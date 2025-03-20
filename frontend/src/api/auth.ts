@@ -1,27 +1,41 @@
 import request from './request'
 
-interface LoginParams {
+interface LoginData {
   username: string
   password: string
 }
 
-interface LoginResult {
+interface LoginResponse {
   access: string
   refresh: string
+  user?: {
+    id: number
+    username: string
+    email: string
+    is_staff: boolean
+    date_joined: string
+  }
 }
 
-export const login = (data: LoginParams) => {
-  return request<LoginResult>({
+interface UserInfo {
+  id: number
+  username: string
+  email: string
+  is_staff: boolean
+  date_joined: string
+}
+
+export const login = (data: LoginData) => {
+  return request<LoginResponse>({
     url: '/auth/token/',
     method: 'post',
     data
   })
 }
 
-export const refreshToken = (refresh: string) => {
-  return request<{ access: string }>({
-    url: '/auth/token/refresh/',
-    method: 'post',
-    data: { refresh }
+export const getUserInfo = () => {
+  return request<UserInfo>({
+    url: '/auth/user/',
+    method: 'get'
   })
 }

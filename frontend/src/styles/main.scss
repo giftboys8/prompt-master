@@ -1,3 +1,6 @@
+// 导入变量和混合器
+@use 'variables' as *;
+
 // Reset
 *,
 *::before,
@@ -24,24 +27,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-// Variables
-:root {
-  --primary-color: #409eff;
-  --success-color: #67c23a;
-  --warning-color: #e6a23c;
-  --danger-color: #f56c6c;
-  --info-color: #909399;
-  
-  --text-color-primary: #303133;
-  --text-color-regular: #606266;
-  --text-color-secondary: #909399;
-  
-  --border-color: #dcdfe6;
-  --border-color-light: #e4e7ed;
-  
-  --background-color: #f5f7fa;
-}
-
 // Common styles
 .page-container {
   padding: 20px;
@@ -52,7 +37,7 @@ body {
   
   h1 {
     font-size: 24px;
-    color: var(--text-color-primary);
+    color: var(--text-primary);
   }
 }
 

@@ -3,21 +3,36 @@ export interface User {
   id: number
   username: string
   email: string
-  first_name: string
-  last_name: string
-  avatar: string
-  is_active: boolean
+  is_staff: boolean
   date_joined: string
 }
 
 // 提示词模版类型
-export interface User {
+export interface Template {
   id: number
-  username: string
-  email: string
-  is_active: boolean
-  is_staff: boolean
-  date_joined: string
+  name: string
+  framework_type: 'RTGO' | 'SPAR' | 'CUSTOM'
+  description: string
+  content: {
+    role?: string
+    task?: string
+    goal?: string
+    output?: string
+    situation?: string
+    purpose?: string
+    action?: string
+    result?: string
+    custom?: string
+  }
+  variables: Array<{
+    name: string
+    default_value: string
+    description: string
+  }>
+  order: number
+  created_at: string
+  updated_at: string
+  created_by: number
 }
 
 export interface TemplateVersion {
@@ -47,33 +62,6 @@ export interface TemplateVersion {
   created_at: string
   created_by: number
   created_by_username: string
-}
-
-export interface Template {
-  id: number
-  name: string
-  framework_type: 'RTGO' | 'SPAR' | 'CUSTOM'
-  description: string
-  content: {
-    role?: string
-    task?: string
-    goal?: string
-    output?: string
-    situation?: string
-    purpose?: string
-    action?: string
-    result?: string
-    custom?: string
-  }
-  variables: Array<{
-    name: string
-    default_value: string
-    description: string
-  }>
-  order: number
-  created_at: string
-  updated_at: string
-  created_by: number
 }
 
 // 业务场景类型

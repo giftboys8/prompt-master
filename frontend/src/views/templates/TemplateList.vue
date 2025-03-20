@@ -61,7 +61,11 @@
     <template #item="{ element: row }">
       <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-4">
         <div class="template-item h-full">
-          <el-card class="box-card h-full" shadow="hover">
+          <el-card 
+            class="box-card h-full" 
+            shadow="hover"
+            @click.stop="handlePreview(row)"
+          >
             <div class="template-content">
               <div class="template-info">
                 <h3 class="mb-2">{{ row.name }}</h3>
@@ -69,10 +73,9 @@
                 <p class="description mb-2">{{ row.description }}</p>
                 <p class="time mb-2">创建时间：{{ new Date(row.created_at).toLocaleString() }}</p>
               </div>
-              <div class="template-actions">
+              <div class="template-actions" @click.stop>
                 <el-button-group>
                   <el-button type="primary" text @click="handleEdit(row)">编辑</el-button>
-                  <el-button type="primary" text @click="handlePreview(row)">预览</el-button>
                   <el-button type="primary" text @click="handleTest(row)">测试</el-button>
                   <el-button type="primary" text @click="handleVersionHistory(row)">
                     <el-icon><Timer /></el-icon>
@@ -105,45 +108,10 @@
     </div>
 
     <!-- 预览对话框 -->
-    <el-dialog
-      v-model="previewDialogVisible"
-      title="模板预览"
-      width="50%"
-      destroy-on-close
-    >
-      <template v-if="currentTemplate">
-        <h3>基本信息</h3>
-        <p><strong>模板名称：</strong>{{ currentTemplate.name }}</p>
-        <p><strong>框架类型：</strong>{{ currentTemplate.framework_type }}</p>
-        <p><strong>描述：</strong>{{ currentTemplate.description }}</p>
-
-        <h3>提示词内容</h3>
-        <template v-if="currentTemplate.framework_type === 'RTGO'">
-          <p><strong>角色(Role)：</strong>{{ currentTemplate.content.role }}</p>
-          <p><strong>任务(Task)：</strong>{{ currentTemplate.content.task }}</p>
-          <p><strong>目标(Goal)：</strong>{{ currentTemplate.content.goal }}</p>
-          <p><strong>输出(Output)：</strong>{{ currentTemplate.content.output }}</p>
-        </template>
-
-        <template v-else-if="currentTemplate.framework_type === 'SPAR'">
-          <p><strong>情境(Situation)：</strong>{{ currentTemplate.content.situation }}</p>
-          <p><strong>目的(Purpose)：</strong>{{ currentTemplate.content.purpose }}</p>
-          <p><strong>行动(Action)：</strong>{{ currentTemplate.content.action }}</p>
-          <p><strong>结果(Result)：</strong>{{ currentTemplate.content.result }}</p>
-        </template>
-
-        <template v-else>
-          <p><strong>自定义内容：</strong>{{ currentTemplate.content.custom }}</p>
-        </template>
-
-        <h3>变量列表</h3>
-        <el-table :data="currentTemplate.variables">
-          <el-table-column prop="name" label="变量名称" />
-          <el-table-column prop="default_value" label="默认值" />
-          <el-table-column prop="description" label="描述" />
-        </el-table>
-      </template>
-    </el-dialog>
+    <TemplatePreview
+      v-model="previewVisible"
+      :template="selectedTemplate"
+    />
 
     <!-- 版本历史对话框 -->
     <template-version-history
@@ -178,6 +146,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Timer, CopyDocument, Upload, Download } from '@element-plus/icons-vue'
 import TemplateVersionHistory from '@/components/TemplateVersionHistory.vue'
+import TemplatePreview from '@/components/TemplatePreview.vue'
 import { getTemplateList, deleteTemplate, cloneTemplate, exportTemplates, importTemplates, reorderTemplates } from '@/api/templates'
 import type { Template } from '@/types'
 // 正确导入 vuedraggable
@@ -191,6 +160,10 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const searchQuery = ref('')
+
+// 预览相关
+const previewVisible = ref(false)
+const selectedTemplate = ref<Template | null>(null)
 
 // 使用ref而不是computed，这样它是可变的
 const sortedTemplates = ref<Template[]>([]);
@@ -229,7 +202,6 @@ const handleDragEnd = async () => {
 }
 
 // 预览相关
-const previewDialogVisible = ref(false)
 const currentTemplate = ref<Template | null>(null)
 
 // 版本历史相关
@@ -346,9 +318,11 @@ const handleEdit = (row: Template) => {
 }
 
 // 预览
-const handlePreview = (row: Template) => {
-  currentTemplate.value = row
-  previewDialogVisible.value = true
+const handlePreview = (row: Template, e?: Event) => {
+  selectedTemplate.value = row
+  previewVisible.value = true
+  // 阻止事件冒泡
+  e?.stopPropagation()
 }
 
 // 测试
@@ -360,9 +334,9 @@ const handleTest = (row: Template) => {
 }
 
 // 监听预览对话框关闭
-watch(previewDialogVisible, (val) => {
+watch(previewVisible, (val) => {
   if (!val) {
-    currentTemplate.value = null
+    selectedTemplate.value = null
   }
 })
 
@@ -462,7 +436,7 @@ onMounted(() => {
 /* 拖拽相关样式 */
 .template-item {
   height: 100%;
-  cursor: move;
+  cursor: pointer;
 }
 
 .template-content {
@@ -527,10 +501,18 @@ onMounted(() => {
 .box-card {
   height: 100%;
   transition: all 0.3s;
+  cursor: pointer;
 }
 
 .box-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.template-actions {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
 }
 
 /* 工具类 */

@@ -1,120 +1,226 @@
 <template>
-  <el-container class="layout-container">
-    <el-aside width="200px" class="aside">
-      <div class="logo">
-        <h1>PromptMaster</h1>
+  <el-container class="layout-container tech-theme">
+    <el-header class="header">
+      <div class="header-content">
+        <div class="left-section">
+          <div class="logo-animation">
+            <span class="logo-icon">⚡</span>
+            <h1>PromptMaster</h1>
+          </div>
+        </div>
+        
+        <div class="right-section">
+          <el-menu
+            router
+            :default-active="route.path"
+            mode="horizontal"
+            class="main-menu"
+          >
+            <el-menu-item index="/" @click="handleMenuClick">
+              <el-icon><HomeFilled /></el-icon>
+              <span>首页</span>
+            </el-menu-item>
+            <el-menu-item index="/templates" @click="handleMenuClick">
+              <el-icon><Document /></el-icon>
+              <span>提示词模板</span>
+            </el-menu-item>
+            <el-menu-item index="/scenes" @click="handleMenuClick">
+              <el-icon><Grid /></el-icon>
+              <span>场景管理</span>
+            </el-menu-item>
+            <el-menu-item index="/contents" @click="handleMenuClick">
+              <el-icon><Collection /></el-icon>
+              <span>内容管理</span>
+            </el-menu-item>
+          </el-menu>
+          
+          <div class="user-info">
+            <template v-if="userStore.isLoggedIn()">
+              <el-dropdown @command="handleCommand">
+                <span class="user-dropdown">
+                  <el-avatar :size="32" class="user-avatar">
+                    {{ username.charAt(0).toUpperCase() }}
+                  </el-avatar>
+                  <div class="user-info-text">
+                    <span class="username">{{ username }}</span>
+                    <span class="user-role">{{ userRole }}</span>
+                  </div>
+                  <el-icon class="el-icon--right">
+                    <arrow-down />
+                  </el-icon>
+                </span>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item disabled>
+                      <span class="dropdown-username">{{ username }}</span>
+                    </el-dropdown-item>
+                    <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+            <template v-else>
+              <el-button type="primary" @click="showLoginDialog = true">
+                登录
+              </el-button>
+            </template>
+          </div>
+        </div>
       </div>
-      <el-menu
-        router
-        :default-active="route.path"
-        background-color="#304156"
-        text-color="#bfcbd9"
-        active-text-color="#409EFF"
+    </el-header>
+
+    <div class="breadcrumb-container">
+      <el-breadcrumb class="breadcrumb">
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+        <template v-for="(item, index) in breadcrumbItems" :key="index">
+          <el-breadcrumb-item :to="item.path">{{ item.title }}</el-breadcrumb-item>
+        </template>
+      </el-breadcrumb>
+    </div>
+
+    <el-main>
+      <router-view v-slot="{ Component }">
+        <component :is="Component" />
+      </router-view>
+    </el-main>
+
+    <!-- 登录对话框 -->
+    <el-dialog
+      v-model="showLoginDialog"
+      title="登录"
+      width="400px"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <el-form
+        ref="loginFormRef"
+        :model="loginForm"
+        :rules="loginRules"
+        label-width="0"
+        @keyup.enter="handleLogin"
       >
-        <el-menu-item index="/" @click="handleMenuClick">
-          <el-icon><HomeFilled /></el-icon>
-          <span>首页</span>
-        </el-menu-item>
-        <el-menu-item index="/templates" @click="handleMenuClick">
-          <el-icon><Document /></el-icon>
-          <span>提示词模板</span>
-        </el-menu-item>
-        <el-menu-item index="/scenes" @click="handleMenuClick">
-          <el-icon><Grid /></el-icon>
-          <span>场景管理</span>
-        </el-menu-item>
-        <el-menu-item index="/contents" @click="handleMenuClick">
-          <el-icon><Collection /></el-icon>
-          <span>内容管理</span>
-        </el-menu-item>
-      </el-menu>
-    </el-aside>
-
-    <el-container>
-      <el-header class="header">
-        <div class="breadcrumb">
-          <el-breadcrumb>
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-            <template v-for="(item, index) in breadcrumbItems" :key="index">
-              <el-breadcrumb-item :to="item.path">{{ item.title }}</el-breadcrumb-item>
-            </template>
-          </el-breadcrumb>
+        <el-form-item prop="username">
+          <el-input
+            v-model="loginForm.username"
+            placeholder="用户名"
+            prefix-icon="User"
+          />
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input
+            v-model="loginForm.password"
+            type="password"
+            placeholder="密码"
+            prefix-icon="Lock"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="showLoginDialog = false">取消</el-button>
+          <el-button type="primary" :loading="loginLoading" @click="handleLogin">
+            登录
+          </el-button>
         </div>
-        <div class="user-info">
-          <el-dropdown @command="handleCommand">
-            <span class="user-dropdown">
-              {{ username }}
-              <el-icon class="el-icon--right">
-                <arrow-down />
-              </el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-      </el-header>
-
-      <el-main>
-        <router-view v-slot="{ Component }">
-          <component :is="Component" />
-        </router-view>
-      </el-main>
-    </el-container>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { HomeFilled, Document, Grid, Collection, ArrowDown, User, Lock } from '@element-plus/icons-vue'
+
+export default defineComponent({
+  name: 'MainLayout',
+  components: {
+    HomeFilled,
+    Document,
+    Grid,
+    Collection,
+    ArrowDown,
+    User,
+    Lock
+  }
+})
+</script>
+
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import {
-  HomeFilled,
-  Document,
-  Grid,
-  Collection,
-  ArrowDown
-} from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-// 用户名
+// 用户信息
 const username = computed(() => {
-  return userStore.user?.username || '用户'
+  const user = userStore.user
+  if (!user) return '未登录'
+  return user.username
+})
+
+const userRole = computed(() => {
+  const user = userStore.user
+  if (!user) return ''
+  return user.is_staff ? '管理员' : '普通用户'
 })
 
 // 面包屑导航
 const breadcrumbItems = computed(() => {
-  const items = []
-  const path = route.path
-  const query = route.query
-
-  if (path.startsWith('/templates')) {
-    items.push({ path: '/templates', title: '提示词模板' })
-    if (path.includes('/create')) {
-      items.push({ path: '', title: '新增模板' })
-    } else if (path.includes('/edit')) {
-      items.push({ path: '', title: `编辑：${query.name || ''}` })
-    }
-  } else if (path.startsWith('/scenes')) {
-    items.push({ path: '/scenes', title: '场景管理' })
-  } else if (path.startsWith('/contents')) {
-    items.push({ path: '/contents', title: '内容管理' })
-  }
-
-  return items
+  const matched = route.matched
+  return matched
+    .filter(item => item.meta?.title)
+    .map(item => ({
+      path: item.path,
+      title: item.meta?.title
+    }))
 })
 
-// 处理菜单点击
-const handleMenuClick = (menu: any) => {
-  router.push(menu.index)
+// 登录相关
+const showLoginDialog = ref(false)
+const loginLoading = ref(false)
+const loginFormRef = ref<FormInstance>()
+const loginForm = ref({
+  username: '',
+  password: ''
+})
+
+const loginRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
-// 处理下拉菜单命令
+const handleLogin = () => {
+  if (!loginFormRef.value) return
+  
+  loginFormRef.value.validate((valid) => {
+    if (valid) {
+      loginLoading.value = true
+      userStore.login(loginForm.value.username, loginForm.value.password)
+        .then((success) => {
+          if (success) {
+            showLoginDialog.value = false
+            ElMessage.success('登录成功')
+          }
+        })
+        .finally(() => {
+          loginLoading.value = false
+        })
+    }
+  })
+}
+
+// 菜单点击
+const handleMenuClick = () => {
+  // 可以添加菜单点击的处理逻辑
+}
+
+// 下拉菜单命令处理
 const handleCommand = (command: string) => {
   if (command === 'logout') {
     userStore.logout()
@@ -125,67 +231,211 @@ const handleCommand = (command: string) => {
 <style scoped>
 .layout-container {
   height: 100vh;
-}
-
-.aside {
-  background-color: #304156;
-  color: #fff;
-}
-
-.logo {
-  height: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #2b2f3a;
-}
-
-.logo h1 {
-  margin: 0;
-  font-size: 20px;
-  color: #fff;
+  background: var(--bg-dark);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 20%);
 }
 
 .header {
-  background-color: #fff;
-  border-bottom: 1px solid #dcdfe6;
+  padding: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  position: relative;
+  z-index: 100;
+}
+
+.header-content {
+  height: 64px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.left-section {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.logo-animation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 24px;
+  animation: pulse 2s infinite;
+}
+
+.logo-animation h1 {
+  margin: 0;
+  font-size: 24px;
+  font-family: 'Orbitron', sans-serif;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+}
+
+.breadcrumb-container {
+  padding: 16px 24px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.breadcrumb {
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.main-menu {
+  display: flex;
+  background: transparent !important;
+  border: none;
 }
 
 .user-info {
-  display: flex;
-  align-items: center;
+  position: relative;
 }
 
 .user-dropdown {
   cursor: pointer;
   display: flex;
   align-items: center;
+  gap: 12px;
   font-size: 14px;
-  color: #606266;
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--glass-bg);
+  transition: all 0.3s ease;
+  min-width: 180px;
+
+  .user-avatar {
+    background: var(--primary-gradient);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .user-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+
+    .username {
+      font-weight: 500;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  }
 }
 
-:deep(.el-menu) {
-  border-right: none;
+.user-dropdown:hover {
+  background: var(--bg-hover);
 }
 
-:deep(.el-menu-item) {
-  color: #bfcbd9;
+.dropdown-username {
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
-:deep(.el-menu-item.is-active) {
-  color: #409eff !important;
-  background-color: #263445 !important;
+/* 登录对话框样式 */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-:deep(.el-menu-item:hover) {
-  background-color: #263445 !important;
+:deep(.el-dialog) {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
 }
 
-:deep(.el-menu-item .el-icon) {
-  margin-right: 10px;
+:deep(.el-dialog__header) {
+  margin: 0;
+  padding: 20px 20px 10px;
+  text-align: center;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.el-input__wrapper) {
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+
+:deep(.el-input__wrapper:hover), :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+:deep(.el-input__inner) {
+  color: var(--text-primary);
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: var(--text-secondary);
+}
+
+:deep(.el-menu--horizontal .el-menu-item) {
+  height: 64px;
+  line-height: 64px;
+  padding: 0 20px;
+}
+
+:deep(.el-breadcrumb__item) {
+  .el-breadcrumb__inner {
+    color: var(--text-secondary);
+    &:hover {
+      color: var(--primary-color);
+    }
+    &.is-link {
+      color: var(--text-secondary);
+      &:hover {
+        color: var(--primary-color);
+      }
+    }
+  }
+  &:last-child .el-breadcrumb__inner {
+    color: var(--text-primary);
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
 }
 </style>

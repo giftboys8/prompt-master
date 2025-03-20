@@ -123,8 +123,8 @@ MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Custom user model
-AUTH_USER_MODEL = 'users.User'
+# 使用默认的用户模型
+# AUTH_USER_MODEL = 'users.User'
 
 # REST Framework 配置
 REST_FRAMEWORK = {

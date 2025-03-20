@@ -62,10 +62,11 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  const requiresAuth = to.meta.requiresAuth !== false
+  const requiresAuth = to.meta.requiresAuth === true
 
   if (requiresAuth && !userStore.token) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
+    // 对于需要认证的页面，如果没有登录，重定向到首页
+    next({ name: 'home' })
   } else {
     next()
   }
