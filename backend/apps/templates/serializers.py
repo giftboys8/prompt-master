@@ -6,7 +6,7 @@ class TemplateSerializer(serializers.ModelSerializer):
         model = Template
         fields = [
             'id', 'name', 'framework_type', 'description',
-            'content', 'variables', 'order', 'created_at', 
+            'content', 'variables', 'order', 'target_role', 'created_at', 
             'updated_at', 'created_by'
         ]
         read_only_fields = ['created_by']
@@ -114,7 +114,7 @@ class TemplateVersionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'template', 'version_number', 'name',
             'framework_type', 'description', 'content',
-            'variables', 'is_current', 'created_at',
+            'variables', 'target_role', 'is_current', 'created_at',
             'created_by', 'created_by_username'
         ]
         read_only_fields = [

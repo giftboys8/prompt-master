@@ -50,6 +50,7 @@ class Template(models.Model):
     content = models.JSONField('内容')
     variables = models.JSONField('变量', default=list)
     order = models.IntegerField('排序', default=0)
+    target_role = models.CharField('适用角色', max_length=100, blank=True, null=True)
     
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
@@ -87,6 +88,7 @@ class Template(models.Model):
             description=self.description,
             content=self.content,
             variables=self.variables,
+            target_role=self.target_role,
             created_by=self.created_by
         )
 
@@ -107,6 +109,7 @@ class TemplateVersion(models.Model):
     description = models.TextField('描述')
     content = models.JSONField('内容')
     variables = models.JSONField('变量', default=list)
+    target_role = models.CharField('适用角色', max_length=100, blank=True, null=True)
     is_current = models.BooleanField('是否为当前版本', default=False)
     
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
