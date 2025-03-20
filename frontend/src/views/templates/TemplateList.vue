@@ -19,9 +19,24 @@
         </el-input>
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </div>
-      <el-button type="primary" @click="router.push('/templates/create')">
-        <el-icon><Plus /></el-icon>新增模板
-      </el-button>
+      <div class="operation-buttons">
+        <el-upload
+          :auto-upload="false"
+          :show-file-list="false"
+          accept=".json"
+          @change="handleImport"
+        >
+          <el-button type="primary">
+            <el-icon><Upload /></el-icon>导入
+          </el-button>
+        </el-upload>
+        <el-button type="primary" @click="handleExport">
+          <el-icon><Download /></el-icon>导出
+        </el-button>
+        <el-button type="primary" @click="router.push('/templates/create')">
+          <el-icon><Plus /></el-icon>新增模板
+        </el-button>
+      </div>
     </div>
 
     <el-table v-loading="loading" :data="templates" style="width: 100%">
@@ -138,9 +153,9 @@
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Timer, CopyDocument } from '@element-plus/icons-vue'
+import { Search, Plus, Timer, CopyDocument, Upload, Download } from '@element-plus/icons-vue'
 import TemplateVersionHistory from '@/components/TemplateVersionHistory.vue'
-import { getTemplateList, deleteTemplate, cloneTemplate } from '@/api/templates'
+import { getTemplateList, deleteTemplate, cloneTemplate, exportTemplates, importTemplates } from '@/api/templates'
 import type { Template } from '@/types'
 
 const router = useRouter()
@@ -167,6 +182,36 @@ const templateToDelete = ref<Template | null>(null)
 const handleVersionHistory = (row: Template) => {
   currentTemplate.value = row
   versionHistoryVisible.value = true
+}
+
+// 导入模板
+const handleImport = async (file: any) => {
+  try {
+    const result = await importTemplates(file.raw)
+    ElMessage.success(result.message)
+    loadData()
+  } catch (error: any) {
+    ElMessage.error(error.message || '导入失败')
+  }
+}
+
+// 导出模板
+const handleExport = async () => {
+  try {
+    const response = await exportTemplates()
+    const blob = new Blob([response], { type: 'application/json' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'templates_export.json'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (error: any) {
+    ElMessage.error(error.message || '导出失败')
+  }
 }
 
 // 克隆模板
@@ -294,6 +339,15 @@ onMounted(() => {
 .search-bar {
   display: flex;
   gap: 10px;
+}
+
+.operation-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+:deep(.el-upload) {
+  width: auto;
 }
 
 .pagination-container {
