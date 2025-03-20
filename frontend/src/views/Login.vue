@@ -2,8 +2,11 @@
   <div class="login-container">
     <el-card class="login-card">
       <template #header>
-        <h2>{{ title }}</h2>
+        <div class="card-header">
+          <h2>登录</h2>
+        </div>
       </template>
+      
       <el-form
         ref="formRef"
         :model="form"
@@ -15,18 +18,20 @@
           <el-input
             v-model="form.username"
             placeholder="用户名"
-            :prefix-icon="User"
+            prefix-icon="User"
           />
         </el-form-item>
+
         <el-form-item prop="password">
           <el-input
             v-model="form.password"
             type="password"
             placeholder="密码"
-            :prefix-icon="Lock"
+            prefix-icon="Lock"
             show-password
           />
         </el-form-item>
+
         <el-form-item>
           <el-button
             type="primary"
@@ -43,30 +48,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
-import type { FormInstance } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
-
-const title = computed(() => import.meta.env.VITE_APP_TITLE)
-
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+
+// 表单数据
 const form = ref({
   username: '',
   password: ''
 })
 
-const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+// 表单验证规则
+const rules: FormRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' }
+  ]
 }
 
+// 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
 
@@ -76,10 +87,8 @@ const handleSubmit = async () => {
       try {
         const success = await userStore.login(form.value.username, form.value.password)
         if (success) {
-          ElMessage.success('登录成功')
-          router.push('/')
-        } else {
-          ElMessage.error('用户名或密码错误')
+          const redirectPath = route.query.redirect as string || '/'
+          router.push(redirectPath)
         }
       } finally {
         loading.value = false
@@ -99,12 +108,18 @@ const handleSubmit = async () => {
 }
 
 .login-card {
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
 }
 
-.login-card :deep(.el-card__header) {
+.card-header {
   text-align: center;
-  padding: 20px;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #303133;
 }
 
 .login-button {

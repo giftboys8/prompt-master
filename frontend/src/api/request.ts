@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
+import router from '@/router'
 
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
@@ -27,11 +27,13 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
-    return response.data
+    // 处理 2xx 的响应
+    if (response.status >= 200 && response.status < 300) {
+      return response.data
+    }
+    return Promise.reject(new Error(response.data?.detail || '请求失败'))
   },
   (error) => {
-    const router = useRouter()
-    
     if (error.response) {
       const { status, data } = error.response
       

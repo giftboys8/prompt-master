@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import type { User } from '@/types'
 import { login as loginApi } from '@/api/auth'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null)
@@ -11,16 +12,19 @@ export const useUserStore = defineStore('user', () => {
   const login = async (username: string, password: string) => {
     try {
       const data = await loginApi({ username, password })
-      token.value = data.access
-      localStorage.setItem('token', data.access)
-      ElMessage.success('登录成功')
-      return true
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        ElMessage.error('用户名或密码错误')
-      } else {
-        ElMessage.error('登录失败，请稍后重试')
+      if (data.access) {
+        token.value = data.access
+        localStorage.setItem('token', data.access)
+        if (data.refresh) {
+          localStorage.setItem('refresh_token', data.refresh)
+        }
+        ElMessage.success('登录成功')
+        router.push('/')
+        return true
       }
+      return false
+    } catch (error: any) {
+      ElMessage.error(error.response?.data?.detail || '登录失败，请稍后重试')
       return false
     }
   }
@@ -29,13 +33,19 @@ export const useUserStore = defineStore('user', () => {
     user.value = null
     token.value = null
     localStorage.removeItem('token')
-    ElMessage.success('已退出登录')
+    localStorage.removeItem('refresh_token')
+    router.push('/login')
+  }
+
+  const isLoggedIn = () => {
+    return !!token.value
   }
 
   return {
     user,
     token,
     login,
-    logout
+    logout,
+    isLoggedIn
   }
 })
