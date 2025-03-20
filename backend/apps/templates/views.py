@@ -1,7 +1,10 @@
+import json
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser, MultiPartParser
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Template, TemplateVersion
 from .serializers import TemplateSerializer, TemplateVersionSerializer
@@ -14,6 +17,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
     filterset_fields = ['framework_type']
     search_fields = ['name', 'description']
     ordering_fields = ['created_at', 'name']
+    parser_classes = [JSONParser, MultiPartParser]
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -64,6 +68,38 @@ class TemplateViewSet(viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    @action(detail=False, methods=['get'])
+    def export(self, request):
+        """导出所有模板"""
+        templates = self.get_queryset()
+        serializer = self.get_serializer(templates, many=True)
+        response = HttpResponse(json.dumps(serializer.data), content_type='application/json')
+        response['Content-Disposition'] = 'attachment; filename="templates_export.json"'
+        return response
+
+    @action(detail=False, methods=['post'])
+    def import_templates(self, request):
+        """导入模板"""
+        try:
+            file = request.FILES.get('file')
+            if not file:
+                return Response({'error': '没有上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
+            templates_data = json.loads(file.read())
+            imported_count = 0
+            for template_data in templates_data:
+                template_data['created_by'] = request.user.id
+                serializer = self.get_serializer(data=template_data)
+                if serializer.is_valid():
+                    serializer.save()
+                    imported_count += 1
+
+            return Response({'message': f'成功导入 {imported_count} 个模板'})
+        except json.JSONDecodeError:
+            return Response({'error': '无效的 JSON 文件'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TemplateVersionViewSet(viewsets.ReadOnlyModelViewSet):
