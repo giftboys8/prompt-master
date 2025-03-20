@@ -69,6 +69,10 @@ service.interceptors.response.use(
 )
 
 const request = <T = any>(config: AxiosRequestConfig): Promise<T> => {
+  // 处理blob响应类型
+  if (config.responseType === 'blob') {
+    return service(config).then(response => response as unknown as T)
+  }
   return service(config)
 }
 

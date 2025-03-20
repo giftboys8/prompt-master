@@ -56,6 +56,29 @@ export const cloneTemplate = (id: number) => {
   })
 }
 
+// 导出模板
+export const exportTemplates = () => {
+  return request({
+    url: '/templates/export/',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
+// 导入模板
+export const importTemplates = (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request({
+    url: '/templates/import_templates/',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
 export const getTemplateList = (params?: any) => {
   return request<{
     count: number
