@@ -5,6 +5,13 @@ interface LoginData {
   password: string
 }
 
+interface RegisterData {
+  username: string
+  email: string
+  password: string
+  password2: string
+}
+
 interface LoginResponse {
   access: string
   refresh: string
@@ -23,6 +30,14 @@ interface UserInfo {
   email: string
   is_staff: boolean
   date_joined: string
+}
+
+export const register = (data: RegisterData) => {
+  return request<UserInfo>({
+    url: '/auth/register/',
+    method: 'post',
+    data
+  })
 }
 
 export const login = (data: LoginData) => {

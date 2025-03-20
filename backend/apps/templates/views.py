@@ -10,6 +10,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Template, TemplateVersion, TemplateTest
 from .serializers import TemplateSerializer, TemplateVersionSerializer, TemplateTestSerializer
 
+from django.db.models import Q
+import json
+
 class TemplateViewSet(viewsets.ModelViewSet):
     queryset = Template.objects.all()
     serializer_class = TemplateSerializer
@@ -17,14 +20,57 @@ class TemplateViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['framework_type']
     search_fields = ['name', 'description']
-    ordering_fields = ['created_at', 'name']
+    ordering_fields = ['created_at', 'name', 'order']
     parser_classes = [JSONParser, MultiPartParser]
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
     def get_queryset(self):
-        return super().get_queryset().filter(created_by=self.request.user)
+        queryset = super().get_queryset().filter(created_by=self.request.user)
+        
+        # 添加角色筛选
+        target_role = self.request.query_params.get('target_role', None)
+        if target_role:
+            queryset = queryset.filter(target_role__icontains=target_role)
+        
+        # 添加模糊搜索（名称、描述和内容）
+        search = self.request.query_params.get('search', None)
+        if search:
+            content_filters = Q()
+            
+            # 先尝试搜索名称和描述
+            queryset = queryset.filter(
+                Q(name__icontains=search) | 
+                Q(description__icontains=search)
+            )
+            
+            # 然后搜索JSON内容字段
+            templates_with_content_match = []
+            for template in Template.objects.filter(created_by=self.request.user):
+                content = template.content
+                if content:
+                    # 检查各种可能的内容字段
+                    if isinstance(content, str):
+                        try:
+                            content_dict = json.loads(content)
+                        except:
+                            content_dict = {}
+                    else:
+                        content_dict = content
+                        
+                    for key, value in content_dict.items():
+                        if value and isinstance(value, str) and search.lower() in value.lower():
+                            templates_with_content_match.append(template.id)
+                            break
+            
+            # 合并内容搜索结果
+            if templates_with_content_match:
+                queryset = queryset.filter(
+                    Q() | Q(id__in=templates_with_content_match)
+                )
+                
+        return queryset
         
     @action(detail=False, methods=['post'])
     def reorder(self, request):

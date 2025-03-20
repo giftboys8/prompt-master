@@ -6,9 +6,15 @@ const router = createRouter({
   routes: [
     {
       path: '/login',
-      name: 'login',
+      name: 'Login',
       component: () => import('@/views/Login.vue'),
-      meta: { requiresAuth: false }
+      meta: { title: '登录' }
+    },
+    {
+      path: '/register',
+      name: 'Register',
+      component: () => import('@/views/Register.vue'),
+      meta: { title: '注册' }
     },
     {
       path: '/',
@@ -63,10 +69,22 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   const requiresAuth = to.meta.requiresAuth === true
+  
+  // 设置页面标题
+  document.title = to.meta.title ? `${to.meta.title} - PromptMaster` : 'PromptMaster'
 
-  if (requiresAuth && !userStore.token) {
-    // 对于需要认证的页面，如果没有登录，重定向到首页
+  // 如果是登录或注册页面，且用户已登录，则重定向到首页
+  if ((to.name === 'Login' || to.name === 'Register') && userStore.isLoggedIn()) {
     next({ name: 'home' })
+    return
+  }
+
+  // 对于需要认证的页面，如果没有登录，重定向到登录页
+  if (requiresAuth && !userStore.isLoggedIn()) {
+    next({ 
+      name: 'Login',
+      query: { redirect: to.fullPath } 
+    })
   } else {
     next()
   }

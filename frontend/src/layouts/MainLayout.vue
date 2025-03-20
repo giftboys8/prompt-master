@@ -60,9 +60,14 @@
               </el-dropdown>
             </template>
             <template v-else>
-              <el-button type="primary" @click="showLoginDialog = true">
-                登录
-              </el-button>
+              <div class="auth-buttons">
+                <el-button type="primary" @click="showLoginDialog = true">
+                  登录
+                </el-button>
+                <el-button @click="router.push('/register')">
+                  注册
+                </el-button>
+              </div>
             </template>
           </div>
         </div>
@@ -118,10 +123,17 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="showLoginDialog = false">取消</el-button>
-          <el-button type="primary" :loading="loginLoading" @click="handleLogin">
-            登录
-          </el-button>
+          <div class="dialog-footer-left">
+            <span class="register-link">没有账号？
+              <a href="#" @click.prevent="goToRegister">立即注册</a>
+            </span>
+          </div>
+          <div class="dialog-footer-right">
+            <el-button @click="showLoginDialog = false">取消</el-button>
+            <el-button type="primary" :loading="loginLoading" @click="handleLogin">
+              登录
+            </el-button>
+          </div>
         </div>
       </template>
     </el-dialog>
@@ -225,6 +237,12 @@ const handleCommand = (command: string) => {
   if (command === 'logout') {
     userStore.logout()
   }
+}
+
+// 跳转到注册页面
+const goToRegister = () => {
+  showLoginDialog.value = false
+  router.push('/register')
 }
 </script>
 
@@ -351,6 +369,11 @@ const handleCommand = (command: string) => {
   background: var(--bg-hover);
 }
 
+.auth-buttons {
+  display: flex;
+  gap: 10px;
+}
+
 .dropdown-username {
   font-size: 12px;
   color: var(--text-secondary);
@@ -359,9 +382,33 @@ const handleCommand = (command: string) => {
 /* 登录对话框样式 */
 .dialog-footer {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 16px;
+  width: 100%;
+}
+
+.dialog-footer-left {
+  flex: 1;
+}
+
+.dialog-footer-right {
+  display: flex;
+  gap: 12px;
+}
+
+.register-link {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.register-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
 }
 
 :deep(.el-dialog) {

@@ -30,6 +30,7 @@ export interface Template {
     description: string
   }>
   order: number
+  target_role: string
   created_at: string
   updated_at: string
   created_by: number
