@@ -70,6 +70,7 @@ export interface Template {
     default_value: string
     description: string
   }>
+  order: number
   created_at: string
   updated_at: string
   created_by: number

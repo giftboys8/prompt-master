@@ -2,6 +2,14 @@
   <div class="page-container">
     <div class="page-header">
       <h1>提示词模板</h1>
+      <div class="drag-tip">
+        <el-alert
+          title="提示：您可以通过拖拽卡片来调整模板的显示顺序"
+          type="info"
+          :closable="false"
+          show-icon
+        />
+      </div>
     </div>
 
     <div class="operation-bar">
@@ -39,35 +47,50 @@
       </div>
     </div>
 
-    <el-table v-loading="loading" :data="templates" style="width: 100%">
-      <el-table-column prop="name" label="模板名称" />
-      <el-table-column prop="framework_type" label="框架类型">
-        <template #default="{ row }">
-          <el-tag>{{ row.framework_type }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="description" label="描述" show-overflow-tooltip />
-      <el-table-column prop="created_at" label="创建时间" width="180">
-        <template #default="{ row }">
-          {{ new Date(row.created_at).toLocaleString() }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button-group>
-            <el-button type="primary" text @click="handleEdit(row)">编辑</el-button>
-            <el-button type="primary" text @click="handlePreview(row)">预览</el-button>
-            <el-button type="primary" text @click="handleVersionHistory(row)">
-              <el-icon><Timer /></el-icon>
-            </el-button>
-            <el-button type="primary" text @click="handleClone(row)">
-              <el-icon><CopyDocument /></el-icon>
-            </el-button>
-            <el-button type="danger" text @click="handleDelete(row)">删除</el-button>
-          </el-button-group>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-row :gutter="20">
+  <draggable
+    v-model="sortedTemplates"
+    v-loading="loading"
+    item-key="id"
+    :animation="150"
+    ghost-class="ghost"
+    @end="handleDragEnd"
+    class="el-row"
+    :class="{ 'is-flex': true, 'flex-wrap': true }"
+  >
+    <template #item="{ element: row }">
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-4">
+        <div class="template-item h-full">
+          <el-card class="box-card h-full" shadow="hover">
+            <div class="template-content">
+              <div class="template-info">
+                <h3 class="mb-2">{{ row.name }}</h3>
+                <el-tag class="mb-2">{{ row.framework_type }}</el-tag>
+                <p class="description mb-2">{{ row.description }}</p>
+                <p class="time mb-2">创建时间：{{ new Date(row.created_at).toLocaleString() }}</p>
+              </div>
+              <div class="template-actions">
+                <el-button-group>
+                  <el-button type="primary" text @click="handleEdit(row)">编辑</el-button>
+                  <el-button type="primary" text @click="handlePreview(row)">预览</el-button>
+                  <el-button type="primary" text @click="handleTest(row)">测试</el-button>
+                  <el-button type="primary" text @click="handleVersionHistory(row)">
+                    <el-icon><Timer /></el-icon>
+                  </el-button>
+                  <el-button type="primary" text @click="handleClone(row)">
+                    <el-icon><CopyDocument /></el-icon>
+                  </el-button>
+                  <el-button type="danger" text @click="handleDelete(row)">删除</el-button>
+                </el-button-group>
+              </div>
+            </div>
+          </el-card>
+        </div>
+      </el-col>
+    </template>
+  </draggable>
+</el-row>
+<!-- 删除了旧的表格结构 -->
 
     <div class="pagination-container">
       <el-pagination
@@ -150,21 +173,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch, onMounted, computed, defineComponent } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Timer, CopyDocument, Upload, Download } from '@element-plus/icons-vue'
 import TemplateVersionHistory from '@/components/TemplateVersionHistory.vue'
-import { getTemplateList, deleteTemplate, cloneTemplate, exportTemplates, importTemplates } from '@/api/templates'
+import { getTemplateList, deleteTemplate, cloneTemplate, exportTemplates, importTemplates, reorderTemplates } from '@/api/templates'
 import type { Template } from '@/types'
+// 正确导入 vuedraggable
+import draggable from 'vuedraggable'
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
 const templates = ref<Template[]>([])
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const searchQuery = ref('')
+
+// 使用ref而不是computed，这样它是可变的
+const sortedTemplates = ref<Template[]>([]);
+
+// 监听templates变化，更新sortedTemplates
+watch(() => templates.value, (newTemplates) => {
+  if (!newTemplates || !Array.isArray(newTemplates)) {
+    console.warn('templates.value is not an array:', newTemplates);
+    sortedTemplates.value = [];
+    return;
+  }
+  sortedTemplates.value = [...newTemplates].sort((a, b) => (a.order || 0) - (b.order || 0));
+}, { immediate: true });
+
+const handleDragEnd = async () => {
+  console.log('拖拽结束，新顺序:', sortedTemplates.value);
+  
+  const updatedOrder = sortedTemplates.value.map((template, index) => ({
+    id: template.id,
+    order: index
+  }))
+
+  try {
+    console.log('发送更新排序请求:', updatedOrder);
+    await reorderTemplates(updatedOrder)
+    ElMessage.success('模板排序已更新')
+    
+    // 更新本地数据
+    templates.value = [...sortedTemplates.value];
+  } catch (error: any) {
+    console.error('更新排序失败:', error);
+    ElMessage.error(error.message || '更新排序失败')
+    // 如果更新失败，重新加载数据以恢复原始顺序
+    await loadData()
+  }
+}
 
 // 预览相关
 const previewDialogVisible = ref(false)
@@ -233,17 +295,39 @@ const handleClone = async (row: Template) => {
 const loadData = async () => {
   loading.value = true
   try {
+    console.log('开始加载模板数据...');
     const res = await getTemplateList({
       page: currentPage.value,
       page_size: pageSize.value,
       search: searchQuery.value
-    })
-    templates.value = res.results
-    total.value = res.count
+    });
+    console.log('获取到的模板数据:', res);
+    
+    if (res && Array.isArray(res.results)) {
+      templates.value = res.results;
+      total.value = res.count;
+      console.log('模板数据已更新:', templates.value);
+    } else {
+      console.warn('返回的数据格式不正确:', res);
+      ElMessage.warning('返回的数据格式不符合预期');
+    }
   } catch (error: any) {
-    ElMessage.error(error.message || '加载失败')
+    console.error('加载模板数据失败:', error);
+    if (error.response) {
+      console.error('错误响应:', error.response);
+      if (error.response.status === 401) {
+        ElMessage.error('请先登录');
+        router.push('/login');
+      } else {
+        ElMessage.error(`加载失败: ${error.response.data?.detail || error.message || '未知错误'}`);
+      }
+    } else if (error.request) {
+      ElMessage.error('网络请求失败，请检查网络连接');
+    } else {
+      ElMessage.error(error.message || '加载失败');
+    }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -265,6 +349,14 @@ const handleEdit = (row: Template) => {
 const handlePreview = (row: Template) => {
   currentTemplate.value = row
   previewDialogVisible.value = true
+}
+
+// 测试
+const handleTest = (row: Template) => {
+  router.push({
+    path: '/templates/test',
+    query: { template: row.id.toString() }
+  })
 }
 
 // 监听预览对话框关闭
@@ -330,6 +422,10 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.drag-tip {
+  margin-top: 10px;
+}
+
 .operation-bar {
   display: flex;
   justify-content: space-between;
@@ -361,5 +457,122 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+/* 拖拽相关样式 */
+.template-item {
+  height: 100%;
+  cursor: move;
+}
+
+.template-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.template-info {
+  flex: 1;
+}
+
+.template-info h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.template-info .description {
+  color: #606266;
+  font-size: 14px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 40px;
+}
+
+.template-info .time {
+  font-size: 12px;
+  color: #909399;
+  margin: 0;
+}
+
+.template-actions {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #EBEEF5;
+}
+
+.template-actions :deep(.el-button-group) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* 拖拽时的样式 */
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+  border: 1px dashed #409EFF;
+}
+
+.template-item:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s;
+}
+
+.box-card {
+  height: 100%;
+  transition: all 0.3s;
+}
+
+.box-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 工具类 */
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+.h-full {
+  height: 100%;
+}
+
+/* Flex 布局 */
+.is-flex {
+  display: flex;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+/* 响应式布局辅助类 */
+:deep(.el-row) {
+  margin: 0 !important;
+  width: 100%;
+}
+
+:deep(.draggable) {
+  width: 100%;
+}
+
+/* 确保按钮在小屏幕上也能很好地显示 */
+@media (max-width: 768px) {
+  .template-actions :deep(.el-button) {
+    padding: 8px;
+  }
+  
+  .template-actions :deep(.el-button-group) {
+    justify-content: center;
+  }
 }
 </style>

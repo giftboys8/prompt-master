@@ -35,6 +35,11 @@ const router = createRouter({
           component: () => import('@/views/templates/TemplateEdit.vue')
         },
         {
+          path: 'templates/test',
+          name: 'template-test',
+          component: () => import('@/views/templates/TemplateTest.vue')
+        },
+        {
           path: 'scenes',
           name: 'scene-list',
           component: () => import('@/views/scenes/SceneList.vue')

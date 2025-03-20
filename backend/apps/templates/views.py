@@ -5,9 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser
 from django.http import HttpResponse
+from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Template, TemplateVersion
-from .serializers import TemplateSerializer, TemplateVersionSerializer
+from .models import Template, TemplateVersion, TemplateTest
+from .serializers import TemplateSerializer, TemplateVersionSerializer, TemplateTestSerializer
 
 class TemplateViewSet(viewsets.ModelViewSet):
     queryset = Template.objects.all()
@@ -24,6 +25,28 @@ class TemplateViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return super().get_queryset().filter(created_by=self.request.user)
+        
+    @action(detail=False, methods=['post'])
+    def reorder(self, request):
+        """更新模板排序"""
+        try:
+            with transaction.atomic():
+                order_data = request.data
+                for item in order_data:
+                    template_id = item.get('id')
+                    new_order = item.get('order')
+                    
+                    if template_id and new_order is not None:
+                        template = Template.objects.get(id=template_id, created_by=request.user)
+                        template.order = new_order
+                        template.save(update_fields=['order'])
+                        
+                return Response({'message': '排序更新成功'})
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=True, methods=['post'])
     def clone(self, request, pk=None):
@@ -114,3 +137,47 @@ class TemplateVersionViewSet(viewsets.ReadOnlyModelViewSet):
         return TemplateVersion.objects.filter(
             template__created_by=self.request.user
         )
+
+class TemplateTestViewSet(viewsets.ModelViewSet):
+    serializer_class = TemplateTestSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['template', 'model']
+    ordering_fields = ['created_at']
+
+    def get_queryset(self):
+        return TemplateTest.objects.filter(created_by=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def run_test(self, request):
+        template_id = request.data.get('template')
+        model = request.data.get('model')
+        input_data = request.data.get('input_data')
+
+        if not all([template_id, model, input_data]):
+            return Response({'error': '缺少必要的参数'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            template = Template.objects.get(id=template_id, created_by=request.user)
+        except Template.DoesNotExist:
+            return Response({'error': '模板不存在'}, status=status.HTTP_404_NOT_FOUND)
+
+        # 这里应该实现与不同大模型的集成逻辑
+        # 目前我们只是模拟一个简单的输出
+        output_content = f"这是使用 {model} 模型测试 '{template.name}' 模板的结果。\n\n"
+        output_content += "输入数据：\n```json\n" + json.dumps(input_data, indent=2, ensure_ascii=False) + "\n```\n\n"
+        output_content += "模拟输出：\n这是一个模拟的输出结果，实际实现时需要集成相应的大模型API。"
+
+        test = TemplateTest.objects.create(
+            template=template,
+            model=model,
+            input_data=input_data,
+            output_content=output_content,
+            created_by=request.user
+        )
+
+        serializer = self.get_serializer(test)
+        return Response(serializer.data)

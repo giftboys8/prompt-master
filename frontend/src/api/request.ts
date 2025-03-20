@@ -29,7 +29,8 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     // 处理 2xx 的响应
     if (response.status >= 200 && response.status < 300) {
-      return response.data
+      console.log('API Response:', response.data);
+      return response.data;
     }
     return Promise.reject(new Error(response.data?.detail || '请求失败'))
   },

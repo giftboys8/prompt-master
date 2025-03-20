@@ -1,13 +1,13 @@
 from rest_framework import serializers
-from .models import Template, TemplateVersion
+from .models import Template, TemplateVersion, TemplateTest
 
 class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = [
             'id', 'name', 'framework_type', 'description',
-            'content', 'variables', 'created_at', 'updated_at',
-            'created_by'
+            'content', 'variables', 'order', 'created_at', 
+            'updated_at', 'created_by'
         ]
         read_only_fields = ['created_by']
 
@@ -121,3 +121,29 @@ class TemplateVersionSerializer(serializers.ModelSerializer):
             'created_by', 'created_by_username',
             'version_number', 'is_current'
         ]
+
+class TemplateTestSerializer(serializers.ModelSerializer):
+    template_name = serializers.CharField(source='template.name', read_only=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+
+    class Meta:
+        model = TemplateTest
+        fields = [
+            'id', 'template', 'template_name', 'model',
+            'input_data', 'output_content', 'created_at',
+            'created_by', 'created_by_username'
+        ]
+        read_only_fields = ['created_by', 'created_by_username', 'output_content']
+
+    def validate_input_data(self, value):
+        if not isinstance(value, dict):
+            raise serializers.ValidationError('输入数据必须是字典类型')
+        
+        template = self.context['view'].get_object()
+        required_variables = [var['name'] for var in template.variables]
+        
+        for var in required_variables:
+            if var not in value:
+                raise serializers.ValidationError(f'缺少必要的变量：{var}')
+        
+        return value

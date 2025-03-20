@@ -87,5 +87,19 @@ export const getTemplateList = (params?: any) => {
     url: '/templates/',
     method: 'get',
     params
+  }).then(response => {
+    console.log('API response:', response);
+    return response;
+  }).catch(error => {
+    console.error('API error:', error);
+    throw error;
+  });
+}
+
+export const reorderTemplates = (orderData: { id: number; order: number }[]) => {
+  return request({
+    url: '/templates/reorder/',
+    method: 'post',
+    data: orderData
   })
 }

@@ -4,6 +4,39 @@ from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
+class TemplateTest(models.Model):
+    MODEL_CHOICES = [
+        ('GPT-3.5', 'GPT-3.5'),
+        ('GPT-4', 'GPT-4'),
+        ('CLAUDE', 'Claude'),
+        # 添加其他模型选项
+    ]
+
+    template = models.ForeignKey(
+        'Template',
+        on_delete=models.CASCADE,
+        related_name='tests',
+        verbose_name='测试模板'
+    )
+    model = models.CharField('测试模型', max_length=20, choices=MODEL_CHOICES)
+    input_data = models.JSONField('输入数据')
+    output_content = models.TextField('输出内容')
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='template_tests',
+        verbose_name='创建者'
+    )
+
+    class Meta:
+        verbose_name = '模板测试'
+        verbose_name_plural = verbose_name
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.template.name} - {self.model} Test'
+
 class Template(models.Model):
     FRAMEWORK_CHOICES = [
         ('RTGO', 'RTGO'),
@@ -16,6 +49,7 @@ class Template(models.Model):
     description = models.TextField('描述')
     content = models.JSONField('内容')
     variables = models.JSONField('变量', default=list)
+    order = models.IntegerField('排序', default=0)
     
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
@@ -29,7 +63,7 @@ class Template(models.Model):
     class Meta:
         verbose_name = '提示词模板'
         verbose_name_plural = verbose_name
-        ordering = ['-created_at']
+        ordering = ['order', '-created_at']
 
     def __str__(self):
         return self.name
