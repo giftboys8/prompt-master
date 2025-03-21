@@ -7,7 +7,7 @@ export const runTemplateTest = (data: {
   input_data: Record<string, any>;
 }) => {
   return request({
-    url: '/api/templates/tests/run_test/',
+    url: '/templates/tests/run_test/',
     method: 'post',
     data
   });
@@ -19,7 +19,7 @@ export const getTemplateTests = (params: {
   model?: string;
 }) => {
   return request({
-    url: '/api/templates/tests/',
+    url: '/templates/tests/',
     method: 'get',
     params
   });
@@ -28,7 +28,7 @@ export const getTemplateTests = (params: {
 // 获取单个测试详情
 export const getTemplateTestDetail = (id: number) => {
   return request({
-    url: `/api/templates/tests/${id}/`,
+    url: `/templates/tests/${id}/`,
     method: 'get'
   });
 };
@@ -36,7 +36,7 @@ export const getTemplateTestDetail = (id: number) => {
 // 删除测试记录
 export const deleteTemplateTest = (id: number) => {
   return request({
-    url: `/api/templates/tests/${id}/`,
+    url: `/templates/tests/${id}/`,
     method: 'delete'
   });
 };

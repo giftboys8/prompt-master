@@ -3,8 +3,10 @@
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
     title="模板预览"
-    width="50%"
+    width="60%"
     destroy-on-close
+    :modal-class="'template-preview-modal'"
+    :close-on-click-modal="false"
   >
     <template v-if="template">
       <h3>基本信息</h3>
@@ -53,22 +55,85 @@ defineEmits(['update:modelValue'])
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/tech-theme.scss' as *;
+
 h3 {
-  margin: 1rem 0;
-  font-size: 1.2rem;
-  color: var(--el-text-color-primary);
+  margin: 1.5rem 0 1rem;
+  font-size: 1.3rem;
+  color: var(--primary-color);
+  font-family: 'Orbitron', sans-serif;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
 }
 
 p {
-  margin: 0.5rem 0;
-  color: var(--el-text-color-regular);
+  margin: 0.75rem 0;
+  color: var(--text-primary);
+  line-height: 1.6;
   
   strong {
-    color: var(--el-text-color-primary);
+    color: var(--neon-blue);
+    font-weight: 600;
   }
 }
 
 .el-table {
   margin-top: 1rem;
+  --el-table-border-color: var(--border-color);
+  --el-table-header-bg-color: var(--bg-hover);
+  --el-table-bg-color: var(--bg-card);
+  --el-table-tr-bg-color: var(--glass-bg);
+  
+  :deep(.el-table__header) {
+    th {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+  }
+  
+  :deep(.el-table__row) {
+    td {
+      color: var(--text-secondary);
+    }
+  }
+}
+
+:deep(.el-dialog) {
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  
+  .el-dialog__header {
+    padding: 1.5rem;
+    margin-right: 0;
+    border-bottom: 1px solid var(--border-color);
+    
+    .el-dialog__title {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 1.5rem;
+      font-family: 'Orbitron', sans-serif;
+    }
+  }
+  
+  .el-dialog__body {
+    padding: 1.5rem;
+    color: var(--text-primary);
+  }
+  
+  .el-dialog__headerbtn {
+    top: 1.5rem;
+    right: 1.5rem;
+    
+    .el-dialog__close {
+      color: var(--text-secondary);
+      
+      &:hover {
+        color: var(--primary-color);
+      }
+    }
+  }
 }
 </style>

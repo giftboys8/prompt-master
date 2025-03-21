@@ -403,7 +403,7 @@ const handlePreview = (row: Template, e?: Event) => {
 // 测试
 const handleTest = (row: Template) => {
   router.push({
-    path: '/templates/test',
+    name: 'template-test',
     query: { template: row.id.toString() }
   })
 }

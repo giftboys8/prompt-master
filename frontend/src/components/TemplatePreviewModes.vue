@@ -226,6 +226,12 @@ const copyFormatted = async () => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: relative;
+  z-index: 10;
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
 }
 
 .preview-header {
@@ -248,19 +254,22 @@ const copyFormatted = async () => {
   }
 
   .content-item {
-    background: #ffffff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    @include glass-morphism;
+    padding: 1.2rem;
+    border-radius: 12px;
+    @include hover-effect;
 
     h5 {
-      color: $accent-color;
-      margin: 0 0 0.5rem 0;
-      font-size: 1rem;
+      font-family: 'Orbitron', sans-serif;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0 0 0.75rem 0;
+      font-size: 1.1rem;
     }
 
     p {
-      color: rgba($text-color, 0.8);
+      color: var(--text-primary);
       line-height: 1.6;
       margin: 0;
       white-space: pre-wrap;
@@ -286,23 +295,28 @@ const copyFormatted = async () => {
     &.user {
       flex-direction: row-reverse;
       .message-content {
-        background: rgba($primary-color, 0.1);
+        background: rgba(14, 165, 233, 0.2);
+        border: 1px solid rgba(14, 165, 233, 0.3);
       }
     }
   }
 
   .message-content {
-    background: #ffffff;
-    padding: 1rem;
+    @include glass-morphism;
+    padding: 1.2rem;
     border-radius: 12px;
-    border: 1px solid #e0e0e0;
     flex: 1;
     max-width: 80%;
+    @include hover-effect;
 
     p {
       margin: 0.5rem 0;
-      color: rgba($text-color, 0.9);
+      color: var(--text-primary);
       line-height: 1.6;
+
+      strong {
+        color: var(--neon-blue);
+      }
 
       &:first-child {
         margin-top: 0;
@@ -318,9 +332,9 @@ const copyFormatted = async () => {
 // 格式化预览样式
 .format-preview {
   .format-card {
-    @include glassmorphism;
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
+    @include glass-morphism;
+    padding: 1.2rem;
+    @include hover-effect;
   }
 
   .format-header {
@@ -333,8 +347,10 @@ const copyFormatted = async () => {
   pre {
     margin: 0;
     white-space: pre-wrap;
-    color: rgba($text-color, 0.9);
+    color: var(--text-primary);
     line-height: 1.6;
+    font-family: 'Inter', monospace;
+    font-size: 0.95rem;
   }
 }
 
@@ -364,15 +380,15 @@ const copyFormatted = async () => {
     }
 
     .result-card {
-      @include glassmorphism;
-      background: #ffffff;
-      border: 1px solid #e0e0e0;
+      @include glass-morphism;
+      // 已应用glass-morphism，不需要额外的背景和边框
 
       pre {
         margin: 0;
         white-space: pre-wrap;
-        color: rgba($text-color, 0.9);
+        color: var(--text-primary);
         line-height: 1.6;
+        font-family: 'Inter', monospace;
       }
     }
   }

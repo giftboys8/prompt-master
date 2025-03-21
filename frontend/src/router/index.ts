@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import TemplateTest from '@/views/templates/TemplateTest.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,7 +44,7 @@ const router = createRouter({
         {
           path: 'templates/test',
           name: 'template-test',
-          component: () => import('@/views/templates/TemplateTest.vue')
+          component: TemplateTest
         },
         {
           path: 'scenes',
