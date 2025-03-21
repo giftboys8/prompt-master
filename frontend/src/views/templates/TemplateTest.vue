@@ -1,37 +1,39 @@
 <template>
   <div class="template-test">
     <h2>模板测试</h2>
-    <el-form :model="testForm" @submit.prevent="runTest" label-position="top">
-      <el-form-item label="选择模板" required>
-        <el-select 
-          v-model="testForm.template" 
-          placeholder="请选择模板"
-          @change="handleTemplateChange"
-          filterable
-        >
-          <el-option
-            v-for="template in templates"
-            :key="template.id"
-            :label="template.name"
-            :value="template.id"
+    <el-form :model="testForm" @submit.prevent="runTest" label-position="top" class="test-form">
+      <div class="form-header">
+        <el-form-item label="选择模板" required>
+          <el-select 
+            v-model="testForm.template" 
+            placeholder="请选择模板"
+            @change="handleTemplateChange"
+            filterable
           >
-            <div class="template-option">
-              <div class="template-name">{{ template.name }}</div>
-              <div class="template-description">{{ template.description }}</div>
-            </div>
-          </el-option>
-        </el-select>
-      </el-form-item>
+            <el-option
+              v-for="template in templates"
+              :key="template.id"
+              :label="template.name"
+              :value="template.id"
+            >
+              <div class="template-option">
+                <div class="template-name">{{ template.name }}</div>
+                <div class="template-description">{{ template.description }}</div>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
 
-      <el-form-item label="选择模型" required>
-        <el-select v-model="testForm.model" placeholder="请选择模型">
-          <el-option label="GPT-3.5" value="GPT-3.5"></el-option>
-          <el-option label="GPT-4" value="GPT-4"></el-option>
-          <el-option label="Claude" value="CLAUDE"></el-option>
-        </el-select>
-      </el-form-item>
+        <el-form-item label="选择模型" required>
+          <el-select v-model="testForm.model" placeholder="请选择模型">
+            <el-option label="GPT-3.5" value="GPT-3.5"></el-option>
+            <el-option label="GPT-4" value="GPT-4"></el-option>
+            <el-option label="Claude" value="CLAUDE"></el-option>
+          </el-select>
+        </el-form-item>
+      </div>
 
-      <!-- 动态变量输入表单 -->
+      <!-- 变量输入表单 -->
       <template v-if="selectedTemplate">
         <div class="variables-section">
           <h3>变量设置</h3>
@@ -41,13 +43,18 @@
           <el-form-item
             v-for="variable in selectedTemplate.variables"
             :key="variable.name"
-            :label="variable.name"
             :required="true"
           >
+            <template #label>
+              <div class="variable-label">
+                <span>{{ variable.name }}</span>
+                <span class="variable-description-inline">({{ variable.description }})</span>
+              </div>
+            </template>
             <div class="variable-input">
               <el-input
                 v-model="variableInputs[variable.name]"
-                :placeholder="variable.description"
+                :placeholder="'请输入' + variable.name"
               >
                 <template #append v-if="variable.default_value">
                   <el-button @click="useDefaultValue(variable.name, variable.default_value)">
@@ -55,15 +62,24 @@
                   </el-button>
                 </template>
               </el-input>
-              <div class="variable-description">
-                {{ variable.description }}
-              </div>
             </div>
           </el-form-item>
         </div>
 
+        <el-form-item>
+          <el-button 
+            type="primary" 
+            native-type="submit" 
+            :disabled="!isFormValid"
+            :loading="isRunning"
+          >
+            运行测试
+          </el-button>
+        </el-form-item>
+      </template>
+
         <!-- 预览区域 -->
-        <div class="preview-section">
+        <div v-if="selectedTemplate" class="preview-section">
           <h3>模板预览</h3>
           <div class="template-preview">
             <div v-if="selectedTemplate.framework_type === 'RTGO'" class="framework-content">
@@ -110,36 +126,51 @@
             </div>
           </div>
         </div>
-      </template>
 
-      <el-form-item>
-        <el-button 
-          type="primary" 
-          native-type="submit" 
-          :disabled="!isFormValid"
-          :loading="isRunning"
-        >
-          运行测试
-        </el-button>
-      </el-form-item>
+      <!-- 测试结果 -->
+      <div v-if="testResult" class="test-result">
+        <h3>测试结果</h3>
+        <div v-html="formattedTestResult" class="test-result-content"></div>
+      </div>
     </el-form>
 
-    <div v-if="testResult" class="test-result">
-      <h3>测试结果</h3>
-      <div v-html="formattedTestResult" class="test-result-content"></div>
-    </div>
-
+    <!-- 测试历史 -->
     <div class="test-history">
-      <h3>测试历史</h3>
-      <el-table :data="testHistory" style="width: 100%">
+      <div class="section-header">
+        <h3>测试历史</h3>
+        <el-button 
+          type="primary" 
+          plain 
+          size="small" 
+          @click="fetchTestHistory" 
+          :loading="isLoadingHistory"
+        >
+          <el-icon><Refresh /></el-icon> 刷新
+        </el-button>
+      </div>
+      
+      <el-table 
+        :data="testHistory" 
+        style="width: 100%" 
+        v-loading="isLoadingHistory"
+        border
+        stripe
+        :header-cell-style="{ background: 'var(--el-fill-color-light)', color: 'var(--el-text-color-primary)' }"
+      >
         <el-table-column prop="created_at" label="测试时间" width="180">
           <template #default="{ row }">
             {{ formatDate(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column prop="model" label="模型" width="120" />
-        <el-table-column prop="template_name" label="模板名称" />
-        <el-table-column label="操作" width="120">
+        <el-table-column prop="model" label="模型" width="120">
+          <template #default="{ row }">
+            <el-tag size="small" :type="getModelTagType(row.model)">
+              {{ row.model }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="template_name" label="模板名称" show-overflow-tooltip />
+        <el-table-column label="操作" width="120" fixed="right">
           <template #default="scope">
             <el-button 
               @click="viewTestDetail(scope.row)" 
@@ -151,24 +182,48 @@
           </template>
         </el-table-column>
       </el-table>
+      
+      <div v-if="testHistory.length === 0 && !isLoadingHistory" class="empty-history">
+        <el-empty description="暂无测试历史记录" />
+      </div>
     </div>
 
     <!-- 测试详情对话框 -->
     <el-dialog
       v-model="showTestDetail"
       title="测试详情"
-      width="60%"
+      width="80%"
       :close-on-click-modal="false"
+      destroy-on-close
+      top="5vh"
+      :modal-class="'template-test-modal'"
     >
-      <div class="test-detail">
-        <div class="detail-section">
-          <h4>输入数据</h4>
-          <pre class="detail-content">{{ formatJson(currentTestDetail?.input_data) }}</pre>
+      <template #header>
+        <div class="dialog-header">
+          <h3>测试详情</h3>
+          <div class="test-meta" v-if="currentTestDetail">
+            <el-tag size="small">{{ currentTestDetail.template_name }}</el-tag>
+            <el-tag size="small" :type="getModelTagType(currentTestDetail.model)">{{ currentTestDetail.model }}</el-tag>
+            <span class="test-time">{{ formatDate(currentTestDetail?.created_at) }}</span>
+          </div>
         </div>
-        <div class="detail-section">
-          <h4>输出结果</h4>
-          <div class="detail-content" v-html="formatMarkdown(currentTestDetail?.output_content)" />
-        </div>
+      </template>
+      
+      <div class="test-detail" v-if="currentTestDetail">
+        <el-tabs type="border-card">
+          <el-tab-pane label="输出结果">
+            <div class="detail-content result-content" v-html="formatMarkdown(currentTestDetail?.output_content)" />
+          </el-tab-pane>
+          <el-tab-pane label="输入数据">
+            <div class="input-data">
+              <el-descriptions :column="1" border>
+                <el-descriptions-item v-for="(value, key) in currentTestDetail.input_data" :key="key" :label="key">
+                  {{ value }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
       </div>
     </el-dialog>
   </div>
@@ -181,6 +236,7 @@ import { runTemplateTest, getTemplateTests } from '@/api/templateTest'
 import { getTemplateList } from '@/api/templates'
 import type { Template } from '@/types'
 import MarkdownIt from 'markdown-it'
+import { Refresh } from '@element-plus/icons-vue'
 
 // 配置MarkdownIt
 const md = new MarkdownIt({
@@ -195,6 +251,7 @@ const variableInputs = ref<Record<string, string>>({})
 const testResult = ref('')
 const testHistory = ref([])
 const isRunning = ref(false)
+const isLoadingHistory = ref(false)
 const showTestDetail = ref(false)
 const currentTestDetail = ref(null)
 
@@ -256,11 +313,37 @@ const fetchTemplates = async () => {
 
 // 获取测试历史
 const fetchTestHistory = async () => {
+  isLoadingHistory.value = true
   try {
     const response = await getTemplateTests({})
-    testHistory.value = response.data
+    // 处理分页响应结构
+    if (response && Array.isArray(response.results)) {
+      testHistory.value = response.results
+    } else if (Array.isArray(response)) {
+      testHistory.value = response
+    } else {
+      testHistory.value = []
+      console.warn('意外的API响应格式:', response)
+    }
   } catch (error: any) {
     ElMessage.error('获取测试历史失败：' + (error.message || '未知错误'))
+    testHistory.value = []
+  } finally {
+    isLoadingHistory.value = false
+  }
+}
+
+// 获取模型标签类型
+const getModelTagType = (model: string) => {
+  switch(model) {
+    case 'GPT-4':
+      return 'success'
+    case 'GPT-3.5':
+      return 'primary'
+    case 'CLAUDE':
+      return 'warning'
+    default:
+      return 'info'
   }
 }
 
@@ -328,16 +411,37 @@ fetchTemplates()
 fetchTestHistory()
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@use '@/styles/_variables.scss' as *;
 .template-test {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
+.test-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.form-header {
+  display: flex;
+  gap: 16px;
+}
+
+.form-header .el-form-item {
+  flex: 1;
+}
+
 .template-test h2 {
-  color: var(--el-text-color-primary);
-  font-size: 24px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 28px;
   margin-bottom: 24px;
 }
 
@@ -379,28 +483,34 @@ fetchTestHistory()
 }
 
 .variables-section {
-  margin-top: 20px;
   padding: 20px;
-  border: 1px solid var(--el-border-color);
-  border-radius: 8px;
-  background-color: var(--el-bg-color);
-  color: var(--el-text-color-primary);
+  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--text-primary);
 }
 
 .variables-section h3 {
-  color: var(--el-text-color-primary);
+  color: var(--primary-color);
   font-size: 18px;
   margin-bottom: 16px;
+  font-family: 'Orbitron', sans-serif;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
 }
 
 .variables-description {
   margin-bottom: 20px;
-  color: var(--el-text-color-secondary);
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.6;
   padding: 12px;
-  background-color: var(--el-fill-color-lighter);
-  border-radius: 4px;
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .variable-input {
@@ -420,26 +530,38 @@ fetchTestHistory()
   color: var(--el-text-color-placeholder);
 }
 
-.variable-description {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
+.variable-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   line-height: 1.4;
 }
 
+.variable-description-inline {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+  font-weight: normal;
+}
+
 .preview-section {
-  margin-top: 20px;
   padding: 20px;
-  border: 1px solid var(--el-border-color);
-  border-radius: 8px;
-  background-color: var(--el-bg-color);
-  color: var(--el-text-color-primary);
+  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--text-primary);
+  margin-top: 16px;
 }
 
 .preview-section h3 {
-  color: var(--el-text-color-primary);
+  color: var(--primary-color);
   font-size: 18px;
   margin-bottom: 16px;
+  font-family: 'Orbitron', sans-serif;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
 }
 
 .framework-content {
@@ -453,30 +575,33 @@ fetchTestHistory()
 .preview-label {
   font-weight: 500;
   margin-bottom: 8px;
-  color: var(--el-text-color-primary);
+  color: var(--neon-blue);
   font-size: 14px;
 }
 
 .preview-text {
   padding: 12px;
-  background-color: var(--el-fill-color-lighter);
-  border-radius: 4px;
+  background: var(--bg-card);
+  border-radius: 8px;
   white-space: pre-wrap;
-  color: var(--el-text-color-primary);
+  color: var(--text-primary);
   font-size: 14px;
   line-height: 1.6;
-  border: 1px solid var(--el-border-color-light);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .test-result {
-  margin-top: 20px;
   padding: 24px;
-  border: 1px solid var(--el-border-color);
-  border-radius: 8px;
-  background-color: var(--el-bg-color);
+  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   font-size: 16px;
   line-height: 1.8;
-  color: var(--el-text-color-primary);
+  color: var(--text-primary);
 }
 
 .test-result :deep(h1),
@@ -529,8 +654,8 @@ fetchTestHistory()
   padding: 0.2em 0.4em;
   margin: 0;
   font-size: 90%;
-  background-color: #2c313c;
-  color: #abb2bf;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
   border-radius: 4px;
 }
 
@@ -551,11 +676,12 @@ fetchTestHistory()
   overflow: auto;
   line-height: 1.5;
   word-wrap: normal;
-  background-color: #282c34;
-  color: #abb2bf;
-  border-radius: 6px;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  border-radius: 8px;
   font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
   font-size: 14px;
+  border: 1px solid var(--border-color);
 }
 
 .test-result :deep(pre) {
@@ -599,7 +725,35 @@ fetchTestHistory()
 }
 
 .test-history {
-  margin-top: 20px;
+  border-top: 1px solid var(--el-border-color);
+  padding-top: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 20px;
+}
+
+.empty-history {
+  margin: 40px 0;
+}
+
+@media (max-width: 768px) {
+  .form-header {
+    flex-direction: column;
+  }
 }
 
 .test-detail {
@@ -618,6 +772,63 @@ fetchTestHistory()
       white-space: pre-wrap;
     }
   }
+}
+
+.dialog-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .test-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    
+    .test-time {
+      color: var(--el-text-color-secondary);
+      font-size: 13px;
+    }
+  }
+}
+
+.result-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.input-data {
+  padding: 16px;
+}
+
+:deep(.el-tabs__item) {
+  color: var(--el-text-color-primary);
+  font-weight: 500;
+}
+
+:deep(.el-tabs__item.is-active) {
+  color: var(--el-color-primary);
+  font-weight: 600;
+}
+
+:deep(.el-descriptions__label) {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.el-descriptions__content) {
+  color: var(--el-text-color-regular);
 }
 
 .detail-content :deep(h1),

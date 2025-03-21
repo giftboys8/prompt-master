@@ -26,16 +26,18 @@
   --shadow-md: 0 8px 12px -2px rgba(0, 0, 0, 0.15);
   
   // 玻璃拟态效果
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(30, 41, 59, 0.85);    // 更不透明的背景
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 // Mixins
 @mixin glass-morphism {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--glass-shadow);
 }
 
 @mixin hover-effect {
