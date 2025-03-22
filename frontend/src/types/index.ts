@@ -87,3 +87,16 @@ export interface Content {
   updated_at: string
   created_by: number
 }
+
+// 模板测试类型
+export interface TemplateTest {
+  id: number
+  template: number
+  model: string
+  input_data: Record<string, any>
+  output_content: string
+  prompt: string
+  dify_response: Record<string, any>
+  created_at: string
+  created_by: number
+}

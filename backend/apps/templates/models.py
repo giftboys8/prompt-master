@@ -21,6 +21,8 @@ class TemplateTest(models.Model):
     model = models.CharField('测试模型', max_length=20, choices=MODEL_CHOICES)
     input_data = models.JSONField('输入数据')
     output_content = models.TextField('输出内容')
+    prompt = models.TextField('生成的提示词', blank=True, null=True)
+    dify_response = models.JSONField('Dify API响应', blank=True, null=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     created_by = models.ForeignKey(
         User,
@@ -106,6 +108,12 @@ class Template(models.Model):
 
 class SharedTemplate(models.Model):
     """模板分享记录"""
+    STATUS_CHOICES = [
+        ('PENDING', '待处理'),
+        ('ACCEPTED', '已接受'),
+        ('REJECTED', '已拒绝'),
+    ]
+    
     template = models.ForeignKey(
         Template,
         on_delete=models.CASCADE,
@@ -119,7 +127,9 @@ class SharedTemplate(models.Model):
         verbose_name='被分享用户'
     )
     can_edit = models.BooleanField('可编辑', default=False)
+    status = models.CharField('状态', max_length=10, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
     created_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

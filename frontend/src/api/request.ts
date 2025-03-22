@@ -5,10 +5,28 @@ import router from '@/router'
 
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
-  baseURL: '/api/v1',  // 直接使用固定的API前缀
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   timeout: 50000,
   headers: { 'Content-Type': 'application/json' }
 })
+
+// 创建不带默认拦截器的axios实例，用于第三方API调用（如Dify）
+const serviceWithoutInterceptors: AxiosInstance = axios.create({
+  timeout: 50000,
+  headers: { 'Content-Type': 'application/json' }
+})
+
+// 为第三方API调用添加基本的响应拦截器
+serviceWithoutInterceptors.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // 直接返回响应数据
+    return response.data
+  },
+  (error) => {
+    console.error('Third-party API Error:', error)
+    return Promise.reject(error)
+  }
+)
 
 // 请求拦截器
 service.interceptors.request.use(
@@ -69,12 +87,23 @@ service.interceptors.response.use(
   }
 )
 
-const request = <T = any>(config: AxiosRequestConfig): Promise<T> => {
+// 扩展AxiosRequestConfig类型，添加自定义选项
+interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
+  useDefaultInterceptors?: boolean;
+}
+
+const request = <T = any>(config: ExtendedAxiosRequestConfig): Promise<T> => {
+  // 提取自定义选项
+  const { useDefaultInterceptors = true, ...axiosConfig } = config;
+  
+  // 选择合适的axios实例
+  const axiosInstance = useDefaultInterceptors ? service : serviceWithoutInterceptors;
+  
   // 处理blob响应类型
-  if (config.responseType === 'blob') {
-    return service(config).then(response => response as unknown as T)
+  if (axiosConfig.responseType === 'blob') {
+    return axiosInstance(axiosConfig).then(response => response as unknown as T)
   }
-  return service(config)
+  return axiosInstance(axiosConfig)
 }
 
 export default request

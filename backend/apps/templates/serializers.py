@@ -165,10 +165,10 @@ class TemplateTestSerializer(serializers.ModelSerializer):
         model = TemplateTest
         fields = [
             'id', 'template', 'template_name', 'model',
-            'input_data', 'output_content', 'created_at',
-            'created_by', 'created_by_username'
+            'input_data', 'output_content', 'prompt', 'dify_response',
+            'created_at', 'created_by', 'created_by_username'
         ]
-        read_only_fields = ['created_by', 'created_by_username', 'output_content']
+        read_only_fields = ['created_by', 'created_by_username', 'output_content', 'prompt', 'dify_response']
 
     def validate_input_data(self, value):
         if not isinstance(value, dict):

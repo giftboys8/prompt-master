@@ -45,10 +45,11 @@ const router = createRouter({
           meta: { title: '编辑模板' }
         },
         {
-          path: 'templates/test',
+          path: 'templates/:id?/test',
           name: 'template-test',
           component: TemplateTest,
-          meta: { title: '模板测试' }
+          meta: { title: '模板测试' },
+          props: true
         },
         {
           path: 'scenes',

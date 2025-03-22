@@ -407,7 +407,7 @@ const handlePreview = (row: Template, e?: Event) => {
 const handleTest = (row: Template) => {
   router.push({
     name: 'template-test',
-    query: { template: row.id.toString() }
+    params: { id: row.id.toString() }
   })
 }
 

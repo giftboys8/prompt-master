@@ -351,7 +351,20 @@ class TemplateTestViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at']
 
     def get_queryset(self):
-        return TemplateTest.objects.filter(created_by=self.request.user)
+        queryset = TemplateTest.objects.all()
+        
+        # 获取template参数进行过滤
+        template_id = self.request.query_params.get('template', None)
+        if template_id:
+            queryset = queryset.filter(template_id=template_id)
+            
+        # 确保用户只能看到自己的测试记录和分享给自己的模板的测试记录
+        queryset = queryset.filter(
+            Q(created_by=self.request.user) |
+            Q(template__shares__shared_with=self.request.user)
+        ).distinct()
+        
+        return queryset.order_by('-created_at')  # 按创建时间倒序排列
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -361,28 +374,89 @@ class TemplateTestViewSet(viewsets.ModelViewSet):
         template_id = request.data.get('template')
         model = request.data.get('model')
         input_data = request.data.get('input_data')
+        dry_run = request.data.get('dryRun', False)
+        dify_response = request.data.get('dify_response')
+
+        print(f"接收到测试记录保存请求: template_id={template_id}, model={model}")
+        print(f"input_data: {input_data}")
+        print(f"dify_response 类型: {type(dify_response)}")
 
         if not all([template_id, model, input_data]):
             return Response({'error': '缺少必要的参数'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            template = Template.objects.get(id=template_id, created_by=request.user)
+            # 首先尝试查找用户创建的模板
+            template = Template.objects.filter(
+                id=template_id
+            ).filter(
+                Q(created_by=request.user) | Q(shares__shared_with=request.user)
+            ).first()
+            
+            if not template:
+                return Response({'error': '模板不存在或您没有权限访问此模板'}, status=status.HTTP_404_NOT_FOUND)
         except Template.DoesNotExist:
             return Response({'error': '模板不存在'}, status=status.HTTP_404_NOT_FOUND)
 
-        # 这里应该实现与不同大模型的集成逻辑
-        # 目前我们只是模拟一个简单的输出
-        output_content = f"这是使用 {model} 模型测试 '{template.name}' 模板的结果。\n\n"
-        output_content += "输入数据：\n```json\n" + json.dumps(input_data, indent=2, ensure_ascii=False) + "\n```\n\n"
-        output_content += "模拟输出：\n这是一个模拟的输出结果，实际实现时需要集成相应的大模型API。"
+        # 生成提示词
+        prompt = self._generate_prompt(template, input_data)
+
+        if dry_run:
+            # 只返回生成的提示词，不实际执行测试
+            return Response({'prompt': prompt})
+
+        # 如果提供了Dify响应，使用它；否则使用模拟输出
+        if dify_response:
+            output_content = json.dumps({
+                'answer': dify_response.get('answer', '未获取到有效响应'),
+                'prompt': prompt,
+                'model': model,
+                'input_variables': input_data,
+                'template_name': template.name,
+                'framework_type': template.framework_type
+            }, ensure_ascii=False, indent=2)
+        else:
+            # 模拟输出（用于开发测试）
+            output_content = json.dumps({
+                'answer': f"这是使用 {model} 模型测试 '{template.name}' 模板的结果。\n\n模拟输出：这是一个模拟的输出结果，实际实现时需要集成相应的大模型API。",
+                'prompt': prompt,
+                'model': model,
+                'input_variables': input_data,
+                'template_name': template.name,
+                'framework_type': template.framework_type
+            }, ensure_ascii=False, indent=2)
 
         test = TemplateTest.objects.create(
             template=template,
             model=model,
             input_data=input_data,
             output_content=output_content,
+            prompt=prompt,
+            dify_response=dify_response,
             created_by=request.user
         )
 
         serializer = self.get_serializer(test)
         return Response(serializer.data)
+
+    def _generate_prompt(self, template, input_data):
+        """根据模板和输入数据生成提示词"""
+        if template.framework_type == 'RTGO':
+            prompt = f"# 角色（Role）\n{template.content['role']}\n\n"
+            prompt += f"# 任务（Task）\n{template.content['task']}\n\n"
+            prompt += f"# 目标（Goal）\n{template.content['goal']}\n\n"
+            prompt += f"# 输出（Output）\n{template.content['output']}\n\n"
+        elif template.framework_type == 'SPAR':
+            prompt = f"# 情况（Situation）\n{template.content['situation']}\n\n"
+            prompt += f"# 目的（Purpose）\n{template.content['purpose']}\n\n"
+            prompt += f"# 行动（Action）\n{template.content['action']}\n\n"
+            prompt += f"# 结果（Result）\n{template.content['result']}\n\n"
+        else:  # CUSTOM
+            prompt = template.content['custom']
+
+        # 替换变量
+        for var in template.variables:
+            var_name = var['name']
+            if var_name in input_data:
+                prompt = prompt.replace(f"{{${var_name}}}", str(input_data[var_name]))
+
+        return prompt
