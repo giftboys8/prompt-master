@@ -327,12 +327,15 @@ const handleClone = async (row: Template) => {
     const result = await cloneTemplate(row.id)
     if (result && result.id) {
       ElMessage.success('克隆成功')
-      loadData()
+      await loadData() // 等待数据重新加载完成
     } else {
       throw new Error('克隆模板失败')
     }
   } catch (error: any) {
-    ElMessage.error(error.message || '克隆失败')
+    // 获取更详细的错误信息
+    const errorMessage = error.response?.data?.error || error.message || '克隆失败'
+    ElMessage.error(errorMessage)
+    console.error('克隆模板错误:', error)
   }
 }
 

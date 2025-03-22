@@ -1,13 +1,32 @@
 from rest_framework import serializers
-from .models import Template, TemplateVersion, TemplateTest
+from django.contrib.auth import get_user_model
+from .models import Template, TemplateVersion, TemplateTest, SharedTemplate
+
+User = get_user_model()
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
+        
+class SharedTemplateSerializer(serializers.ModelSerializer):
+    shared_with = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = SharedTemplate
+        fields = ['id', 'shared_with', 'can_edit', 'created_at']
 
 class TemplateSerializer(serializers.ModelSerializer):
+    is_owner = serializers.SerializerMethodField()
+    shared_with = SharedTemplateSerializer(source='shares', many=True, read_only=True)
+    can_edit = serializers.SerializerMethodField()
     class Meta:
         model = Template
         fields = [
             'id', 'name', 'framework_type', 'description',
             'content', 'variables', 'order', 'target_role', 'created_at', 
-            'updated_at', 'created_by'
+            'updated_at', 'created_by', 'is_owner', 'can_edit', 'shared_with',
+            'visibility'
         ]
         read_only_fields = ['created_by']
 
@@ -74,6 +93,22 @@ class TemplateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('无效的框架类型')
         
         return value
+
+    def get_is_owner(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return obj.created_by_id == request.user.id
+        return False
+
+    def get_can_edit(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            # 创建者始终可以编辑
+            if obj.created_by_id == request.user.id:
+                return True
+            # 检查是否有编辑权限的共享
+            return obj.shares.filter(shared_with=request.user, can_edit=True).exists()
+        return False
 
     def validate(self, data):
         """

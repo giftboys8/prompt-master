@@ -1,6 +1,12 @@
 <template>
   <div class="template-test">
-    <h2>模板测试</h2>
+    <div class="page-header">
+      <h2>模板测试</h2>
+      <el-button @click="router.push('/templates')" type="primary" plain>
+        <el-icon><Back /></el-icon>
+        返回列表
+      </el-button>
+    </div>
     <el-form :model="testForm" @submit.prevent="runTest" label-position="top" class="test-form">
       <div class="form-header">
         <el-form-item label="选择模板" required>
@@ -231,16 +237,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { runTemplateTest, getTemplateTests } from '@/api/templateTest'
 import { getTemplateList } from '@/api/templates'
 import type { Template } from '@/types'
 import MarkdownIt from 'markdown-it'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, Back } from '@element-plus/icons-vue'
 
-// 配置MarkdownIt
+const router = useRouter()
 const md = new MarkdownIt({
-  html: true,
   linkify: true,
   typographer: true,
   breaks: true
@@ -348,6 +354,7 @@ const getModelTagType = (model: string) => {
 }
 
 // 运行测试
+
 const runTest = async () => {
   if (!isFormValid.value) {
     ElMessage.warning('请填写所有必需的字段')
@@ -417,6 +424,17 @@ fetchTestHistory()
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0;
 }
 
 .test-form {

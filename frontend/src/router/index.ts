@@ -29,22 +29,26 @@ const router = createRouter({
         {
           path: 'templates',
           name: 'template-list',
-          component: () => import('@/views/templates/TemplateList.vue')
+          component: () => import('@/views/templates/TemplateList.vue'),
+          meta: { title: '提示词模板' }
         },
         {
           path: 'templates/create',
           name: 'template-create',
-          component: () => import('@/views/templates/TemplateCreate.vue')
+          component: () => import('@/views/templates/TemplateCreate.vue'),
+          meta: { title: '创建模板' }
         },
         {
           path: 'templates/:id/edit',
           name: 'template-edit',
-          component: () => import('@/views/templates/TemplateEdit.vue')
+          component: () => import('@/views/templates/TemplateEdit.vue'),
+          meta: { title: '编辑模板' }
         },
         {
           path: 'templates/test',
           name: 'template-test',
-          component: TemplateTest
+          component: TemplateTest,
+          meta: { title: '模板测试' }
         },
         {
           path: 'scenes',

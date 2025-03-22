@@ -43,8 +43,20 @@ class Template(models.Model):
         ('SPAR', 'SPAR'),
         ('CUSTOM', 'Custom'),
     ]
+    
+    VISIBILITY_CHOICES = [
+        ('PRIVATE', '私有'),
+        ('PUBLIC', '公开'),
+        ('SHARED', '共享'),
+    ]
 
     name = models.CharField('模板名称', max_length=100)
+    visibility = models.CharField(
+        '可见性',
+        max_length=10,
+        choices=VISIBILITY_CHOICES,
+        default='PRIVATE'
+    )
     framework_type = models.CharField('框架类型', max_length=10, choices=FRAMEWORK_CHOICES)
     description = models.TextField('描述')
     content = models.JSONField('内容')
@@ -91,6 +103,38 @@ class Template(models.Model):
             target_role=self.target_role,
             created_by=self.created_by
         )
+
+class SharedTemplate(models.Model):
+    """模板分享记录"""
+    template = models.ForeignKey(
+        Template,
+        on_delete=models.CASCADE,
+        related_name='shares',
+        verbose_name='模板'
+    )
+    shared_with = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shared_with_me',
+        verbose_name='被分享用户'
+    )
+    can_edit = models.BooleanField('可编辑', default=False)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shared_templates',
+        verbose_name='创建者'
+    )
+
+    class Meta:
+        verbose_name = '共享模板'
+        verbose_name_plural = verbose_name
+        unique_together = [('template', 'shared_with')]
+
+    def __str__(self):
+        return f'{self.template.name} shared with {self.shared_with.username}'
+
 
 class TemplateVersion(models.Model):
     template = models.ForeignKey(

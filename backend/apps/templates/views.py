@@ -7,11 +7,13 @@ from rest_framework.parsers import JSONParser, MultiPartParser
 from django.http import HttpResponse
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Template, TemplateVersion, TemplateTest
+from django.contrib.auth import get_user_model
+from .models import Template, TemplateVersion, TemplateTest, SharedTemplate
 from .serializers import TemplateSerializer, TemplateVersionSerializer, TemplateTestSerializer
 
 from django.db.models import Q
-import json
+
+User = get_user_model()
 
 class TemplateViewSet(viewsets.ModelViewSet):
     queryset = Template.objects.all()
@@ -27,7 +29,15 @@ class TemplateViewSet(viewsets.ModelViewSet):
         serializer.save(created_by=self.request.user)
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(created_by=self.request.user)
+        # 获取用户创建的模板和分享给用户的模板
+        user_templates = Template.objects.filter(created_by=self.request.user)
+        shared_templates = Template.objects.filter(shares__shared_with=self.request.user)
+        
+        # 使用OR查询代替union操作
+        queryset = Template.objects.filter(
+            Q(id__in=user_templates.values_list('id', flat=True)) | 
+            Q(id__in=shared_templates.values_list('id', flat=True))
+        )
         
         # 添加角色筛选
         target_role = self.request.query_params.get('target_role', None)
@@ -97,17 +107,54 @@ class TemplateViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def clone(self, request, pk=None):
         """克隆模板"""
-        template = self.get_object()
-        new_template = Template.objects.create(
-            name=f"{template.name} (副本)",
-            framework_type=template.framework_type,
-            description=template.description,
-            content=template.content,
-            variables=template.variables,
-            created_by=request.user
-        )
-        serializer = self.get_serializer(new_template)
-        return Response(serializer.data)
+        import traceback
+        import sys
+        
+        try:
+            # 获取原模板
+            template = self.get_object()
+            print(f"开始克隆模板 ID: {pk}, 名称: {template.name}")
+            
+            try:
+                # 使用事务确保原子性
+                with transaction.atomic():
+                    # 创建新模板实例
+                    new_template = Template.objects.create(
+                        name=f"{template.name} (副本)",
+                        framework_type=template.framework_type,
+                        description=template.description,
+                        content=template.content,
+                        variables=template.variables,
+                        target_role=template.target_role,
+                        order=template.order,
+                        created_by=request.user,
+                        visibility='PRIVATE'  # 克隆的模板默认设置为私有
+                    )
+                    print(f"成功创建新模板 ID: {new_template.id}")
+                    
+                    # 序列化并返回新模板数据
+                    serializer = self.get_serializer(new_template)
+                    return Response(serializer.data)
+            except Exception as e:
+                print(f"模板创建失败: {str(e)}")
+                traceback.print_exc(file=sys.stdout)
+                return Response({"error": f"创建模板失败: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except Exception as e:
+            print(f"克隆操作失败: {str(e)}")
+            traceback.print_exc(file=sys.stdout)
+            return Response({"error": f"克隆失败: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        except Template.DoesNotExist:
+            return Response(
+                {'error': '要克隆的模板不存在'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'克隆模板失败: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['get'])
     def versions(self, request, pk=None):
@@ -147,6 +194,118 @@ class TemplateViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = 'attachment; filename="templates_export.json"'
         return response
 
+    @action(detail=True, methods=['post'])
+    def share(self, request, pk=None):
+        """分享模板给其他用户"""
+        template = self.get_object()
+        
+        # 只有创建者可以分享模板
+        if template.created_by != request.user:
+            return Response(
+                {'error': '只有模板创建者可以分享模板'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # 获取要分享给的用户和权限设置
+        user_id = request.data.get('user_id')
+        can_edit = request.data.get('can_edit', False)
+        
+        try:
+            shared_with = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'error': '指定的用户不存在'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # 不能分享给自己
+        if shared_with == request.user:
+            return Response(
+                {'error': '不能分享给自己'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # 创建或更新分享记录
+        share, created = SharedTemplate.objects.update_or_create(
+            template=template,
+            shared_with=shared_with,
+            defaults={
+                'can_edit': can_edit,
+                'created_by': request.user
+            }
+        )
+        
+        return Response(
+            {'message': f'已成功分享给 {shared_with.username}', 'created': created},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )
+        
+    @action(detail=True, methods=['delete'])
+    def revoke_share(self, request, pk=None):
+        """撤销模板分享"""
+        template = self.get_object()
+        
+        # 只有创建者可以撤销分享
+        if template.created_by != request.user:
+            return Response(
+                {'error': '只有模板创建者可以撤销分享'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user_id = request.data.get('user_id')
+        
+        try:
+            shared_with = User.objects.get(id=user_id)
+            share = SharedTemplate.objects.get(
+                template=template,
+                shared_with=shared_with
+            )
+            share.delete()
+            return Response({'message': f'已撤销与 {shared_with.username} 的分享'})
+        except User.DoesNotExist:
+            return Response(
+                {'error': '指定的用户不存在'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except SharedTemplate.DoesNotExist:
+            return Response(
+                {'error': '未找到分享记录'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+    @action(detail=False, methods=['get'])
+    def shared_with_me(self, request):
+        """获取分享给我的模板列表"""
+        shared_templates = Template.objects.filter(
+            shares__shared_with=request.user
+        )
+        
+        # 添加筛选和排序
+        target_role = request.query_params.get('target_role', None)
+        if target_role:
+            shared_templates = shared_templates.filter(target_role__icontains=target_role)
+            
+        # 添加搜索
+        search = request.query_params.get('search', None)
+        if search:
+            shared_templates = shared_templates.filter(
+                Q(name__icontains=search) | 
+                Q(description__icontains=search)
+            )
+            
+        # 排序
+        ordering = request.query_params.get('ordering', '-created_at')
+        shared_templates = shared_templates.order_by(ordering)
+        
+        # 分页
+        page = self.paginate_queryset(shared_templates)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+            
+        serializer = self.get_serializer(shared_templates, many=True)
+        return Response(serializer.data)
+        
     @action(detail=False, methods=['post'])
     def import_templates(self, request):
         """导入模板"""

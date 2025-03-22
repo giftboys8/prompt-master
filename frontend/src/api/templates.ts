@@ -3,7 +3,7 @@ import type { Template } from '@/types'
 
 export const createTemplate = (data: Partial<Template>) => {
   return request<Template>({
-    url: '/templates/',
+    url: '/templates/templates/',
     method: 'post',
     data
   })
@@ -11,14 +11,14 @@ export const createTemplate = (data: Partial<Template>) => {
 
 export const getTemplate = (id: number) => {
   return request<Template>({
-    url: `/templates/${id}/`,
+    url: `/templates/templates/${id}/`,
     method: 'get'
   })
 }
 
 export const updateTemplate = (id: number, data: Partial<Template>) => {
   return request<Template>({
-    url: `/templates/${id}/`,
+    url: `/templates/templates/${id}/`,
     method: 'put',
     data
   })
@@ -26,7 +26,7 @@ export const updateTemplate = (id: number, data: Partial<Template>) => {
 
 export const deleteTemplate = (id: number) => {
   return request({
-    url: `/templates/${id}/`,
+    url: `/templates/templates/${id}/`,
     method: 'delete'
   })
 }
@@ -34,7 +34,7 @@ export const deleteTemplate = (id: number) => {
 // 获取模板版本列表
 export const getTemplateVersions = (templateId: number) => {
   return request<TemplateVersion[]>({
-    url: `/templates/${templateId}/versions/`,
+    url: `/templates/templates/${templateId}/versions/`,
     method: 'get'
   })
 }
@@ -42,7 +42,7 @@ export const getTemplateVersions = (templateId: number) => {
 // 恢复到指定版本
 export const restoreTemplateVersion = (templateId: number, versionId: number) => {
   return request({
-    url: `/templates/${templateId}/restore/`,
+    url: `/templates/templates/${templateId}/restore/`,
     method: 'post',
     data: { version_id: versionId }
   })
@@ -51,7 +51,7 @@ export const restoreTemplateVersion = (templateId: number, versionId: number) =>
 // 克隆模板
 export const cloneTemplate = (id: number) => {
   return request<Template>({
-    url: `/templates/${id}/clone/`,
+    url: `/templates/templates/${id}/clone/`,
     method: 'post'
   })
 }
@@ -84,9 +84,13 @@ export const getTemplateList = (params?: any) => {
     count: number
     results: Template[]
   }>({
-    url: '/templates/',
+    url: '/templates/templates/',
     method: 'get',
-    params
+    params: {
+      ...params,
+      page: params?.page || 1,
+      page_size: params?.page_size || 10
+    }
   }).then(response => {
     console.log('API response:', response);
     return response;
