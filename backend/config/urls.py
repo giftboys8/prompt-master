@@ -27,5 +27,6 @@ urlpatterns = [
         path('scenes/', include('apps.scenes.urls')),
         path('templates/', include('apps.templates.urls')),
         path('contents/', include('apps.contents.urls')),
+        path('', include('apps.apikeys.urls')),
     ])),
 ]

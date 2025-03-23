@@ -35,6 +35,7 @@ LOCAL_APPS = [
     'apps.scenes',
     'apps.templates',
     'apps.contents',
+    'apps.apikeys',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
