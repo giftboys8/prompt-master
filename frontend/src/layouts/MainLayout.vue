@@ -32,6 +32,10 @@
               <el-icon><Collection /></el-icon>
               <span>内容管理</span>
             </el-menu-item>
+            <el-menu-item index="/apikeys" @click="handleMenuClick">
+              <el-icon><Key /></el-icon>
+              <span>秘钥管理</span>
+            </el-menu-item>
           </el-menu>
           
           <div class="user-info">
@@ -142,7 +146,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { HomeFilled, Document, Grid, Collection, ArrowDown, User, Lock } from '@element-plus/icons-vue'
+import { HomeFilled, Document, Grid, Collection, ArrowDown, User, Lock, Key } from '@element-plus/icons-vue'
 
 export default defineComponent({
   name: 'MainLayout',
@@ -153,7 +157,8 @@ export default defineComponent({
     Collection,
     ArrowDown,
     User,
-    Lock
+    Lock,
+    Key
   }
 })
 </script>

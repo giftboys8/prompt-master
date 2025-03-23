@@ -60,6 +60,12 @@ const router = createRouter({
           path: 'contents',
           name: 'content-list',
           component: () => import('@/views/contents/ContentList.vue')
+        },
+        {
+          path: 'apikeys',
+          name: 'apikey-list',
+          component: () => import('@/views/apikeys/ApiKeyList.vue'),
+          meta: { title: '秘钥管理' }
         }
       ]
     },
