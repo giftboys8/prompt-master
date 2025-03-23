@@ -33,11 +33,11 @@
         :animation="150"
         ghost-class="ghost"
         @end="handleDragEnd"
-        class="el-row"
+        class="el-row template-grid"
         :class="{ 'is-flex': true, 'flex-wrap': true }"
       >
         <template #item="{ element: template }">
-          <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-4">
+          <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="4" class="mb-4">
             <template-card 
               :template="template"
               @edit="handleEdit"
@@ -326,6 +326,21 @@ onMounted(() => {
   border: 1px dashed #409EFF;
 }
 
+/* 模板网格布局 */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .template-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}
+
 /* 工具类 */
 .mb-4 {
   margin-bottom: 16px;
@@ -344,9 +359,31 @@ onMounted(() => {
 :deep(.el-row) {
   margin: 0 !important;
   width: 100%;
+  justify-content: flex-start;
 }
 
 :deep(.draggable) {
   width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* 卡片容器响应式间距 */
+@media (max-width: 576px) {
+  .el-col {
+    padding: 0 8px !important;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 992px) {
+  .el-col {
+    padding: 0 12px !important;
+  }
+}
+
+@media (min-width: 993px) {
+  .el-col {
+    padding: 0 15px !important;
+  }
 }
 </style>

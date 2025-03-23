@@ -49,16 +49,20 @@ defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview'])
 .template-item {
   height: 100%;
   cursor: pointer;
+  min-width: 0; /* 防止flex子项溢出 */
 }
 
 .template-content {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0; /* 防止内容溢出 */
 }
 
 .template-info {
   flex: 1;
+  width: 100%;
+  overflow: hidden; /* 确保内容不会溢出 */
 }
 
 .template-info h3 {
@@ -107,6 +111,8 @@ defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview'])
   height: 100%;
   transition: all 0.3s;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 
 .box-card:hover {
