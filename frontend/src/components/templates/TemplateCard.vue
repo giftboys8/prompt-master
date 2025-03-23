@@ -23,6 +23,7 @@
               <el-icon><CopyDocument /></el-icon>
             </el-button>
             <el-button 
+              v-if="user?.id === template.created_by"
               type="primary" 
               text 
               @click="$emit('share', template)"
@@ -42,6 +43,10 @@
 <script setup lang="ts">
 import { Timer, CopyDocument, Share } from '@element-plus/icons-vue'
 import type { Template } from '@/types'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
+
+const { user } = storeToRefs(useUserStore())
 
 defineProps({
   template: {
