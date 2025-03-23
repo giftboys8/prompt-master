@@ -137,8 +137,10 @@
 
     <!-- 预览对话框 -->
     <TemplatePreview
-      v-model="previewVisible"
+      :model-value="previewVisible"
       :template="selectedTemplate"
+      mode="dialog"
+      @update:model-value="handlePreviewVisibleChange"
     />
 
     <!-- 版本历史对话框 -->
@@ -403,16 +405,23 @@ const handlePreview = (row: Template, e?: Event) => {
   e?.stopPropagation()
 }
 
-// 测试
-const handleTest = (row: Template) => {
-  router.push({
-    name: 'template-test',
-    params: { id: row.id.toString() }
-  })
-}
-
 // 监听预览对话框关闭
 watch(previewVisible, (val) => {
+  if (!val) {
+    selectedTemplate.value = null
+  }
+})
+
+// 处理预览弹窗的显示状态
+const handlePreviewVisibleChange = (val: boolean) => {
+  previewVisible.value = val
+  if (!val) {
+    selectedTemplate.value = null
+  }
+}
+
+// 监听删除对话框关闭
+watch(deleteDialogVisible, (val) => {
   if (!val) {
     selectedTemplate.value = null
   }
@@ -424,6 +433,14 @@ watch(deleteDialogVisible, (val) => {
     templateToDelete.value = null
   }
 })
+
+// 测试模板
+const handleTest = (row: Template) => {
+  router.push({
+    name: 'template-test',
+    params: { id: row.id }
+  })
+}
 
 // 删除
 const handleDelete = (row: Template) => {

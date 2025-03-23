@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # Python 基础镜像
+  python-base:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.python-base
+    image: python-base:latest
+
+  # Nginx 基础镜像
+  nginx-base:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.nginx-base
+    image: nginx-base:latest
+
+  # 后端服务
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    network_mode: host  # 使用宿主机网络
+    depends_on:
+      - python-base
+      - postgres
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ACCESS_TOKEN_LIFETIME=${JWT_ACCESS_TOKEN_LIFETIME:-60}
+      - JWT_REFRESH_TOKEN_LIFETIME=${JWT_REFRESH_TOKEN_LIFETIME:-1440}
+      - POSTGRES_DB=${POSTGRES_DB:-promptmaster}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_HOST=127.0.0.1  # 修改为本地地址
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://127.0.0.1:6379/0  # 修改为本地地址
+      - DIFY_API_KEY=${DIFY_API_KEY}
+      - DIFY_API_BASE_URL=${DIFY_API_BASE_URL:-https://api.dify.ai/v1}
+    volumes:
+      - backend_static:/app/staticfiles
+      - backend_media:/app/mediafiles
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 config.wsgi:application"
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    network_mode: host  # 使用宿主机网络
+    depends_on:
+      - nginx-base
+      - backend
+    environment:
+      - VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1  # 修改为本地地址
+      - VITE_DIFY_API_BASE_URL=${DIFY_API_BASE_URL:-https://api.dify.ai/v1}
+      - VITE_DIFY_API_KEY=${DIFY_API_KEY}
+      - VITE_APP_TITLE=${VITE_APP_TITLE:-PromptMaster}
+
+  # PostgreSQL数据库
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    restart: always
+    network_mode: host  # 使用宿主机网络
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-promptmaster}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis缓存
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    restart: always
+    network_mode: host  # 使用宿主机网络
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_static:
+    driver: local
+  backend_media:
+    driver: local

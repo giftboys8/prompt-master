@@ -102,32 +102,28 @@
                 </div>
                 
                 <div class="template-actions">
-                <el-button
-                  type="primary"
-                  size="small"
-                  @click.stop="handlePreview(template)"
-                >
-                  查看
-                </el-button>
-                <el-button
-                  v-if="template.can_edit"
-                  type="success"
-                  size="small"
-                  @click.stop="handleEdit(template.id)"
-                >
-                  编辑
-                </el-button>
-                <el-button
-                  type="warning"
-                  size="small"
-                  @click.stop="handleClone(template)"
-                >
-                  克隆
-                </el-button>
-              </div>
-                      <el-icon><EditPen /></el-icon>
-                    </el-button>
-                  </el-button-group>
+                  <el-button
+                    type="primary"
+                    size="small"
+                    @click.stop="handlePreview(template)"
+                  >
+                    查看
+                  </el-button>
+                  <el-button
+                    v-if="template.can_edit"
+                    type="success"
+                    size="small"
+                    @click.stop="handleEdit(template.id)"
+                  >
+                    编辑
+                  </el-button>
+                  <el-button
+                    type="warning"
+                    size="small"
+                    @click.stop="handleClone(template)"
+                  >
+                    克隆
+                  </el-button>
                 </div>
               </div>
             </div>
@@ -155,6 +151,7 @@
     <template-preview 
       v-model="previewDialogVisible"
       :template="currentTemplate"
+      mode="dialog"
     />
   </div>
 </template>
@@ -163,12 +160,9 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, User, Calendar } from '@element-plus/icons-vue'
+import { Search, User, Calendar, Monitor, CopyDocument, EditPen } from '@element-plus/icons-vue'
 import { getSharedWithMe } from '@/api/share'
 import { cloneTemplate } from '@/api/templates'
-  Monitor, CopyDocument, EditPen
-} from '@element-plus/icons-vue'
-import { getSharedWithMe } from '@/api/share'
 import { useUserStore } from '@/stores/user'
 import TemplatePreview from '@/components/TemplatePreview.vue'
 import type { Template } from '@/types'
@@ -253,12 +247,8 @@ const handleClone = async (template: Template) => {
 }
 
 // 编辑模板
-const handleEdit = (template: Template) => {
-  if (!template.can_edit) {
-    ElMessage.warning('您没有编辑此模板的权限')
-    return
-  }
-  router.push(`/templates/${template.id}/edit`)
+const handleEdit = (id: string | number) => {
+  router.push(`/templates/${id}/edit`)
 }
 
 onMounted(() => {

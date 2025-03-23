@@ -1,0 +1,19 @@
+# 从 debian:bullseye-slim 开始构建 Nginx 基础镜像
+FROM debian:bullseye-slim
+
+# 避免交互式提示
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 安装 Nginx
+RUN apt-get update && apt-get install -y \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
+
+# 创建 Nginx 运行所需的目录
+RUN mkdir -p /var/log/nginx /var/cache/nginx /usr/share/nginx/html
+
+# 暴露端口
+EXPOSE 3000
+
+# 启动 Nginx
+CMD ["nginx", "-g", "daemon off;"]
