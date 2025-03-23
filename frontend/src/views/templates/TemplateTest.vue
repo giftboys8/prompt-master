@@ -30,6 +30,7 @@
           v-if="selectedTemplate"
           :template="selectedTemplate"
           v-model:variables="variableInputs"
+          v-model:apiKey="selectedApiKey"
           :is-running="isRunning"
           @run-test="runTest"
         />
@@ -42,11 +43,13 @@
     </div>
 
     <!-- 历史记录 -->
-    <template-test-history
-      :history="testHistory"
-      :is-loading="isLoadingHistory"
-      @view-detail="showHistoryDetail"
-    />
+    <div class="history-container">
+      <template-test-history
+        :history="testHistory"
+        :is-loading="isLoadingHistory"
+        @view-detail="showHistoryDetail"
+      />
+    </div>
 
     <!-- 历史记录详情对话框 -->
     <template-history-detail
@@ -86,6 +89,7 @@ const templates = ref<Template[]>([])
 const selectedTemplate = ref<Template | null>(null)
 const selectedTemplateId = ref<number | null>(null)
 const variableInputs = ref<Record<string, string>>({})
+const selectedApiKey = ref<any>(null)
 const testResult = ref('')
 const isRunning = ref(false)
 const testHistory = ref<ITemplateTest[]>([])
@@ -159,6 +163,12 @@ const runTest = async () => {
     return
   }
 
+  // 验证是否选择了API密钥
+  if (!selectedApiKey.value) {
+    ElMessage.warning('请选择一个API密钥')
+    return
+  }
+
   // 验证所有变量都已填写
   const allVariablesFilled = selectedTemplate.value.variables.every(
     variable => !!variableInputs.value[variable.name]
@@ -179,17 +189,13 @@ const runTest = async () => {
     if (!import.meta.env.VITE_DIFY_API_BASE_URL) {
       throw new Error('Dify API基础URL未配置，请检查环境变量')
     }
-    
-    if (!import.meta.env.VITE_DIFY_API_KEY) {
-      throw new Error('Dify API密钥未配置，请检查环境变量')
-    }
 
     const response = await sendMessage({
       query: prompt,
       inputs: variableInputs.value,
       response_mode: 'blocking',
       user: 'template_test_user'
-    })
+    }, selectedApiKey.value.key)
 
     if (!response || typeof response !== 'object') {
       throw new Error('API响应格式不正确：未收到响应数据')
@@ -286,6 +292,7 @@ const cleanup = () => {
   templates.value = []
   selectedHistoryRecord.value = null
   historyDetailVisible.value = false
+  selectedApiKey.value = null
 }
 
 // 在组件卸载时进行清理
@@ -293,47 +300,43 @@ onUnmounted(cleanup)
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/_variables.scss' as *;
-
 .template-test {
+  padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
-  min-height: 100vh;
-  background: var(--bg-main);
-}
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
 
-  h2 {
-    margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 600;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-size: 28px;
+    h2 {
+      color: var(--primary-color);
+      font-size: 24px;
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+    }
   }
-}
 
-.main-content {
-  display: grid;
-  grid-template-columns: minmax(400px, 1fr) minmax(500px, 2fr);
-  gap: 24px;
-  margin-bottom: 24px;
-}
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
 
-.preview-panel {
-  position: sticky;
-  top: 24px;
-  height: fit-content;
-}
+    .preview-panel {
+      height: 100%;
+    }
 
-.settings-panel {
-  background: transparent;
+    .settings-panel {
+      height: 100%;
+    }
+  }
+  
+  .history-container {
+    max-width: 100%;
+    margin-top: 24px;
+  }
 }
 </style>
