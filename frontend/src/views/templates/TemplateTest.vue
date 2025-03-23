@@ -24,7 +24,7 @@
         class="preview-panel"
       />
 
-      <!-- 右侧：变量设置和测试结果 -->
+      <!-- 右侧：变量设置 -->
       <div class="settings-panel">
         <template-variable-form
           v-if="selectedTemplate"
@@ -34,12 +34,15 @@
           :is-running="isRunning"
           @run-test="runTest"
         />
-
-        <template-test-result
-          v-if="testResult"
-          :result="testResult"
-        />
       </div>
+    </div>
+
+    <!-- 测试结果 -->
+    <div class="result-container">
+      <template-test-result
+        v-if="testResult"
+        :result="testResult"
+      />
     </div>
 
     <!-- 历史记录 -->
@@ -321,22 +324,30 @@ onUnmounted(cleanup)
 
   .main-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 24px;
     margin-top: 24px;
+    margin-bottom: 24px;
 
     .preview-panel {
       height: 100%;
+      min-width: 0;
     }
 
     .settings-panel {
       height: 100%;
+      min-width: 0;
     }
   }
   
+  .result-container {
+    margin-bottom: 24px;
+    width: 100%;
+  }
+  
   .history-container {
-    max-width: 100%;
     margin-top: 24px;
+    width: 100%;
   }
 }
 </style>

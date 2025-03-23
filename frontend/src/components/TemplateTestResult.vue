@@ -34,8 +34,9 @@ const formattedResult = computed(() => {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  margin-top: 24px;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 
   h3 {
     color: var(--primary-color);
