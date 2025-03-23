@@ -62,7 +62,7 @@ export const cloneTemplate = (id: number) => {
 // 导出模板
 export const exportTemplates = () => {
   return request({
-    url: '/templates/export/',
+    url: '/templates/templates/export/',
     method: 'get',
     responseType: 'blob'
   })
@@ -105,7 +105,7 @@ export const getTemplateList = (params?: any) => {
 
 export const reorderTemplates = (orderData: { id: number; order: number }[]) => {
   return request({
-    url: '/templates/reorder/',
+    url: '/templates/templates/reorder/',
     method: 'post',
     data: orderData
   })
