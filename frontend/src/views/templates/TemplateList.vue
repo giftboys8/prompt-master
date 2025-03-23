@@ -44,6 +44,7 @@
               @test="handleTest"
               @history="handleVersionHistory"
               @clone="handleClone"
+              @share="handleShare"
               @delete="handleDelete"
               @preview="handlePreview"
             />
@@ -80,6 +81,13 @@
       @restored="loadData"
     />
 
+    <!-- 分享对话框 -->
+    <template-share-dialog
+      v-model="shareDialogVisible"
+      :template="currentTemplate"
+      @shared="loadData"
+    />
+
     <!-- 删除确认对话框 -->
     <el-dialog
       v-model="deleteDialogVisible"
@@ -111,6 +119,7 @@ import { ElMessage } from 'element-plus'
 import draggable from 'vuedraggable'
 
 import TemplateCard from '@/components/templates/TemplateCard.vue'
+import TemplateShareDialog from '@/components/templates/TemplateShareDialog.vue'
 import TemplateSearchBar from '@/components/templates/TemplateSearchBar.vue'
 import TemplateOperationBar from '@/components/templates/TemplateOperationBar.vue'
 import TemplateVersionHistory from '@/components/TemplateVersionHistory.vue'
@@ -151,6 +160,9 @@ const currentTemplate = ref<Template | null>(null)
 
 // 版本历史相关
 const versionHistoryVisible = ref(false)
+
+// 分享相关
+const shareDialogVisible = ref(false)
 
 // 删除相关
 const deleteDialogVisible = ref(false)
@@ -207,6 +219,17 @@ const handleTest = (template: Template) => {
 // 克隆模板
 const handleClone = async (template: Template) => {
   await cloneTemplateItem(template.id)
+}
+
+// 分享模板
+const handleShare = (template: Template) => {
+  if (!template) {
+    ElMessage.error('模板信息不存在')
+    return
+  }
+  currentTemplate.value = template
+  shareDialogVisible.value = true
+  ElMessage.info('请在弹出的对话框中选择用户和权限，然后点击"分享"按钮完成分享操作')
 }
 
 // 打开版本历史

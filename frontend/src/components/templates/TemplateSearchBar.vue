@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { roleOptions, frameworkOptions } from '@/constants/template-options'
 

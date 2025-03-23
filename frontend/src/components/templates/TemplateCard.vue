@@ -22,6 +22,15 @@
             <el-button type="primary" text @click="$emit('clone', template)">
               <el-icon><CopyDocument /></el-icon>
             </el-button>
+            <el-button 
+              type="primary" 
+              text 
+              @click="$emit('share', template)"
+              title="打开分享对话框"
+            >
+              <el-icon><Share /></el-icon>
+              <span class="button-text">分享</span>
+            </el-button>
             <el-button type="danger" text @click="$emit('delete', template)">删除</el-button>
           </el-button-group>
         </div>
@@ -31,8 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
-import { Timer, CopyDocument } from '@element-plus/icons-vue'
+import { Timer, CopyDocument, Share } from '@element-plus/icons-vue'
 import type { Template } from '@/types'
 
 defineProps({
@@ -42,7 +50,7 @@ defineProps({
   }
 })
 
-defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview'])
+defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview', 'share'])
 </script>
 
 <style scoped>
@@ -100,6 +108,11 @@ defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview'])
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.template-actions :deep(.button-text) {
+  margin-left: 4px;
+  font-size: 12px;
 }
 
 .template-item:hover {

@@ -15,26 +15,38 @@
             :default-active="route.path"
             mode="horizontal"
             class="main-menu"
+            :ellipsis="false"
+            @select="handleMenuClick"
           >
-            <el-menu-item index="/" @click="handleMenuClick">
-              <el-icon><HomeFilled /></el-icon>
-              <span>首页</span>
+            <el-menu-item index="/">
+              <template #title>
+                <el-icon><HomeFilled /></el-icon>
+                <span>首页</span>
+              </template>
             </el-menu-item>
-            <el-menu-item index="/templates" @click="handleMenuClick">
-              <el-icon><Document /></el-icon>
-              <span>提示词模板</span>
+            <el-menu-item index="/templates">
+              <template #title>
+                <el-icon><Document /></el-icon>
+                <span>提示词模板</span>
+              </template>
             </el-menu-item>
-            <el-menu-item index="/scenes" @click="handleMenuClick">
-              <el-icon><Grid /></el-icon>
-              <span>场景管理</span>
+            <el-menu-item index="/scenes">
+              <template #title>
+                <el-icon><Grid /></el-icon>
+                <span>场景管理</span>
+              </template>
             </el-menu-item>
-            <el-menu-item index="/contents" @click="handleMenuClick">
-              <el-icon><Collection /></el-icon>
-              <span>内容管理</span>
+            <el-menu-item index="/contents">
+              <template #title>
+                <el-icon><Collection /></el-icon>
+                <span>内容管理</span>
+              </template>
             </el-menu-item>
-            <el-menu-item index="/apikeys" @click="handleMenuClick">
-              <el-icon><Key /></el-icon>
-              <span>秘钥管理</span>
+            <el-menu-item index="/apikeys">
+              <template #title>
+                <el-icon><Key /></el-icon>
+                <span>秘钥管理</span>
+              </template>
             </el-menu-item>
           </el-menu>
           
@@ -233,8 +245,9 @@ const handleLogin = () => {
 }
 
 // 菜单点击
-const handleMenuClick = () => {
+const handleMenuClick = (index: string) => {
   // 可以添加菜单点击的处理逻辑
+  console.log('Menu clicked:', index);
 }
 
 // 下拉菜单命令处理

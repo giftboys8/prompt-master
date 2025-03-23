@@ -23,7 +23,8 @@ urlpatterns = [
 
     # API 路由
     path('api/v1/', include([
-        path('auth/', include('apps.users.urls')),
+        path('auth/', include('apps.users.urls', namespace='auth')),  # 用户认证相关接口
+        path('users/', include('apps.users.urls', namespace='users')),  # 添加用户相关接口
         path('scenes/', include('apps.scenes.urls')),
         path('templates/', include('apps.templates.urls')),
         path('contents/', include('apps.contents.urls')),

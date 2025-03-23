@@ -50,7 +50,15 @@ export const login = (data: LoginData) => {
 
 export const getUserInfo = () => {
   return request<UserInfo>({
-    url: '/auth/user/',
+    url: '/auth/info/',
     method: 'get'
+  })
+}
+
+export const searchUsers = (query: string) => {
+  return request<UserInfo[]>({
+    url: '/auth/search/',
+    method: 'get',
+    params: { search: query }
   })
 }

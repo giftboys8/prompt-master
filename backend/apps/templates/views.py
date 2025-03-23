@@ -273,6 +273,102 @@ class TemplateViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
             
+    @action(detail=True, methods=['get'])
+    def get_shares(self, request, pk=None):
+        """获取模板的共享列表"""
+        template = self.get_object()
+        
+        # 只有创建者可以查看分享列表
+        if template.created_by != request.user:
+            return Response(
+                {'error': '只有模板创建者可以查看分享列表'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # 获取该模板的所有分享记录
+        shares = SharedTemplate.objects.filter(template=template)
+        
+        # 构建响应数据
+        share_data = []
+        for share in shares:
+            share_data.append({
+                'id': share.id,
+                'template': share.template.id,
+                'template_name': share.template.name,
+                'shared_with': {
+                    'id': share.shared_with.id,
+                    'username': share.shared_with.username,
+                    'email': share.shared_with.email,
+                    'is_staff': share.shared_with.is_staff,
+                    'date_joined': share.shared_with.date_joined
+                },
+                'created_by': {
+                    'id': share.created_by.id,
+                    'username': share.created_by.username,
+                    'email': share.created_by.email,
+                    'is_staff': share.created_by.is_staff,
+                    'date_joined': share.created_by.date_joined
+                },
+                'can_edit': share.can_edit,
+                'status': 'accepted',  # 直接分享的状态默认为accepted
+                'created_at': share.created_at
+            })
+        
+        return Response(share_data)
+        
+    @action(detail=True, methods=['get'])
+    def get_share(self, request, pk=None):
+        """获取单个模板的分享信息"""
+        template = self.get_object()
+        
+        # 获取用户ID参数
+        user_id = request.query_params.get('user_id')
+        
+        if not user_id:
+            return Response(
+                {'error': '缺少必要的用户ID参数'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            # 查找分享记录
+            share = SharedTemplate.objects.get(
+                template=template,
+                shared_with_id=user_id
+            )
+            
+            # 构建响应数据
+            share_data = {
+                'id': share.id,
+                'template': share.template.id,
+                'template_name': share.template.name,
+                'shared_with': {
+                    'id': share.shared_with.id,
+                    'username': share.shared_with.username,
+                    'email': share.shared_with.email,
+                    'is_staff': share.shared_with.is_staff,
+                    'date_joined': share.shared_with.date_joined
+                },
+                'created_by': {
+                    'id': share.created_by.id,
+                    'username': share.created_by.username,
+                    'email': share.created_by.email,
+                    'is_staff': share.created_by.is_staff,
+                    'date_joined': share.created_by.date_joined
+                },
+                'can_edit': share.can_edit,
+                'status': share.status,
+                'created_at': share.created_at
+            }
+            
+            return Response(share_data)
+            
+        except SharedTemplate.DoesNotExist:
+            return Response(
+                {'error': '未找到该模板与指定用户的分享记录'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
     @action(detail=False, methods=['get'])
     def shared_with_me(self, request):
         """获取分享给我的模板列表"""

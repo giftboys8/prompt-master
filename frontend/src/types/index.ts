@@ -36,6 +36,18 @@ export interface Template {
   created_by: number
 }
 
+// 共享模板类型
+export interface SharedTemplate {
+  id: number
+  template: number
+  template_name: string
+  shared_with: User
+  created_by: User
+  can_edit: boolean
+  status: 'pending' | 'accepted' | 'rejected'
+  created_at: string
+}
+
 export interface TemplateVersion {
   id: number
   template: number

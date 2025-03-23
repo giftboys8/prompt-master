@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import status, generics
+from rest_framework import status, generics, filters
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,6 +25,16 @@ class UserInfoView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+class UserSearchView(generics.ListAPIView):
+    """
+    用户搜索视图
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'email']
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """

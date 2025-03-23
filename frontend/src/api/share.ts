@@ -67,7 +67,7 @@ export function getUserList(search?: string) {
     previous: string | null;
     results: User[];
   }>({
-    url: '/users/',
+    url: '/auth/search/',
     method: 'get',
     params: { search }
   })
@@ -76,7 +76,7 @@ export function getUserList(search?: string) {
 // 获取模板的共享列表
 export function getTemplateShares(templateId: number) {
   return request<SharedTemplate[]>({
-    url: `/templates/${templateId}/share/`,
+    url: `/templates/templates/${templateId}/get_shares/`,
     method: 'get'
   })
 }
@@ -88,19 +88,24 @@ export function addShare(data: {
   can_edit: boolean
 }) {
   return request<SharedTemplate>({
-    url: `/templates/${data.template}/share/`,
+    url: `/templates/templates/${data.template}/share/`,
     method: 'post',
     data: {
       user_id: data.shared_with_id,
       can_edit: data.can_edit
     }
+  }).catch(error => {
+    if (error.response?.status === 404) {
+      throw new Error('模板信息不存在')
+    }
+    throw error
   })
 }
 
 // 删除共享
 export function deleteShare(templateId: number, userId: number) {
   return request({
-    url: `/templates/${templateId}/revoke_share/`,
+    url: `/templates/templates/${templateId}/revoke_share/`,
     method: 'delete',
     data: {
       user_id: userId
