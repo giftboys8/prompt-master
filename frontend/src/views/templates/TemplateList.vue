@@ -13,116 +13,46 @@
     </div>
 
     <div class="operation-bar">
-      <div class="search-bar">
-        <el-input
-          v-model="searchQuery"
-          placeholder="搜索模板名称、描述或提示词内容"
-          clearable
-          @clear="handleSearch"
-          @keyup.enter="handleSearch"
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
-        <el-select
-          v-model="selectedRole"
-          clearable
-          placeholder="选择角色"
-          class="filter-select"
-          @change="handleSearch"
-        >
-          <el-option
-            v-for="role in roleOptions"
-            :key="role.value"
-            :label="role.label"
-            :value="role.value"
-          />
-        </el-select>
-        <el-select
-          v-model="selectedFramework"
-          clearable
-          placeholder="框架类型"
-          class="filter-select"
-          @change="handleSearch"
-        >
-          <el-option
-            v-for="framework in frameworkOptions"
-            :key="framework.value"
-            :label="framework.label"
-            :value="framework.value"
-          />
-        </el-select>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-      </div>
-      <div class="operation-buttons">
-        <el-upload
-          :auto-upload="false"
-          :show-file-list="false"
-          accept=".json"
-          @change="handleImport"
-        >
-          <el-button type="primary">
-            <el-icon><Upload /></el-icon>导入
-          </el-button>
-        </el-upload>
-        <el-button type="primary" @click="handleExport">
-          <el-icon><Download /></el-icon>导出
-        </el-button>
-        <el-button type="primary" @click="router.push('/templates/create')">
-          <el-icon><Plus /></el-icon>新增模板
-        </el-button>
-      </div>
+      <!-- 搜索栏组件 -->
+      <template-search-bar @search="handleSearchParams" />
+      
+      <!-- 操作栏组件 -->
+      <template-operation-bar
+        @import="handleImport"
+        @export="handleExport"
+        @create="handleCreate"
+      />
     </div>
 
+    <!-- 模板列表 -->
     <el-row :gutter="20">
-  <draggable
-    v-model="sortedTemplates"
-    v-loading="loading"
-    item-key="id"
-    :animation="150"
-    ghost-class="ghost"
-    @end="handleDragEnd"
-    class="el-row"
-    :class="{ 'is-flex': true, 'flex-wrap': true }"
-  >
-    <template #item="{ element: row }">
-      <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-4">
-        <div class="template-item h-full">
-          <el-card 
-            class="box-card h-full" 
-            shadow="hover"
-            @click.stop="handlePreview(row)"
-          >
-            <div class="template-content">
-              <div class="template-info">
-                <h3 class="mb-2">{{ row.name }}</h3>
-                <el-tag class="mb-2">{{ row.framework_type }}</el-tag>
-                <p class="description mb-2">{{ row.description }}</p>
-                <p class="time mb-2">创建时间：{{ new Date(row.created_at).toLocaleString() }}</p>
-              </div>
-              <div class="template-actions" @click.stop>
-                <el-button-group>
-                  <el-button type="primary" text @click="handleEdit(row)">编辑</el-button>
-                  <el-button type="primary" text @click="handleTest(row)">测试</el-button>
-                  <el-button type="primary" text @click="handleVersionHistory(row)">
-                    <el-icon><Timer /></el-icon>
-                  </el-button>
-                  <el-button type="primary" text @click="handleClone(row)">
-                    <el-icon><CopyDocument /></el-icon>
-                  </el-button>
-                  <el-button type="danger" text @click="handleDelete(row)">删除</el-button>
-                </el-button-group>
-              </div>
-            </div>
-          </el-card>
-        </div>
-      </el-col>
-    </template>
-  </draggable>
-</el-row>
-<!-- 删除了旧的表格结构 -->
+      <draggable
+        v-model="sortedTemplates"
+        v-loading="loading"
+        item-key="id"
+        :animation="150"
+        ghost-class="ghost"
+        @end="handleDragEnd"
+        class="el-row"
+        :class="{ 'is-flex': true, 'flex-wrap': true }"
+      >
+        <template #item="{ element: template }">
+          <el-col :xs="24" :sm="12" :md="8" :lg="6" class="mb-4">
+            <template-card 
+              :template="template"
+              @edit="handleEdit"
+              @test="handleTest"
+              @history="handleVersionHistory"
+              @clone="handleClone"
+              @delete="handleDelete"
+              @preview="handlePreview"
+            />
+          </el-col>
+        </template>
+      </draggable>
+    </el-row>
 
+    <!-- 分页器 -->
     <div class="pagination-container">
       <el-pagination
         v-model:current-page="currentPage"
@@ -136,8 +66,8 @@
     </div>
 
     <!-- 预览对话框 -->
-    <TemplatePreview
-      :model-value="previewVisible"
+    <template-preview
+      v-model="previewVisible"
       :template="selectedTemplate"
       mode="dialog"
       @update:model-value="handlePreviewVisibleChange"
@@ -161,7 +91,11 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="deleteDialogVisible = false">取消</el-button>
-          <el-button type="danger" @click="confirmDelete" :loading="deleteLoading">
+          <el-button 
+            type="danger" 
+            @click="confirmDelete" 
+            :loading="deleteLoading"
+          >
             确定
           </el-button>
         </span>
@@ -171,112 +105,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed, defineComponent } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Timer, CopyDocument, Upload, Download } from '@element-plus/icons-vue'
-import TemplateVersionHistory from '@/components/TemplateVersionHistory.vue'
-import TemplatePreview from '@/components/TemplatePreview.vue'
-import { getTemplateList, deleteTemplate, cloneTemplate, exportTemplates, importTemplates, reorderTemplates } from '@/api/templates'
-import type { Template } from '@/types'
-// 正确导入 vuedraggable
+import { ref, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import draggable from 'vuedraggable'
 
+import TemplateCard from '@/components/templates/TemplateCard.vue'
+import TemplateSearchBar from '@/components/templates/TemplateSearchBar.vue'
+import TemplateOperationBar from '@/components/templates/TemplateOperationBar.vue'
+import TemplateVersionHistory from '@/components/TemplateVersionHistory.vue'
+import TemplatePreview from '@/components/TemplatePreview.vue'
+
+import { useTemplateList } from '@/composables/useTemplateList'
+import type { Template } from '@/types'
+
 const router = useRouter()
-const route = useRoute()
-const loading = ref(false)
-const templates = ref<Template[]>([])
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchQuery = ref('')
-const selectedRole = ref('')
-const selectedFramework = ref('')
 
-// 角色选项
-const roleOptions = [
-  { label: '产品经理', value: '产品经理' },
-  { label: '运维工程师', value: '运维工程师' },
-  { label: '系统管理员', value: '系统管理员' },
-  { label: '技术支持工程师', value: '技术支持工程师' },
-  { label: '性能优化工程师', value: '性能优化工程师' },
-  { label: '安全工程师', value: '安全工程师' },
-  { label: '基础设施工程师', value: '基础设施工程师' },
-  { label: 'Kubernetes管理员', value: 'Kubernetes管理员' },
-  { label: '网络工程师', value: '网络工程师' },
-  { label: '数据库管理员', value: '数据库管理员' },
-  { label: '系统架构师', value: '系统架构师' },
-  { label: '容器平台工程师', value: '容器平台工程师' },
-  { label: 'DevOps工程师', value: 'DevOps工程师' },
-  { label: 'SRE', value: 'SRE' },
-  { label: '监控平台工程师', value: '监控平台工程师' },
-  { label: '自动化工程师', value: '自动化工程师' },
-  { label: '灾备管理员', value: '灾备管理员' },
-  { label: '云平台架构师', value: '云平台架构师' },
-  { label: '容量规划工程师', value: '容量规划工程师' },
-  { label: '运维开发工程师', value: '运维开发工程师' },
-  { label: '故障分析工程师', value: '故障分析工程师' },
-  { label: '事件响应工程师', value: '事件响应工程师' },
-  { label: '增长运营', value: '增长运营' },
-  { label: '渠道运营', value: '渠道运营' },
-  { label: '产品运营', value: '产品运营' },
-  { label: '用户体验设计师', value: '用户体验设计师' },
-  { label: '数据分析师', value: '数据分析师' },
-  { label: '商业化运营', value: '商业化运营' },
-  { label: '内容运营', value: '内容运营' },
-  { label: '文案策划', value: '文案策划' },
-  { label: '提示词工程师', value: '提示词工程师' },
-  { label: 'AI应用开发者', value: 'AI应用开发者' }
-]
+// 使用组合式函数管理模板列表
+const {
+  loading,
+  templates,
+  sortedTemplates,
+  total,
+  currentPage,
+  pageSize,
+  loadData,
+  updateOrder,
+  importTemplate,
+  exportTemplate,
+  cloneTemplateItem,
+  removeTemplate
+} = useTemplateList()
 
-// 框架类型选项
-const frameworkOptions = [
-  { label: 'RTGO', value: 'RTGO' },
-  { label: 'SPAR', value: 'SPAR' },
-  { label: '自定义', value: 'CUSTOM' }
-]
+// 搜索参数
+const searchParams = ref({
+  search: '',
+  target_role: '',
+  framework_type: ''
+})
 
 // 预览相关
 const previewVisible = ref(false)
 const selectedTemplate = ref<Template | null>(null)
-
-// 使用ref而不是computed，这样它是可变的
-const sortedTemplates = ref<Template[]>([]);
-
-// 监听templates变化，更新sortedTemplates
-watch(() => templates.value, (newTemplates) => {
-  if (!newTemplates || !Array.isArray(newTemplates)) {
-    console.warn('templates.value is not an array:', newTemplates);
-    sortedTemplates.value = [];
-    return;
-  }
-  sortedTemplates.value = [...newTemplates].sort((a, b) => (a.order || 0) - (b.order || 0));
-}, { immediate: true });
-
-const handleDragEnd = async () => {
-  console.log('拖拽结束，新顺序:', sortedTemplates.value);
-  
-  const updatedOrder = sortedTemplates.value.map((template, index) => ({
-    id: template.id,
-    order: index
-  }))
-
-  try {
-    console.log('发送更新排序请求:', updatedOrder);
-    await reorderTemplates(updatedOrder)
-    ElMessage.success('模板排序已更新')
-    
-    // 更新本地数据
-    templates.value = [...sortedTemplates.value];
-  } catch (error: any) {
-    console.error('更新排序失败:', error);
-    ElMessage.error(error.message || '更新排序失败')
-    // 如果更新失败，重新加载数据以恢复原始顺序
-    await loadData()
-  }
-}
-
-// 预览相关
 const currentTemplate = ref<Template | null>(null)
 
 // 版本历史相关
@@ -287,130 +157,69 @@ const deleteDialogVisible = ref(false)
 const deleteLoading = ref(false)
 const templateToDelete = ref<Template | null>(null)
 
-// 打开版本历史
-const handleVersionHistory = (row: Template) => {
-  currentTemplate.value = row
-  versionHistoryVisible.value = true
+// 处理搜索参数
+const handleSearchParams = (params: { query: string, role: string, framework: string }) => {
+  searchParams.value = {
+    search: params.query,
+    target_role: params.role,
+    framework_type: params.framework
+  }
+  currentPage.value = 1
+  loadData(searchParams.value)
+}
+
+// 处理拖拽结束
+const handleDragEnd = async () => {
+  await updateOrder()
 }
 
 // 导入模板
 const handleImport = async (file: any) => {
-  try {
-    const result = await importTemplates(file.raw)
-    ElMessage.success(result.message)
-    loadData()
-  } catch (error: any) {
-    ElMessage.error(error.message || '导入失败')
-  }
+  await importTemplate(file.raw)
 }
 
 // 导出模板
 const handleExport = async () => {
-  try {
-    const response = await exportTemplates()
-    const blob = new Blob([response], { type: 'application/json' })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'templates_export.json'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    ElMessage.success('导出成功')
-  } catch (error: any) {
-    ElMessage.error(error.message || '导出失败')
-  }
+  await exportTemplate()
 }
 
-// 克隆模板
-const handleClone = async (row: Template) => {
-  try {
-    const result = await cloneTemplate(row.id)
-    if (result && result.id) {
-      ElMessage.success('克隆成功')
-      await loadData() // 等待数据重新加载完成
-    } else {
-      throw new Error('克隆模板失败')
-    }
-  } catch (error: any) {
-    // 获取更详细的错误信息
-    const errorMessage = error.response?.data?.error || error.message || '克隆失败'
-    ElMessage.error(errorMessage)
-    console.error('克隆模板错误:', error)
-  }
+// 创建模板
+const handleCreate = () => {
+  router.push('/templates/create')
 }
 
-// 加载数据
-const loadData = async () => {
-  loading.value = true
-  try {
-    console.log('开始加载模板数据...');
-    const res = await getTemplateList({
-      page: currentPage.value,
-      page_size: pageSize.value,
-      search: searchQuery.value,
-      target_role: selectedRole.value,
-      framework_type: selectedFramework.value
-    });
-    console.log('获取到的模板数据:', res);
-    
-    if (res && Array.isArray(res.results)) {
-      templates.value = res.results;
-      total.value = res.count;
-      console.log('模板数据已更新:', templates.value);
-    } else {
-      console.warn('返回的数据格式不正确:', res);
-      ElMessage.warning('返回的数据格式不符合预期');
-    }
-  } catch (error: any) {
-    console.error('加载模板数据失败:', error);
-    if (error.response) {
-      console.error('错误响应:', error.response);
-      if (error.response.status === 401) {
-        ElMessage.error('请先登录');
-        router.push('/login');
-      } else {
-        ElMessage.error(`加载失败: ${error.response.data?.detail || error.message || '未知错误'}`);
-      }
-    } else if (error.request) {
-      ElMessage.error('网络请求失败，请检查网络连接');
-    } else {
-      ElMessage.error(error.message || '加载失败');
-    }
-  } finally {
-    loading.value = false;
-  }
-}
-
-// 搜索
-const handleSearch = () => {
-  currentPage.value = 1
-  loadData()
-}
-
-// 编辑
-const handleEdit = (row: Template) => {
+// 编辑模板
+const handleEdit = (template: Template) => {
   router.push({
-    path: `/templates/${row.id}/edit`,
-    query: { name: row.name } // 添加名称作为查询参数，方便面包屑导航显示
+    path: `/templates/${template.id}/edit`,
+    query: { name: template.name }
   })
 }
 
-// 预览
-const handlePreview = (row: Template, e?: Event) => {
-  selectedTemplate.value = row
-  previewVisible.value = true
-  // 阻止事件冒泡
-  e?.stopPropagation()
+// 测试模板
+const handleTest = (template: Template) => {
+  router.push({
+    name: 'template-test',
+    params: { id: template.id }
+  })
 }
 
-// 监听预览对话框关闭
-watch(previewVisible, (val) => {
-  if (!val) {
-    selectedTemplate.value = null
-  }
-})
+// 克隆模板
+const handleClone = async (template: Template) => {
+  await cloneTemplateItem(template.id)
+}
+
+// 打开版本历史
+const handleVersionHistory = (template: Template) => {
+  currentTemplate.value = template
+  versionHistoryVisible.value = true
+}
+
+// 预览模板
+const handlePreview = (template: Template) => {
+  selectedTemplate.value = template
+  previewVisible.value = true
+}
 
 // 处理预览弹窗的显示状态
 const handlePreviewVisibleChange = (val: boolean) => {
@@ -420,8 +229,38 @@ const handlePreviewVisibleChange = (val: boolean) => {
   }
 }
 
-// 监听删除对话框关闭
-watch(deleteDialogVisible, (val) => {
+// 删除模板
+const handleDelete = (template: Template) => {
+  templateToDelete.value = template
+  deleteDialogVisible.value = true
+}
+
+// 确认删除
+const confirmDelete = async () => {
+  if (!templateToDelete.value) return
+
+  deleteLoading.value = true
+  try {
+    await removeTemplate(templateToDelete.value.id)
+    deleteDialogVisible.value = false
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+// 分页相关
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  loadData(searchParams.value)
+}
+
+const handleCurrentChange = (val: number) => {
+  currentPage.value = val
+  loadData(searchParams.value)
+}
+
+// 监听预览对话框关闭
+watch(previewVisible, (val) => {
   if (!val) {
     selectedTemplate.value = null
   }
@@ -433,48 +272,6 @@ watch(deleteDialogVisible, (val) => {
     templateToDelete.value = null
   }
 })
-
-// 测试模板
-const handleTest = (row: Template) => {
-  router.push({
-    name: 'template-test',
-    params: { id: row.id }
-  })
-}
-
-// 删除
-const handleDelete = (row: Template) => {
-  templateToDelete.value = row
-  deleteDialogVisible.value = true
-}
-
-// 确认删除
-const confirmDelete = async () => {
-  if (!templateToDelete.value) return
-
-  deleteLoading.value = true
-  try {
-    await deleteTemplate(templateToDelete.value.id)
-    ElMessage.success('删除成功')
-    deleteDialogVisible.value = false
-    loadData()
-  } catch (error: any) {
-    ElMessage.error(error.message || '删除失败')
-  } finally {
-    deleteLoading.value = false
-  }
-}
-
-// 分页
-const handleSizeChange = (val: number) => {
-  pageSize.value = val
-  loadData()
-}
-
-const handleCurrentChange = (val: number) => {
-  currentPage.value = val
-  loadData()
-}
 
 // 初始化
 onMounted(() => {
@@ -499,35 +296,14 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
-}
-
-.search-bar {
-  display: flex;
-  gap: 10px;
   flex-wrap: wrap;
-}
-
-.filter-select {
-  min-width: 160px;
+  gap: 15px;
 }
 
 @media (max-width: 768px) {
-  .search-bar {
+  .operation-bar {
     flex-direction: column;
   }
-  
-  .filter-select {
-    width: 100%;
-  }
-}
-
-.operation-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-:deep(.el-upload) {
-  width: auto;
 }
 
 .pagination-container {
@@ -543,59 +319,6 @@ onMounted(() => {
   margin-top: 20px;
 }
 
-/* 拖拽相关样式 */
-.template-item {
-  height: 100%;
-  cursor: pointer;
-}
-
-.template-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.template-info {
-  flex: 1;
-}
-
-.template-info h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.template-info .description {
-  color: #606266;
-  font-size: 14px;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  min-height: 40px;
-}
-
-.template-info .time {
-  font-size: 12px;
-  color: #909399;
-  margin: 0;
-}
-
-.template-actions {
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid #EBEEF5;
-}
-
-.template-actions :deep(.el-button-group) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
 /* 拖拽时的样式 */
 .ghost {
   opacity: 0.5;
@@ -603,39 +326,9 @@ onMounted(() => {
   border: 1px dashed #409EFF;
 }
 
-.template-item:hover {
-  transform: translateY(-2px);
-  transition: all 0.3s;
-}
-
-.box-card {
-  height: 100%;
-  transition: all 0.3s;
-  cursor: pointer;
-}
-
-.box-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.template-actions {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-color);
-}
-
 /* 工具类 */
 .mb-4 {
   margin-bottom: 16px;
-}
-
-.mb-2 {
-  margin-bottom: 8px;
-}
-
-.h-full {
-  height: 100%;
 }
 
 /* Flex 布局 */
@@ -655,16 +348,5 @@ onMounted(() => {
 
 :deep(.draggable) {
   width: 100%;
-}
-
-/* 确保按钮在小屏幕上也能很好地显示 */
-@media (max-width: 768px) {
-  .template-actions :deep(.el-button) {
-    padding: 8px;
-  }
-  
-  .template-actions :deep(.el-button-group) {
-    justify-content: center;
-  }
 }
 </style>

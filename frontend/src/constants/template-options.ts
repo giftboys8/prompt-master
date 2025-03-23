@@ -1,0 +1,42 @@
+// 角色选项
+export const roleOptions = [
+  { label: '产品经理', value: '产品经理' },
+  { label: '运维工程师', value: '运维工程师' },
+  { label: '系统管理员', value: '系统管理员' },
+  { label: '技术支持工程师', value: '技术支持工程师' },
+  { label: '性能优化工程师', value: '性能优化工程师' },
+  { label: '安全工程师', value: '安全工程师' },
+  { label: '基础设施工程师', value: '基础设施工程师' },
+  { label: 'Kubernetes管理员', value: 'Kubernetes管理员' },
+  { label: '网络工程师', value: '网络工程师' },
+  { label: '数据库管理员', value: '数据库管理员' },
+  { label: '系统架构师', value: '系统架构师' },
+  { label: '容器平台工程师', value: '容器平台工程师' },
+  { label: 'DevOps工程师', value: 'DevOps工程师' },
+  { label: 'SRE', value: 'SRE' },
+  { label: '监控平台工程师', value: '监控平台工程师' },
+  { label: '自动化工程师', value: '自动化工程师' },
+  { label: '灾备管理员', value: '灾备管理员' },
+  { label: '云平台架构师', value: '云平台架构师' },
+  { label: '容量规划工程师', value: '容量规划工程师' },
+  { label: '运维开发工程师', value: '运维开发工程师' },
+  { label: '故障分析工程师', value: '故障分析工程师' },
+  { label: '事件响应工程师', value: '事件响应工程师' },
+  { label: '增长运营', value: '增长运营' },
+  { label: '渠道运营', value: '渠道运营' },
+  { label: '产品运营', value: '产品运营' },
+  { label: '用户体验设计师', value: '用户体验设计师' },
+  { label: '数据分析师', value: '数据分析师' },
+  { label: '商业化运营', value: '商业化运营' },
+  { label: '内容运营', value: '内容运营' },
+  { label: '文案策划', value: '文案策划' },
+  { label: '提示词工程师', value: '提示词工程师' },
+  { label: 'AI应用开发者', value: 'AI应用开发者' }
+]
+
+// 框架类型选项
+export const frameworkOptions = [
+  { label: 'RTGO', value: 'RTGO' },
+  { label: 'SPAR', value: 'SPAR' },
+  { label: '自定义', value: 'CUSTOM' }
+]
