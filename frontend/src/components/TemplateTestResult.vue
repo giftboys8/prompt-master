@@ -35,6 +35,7 @@ const formattedResult = computed(() => {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   margin-top: 24px;
+  width: 100%;
 
   h3 {
     color: var(--primary-color);

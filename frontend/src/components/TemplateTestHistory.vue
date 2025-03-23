@@ -109,12 +109,15 @@ const getModelName = (record: TemplateTest) => {
 <style lang="scss" scoped>
 .test-history {
   margin-top: 40px;
+  width: 100%;
 
   h3 {
     color: var(--primary-color);
     font-size: 18px;
     margin-bottom: 16px;
     font-family: 'Orbitron', sans-serif;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
   }
 }
 

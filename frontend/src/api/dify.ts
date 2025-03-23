@@ -42,16 +42,18 @@ export interface DifyMessageResponse {
   created_at: number
 }
 
-export function sendMessage(data: DifyMessageRequest) {
+export function sendMessage(data: DifyMessageRequest, customApiKey?: string) {
   // 打印环境变量，便于调试
   console.log('Dify API Base URL:', import.meta.env.VITE_DIFY_API_BASE_URL);
-  console.log('Dify API Key is set:', !!import.meta.env.VITE_DIFY_API_KEY);
   
-  const apiKey = import.meta.env.VITE_DIFY_API_KEY;
+  // 优先使用传入的自定义API密钥，如果没有则使用环境变量中的密钥
+  const apiKey = customApiKey || import.meta.env.VITE_DIFY_API_KEY;
   if (!apiKey) {
-    console.error('Dify API Key is not set in environment variables');
-    return Promise.reject(new Error('API密钥未配置，请检查环境变量'));
+    console.error('Dify API Key is not provided and not set in environment variables');
+    return Promise.reject(new Error('未提供API密钥，请选择一个API密钥或检查环境变量'));
   }
+  
+  console.log('Using API Key:', customApiKey ? '自定义密钥' : '环境变量密钥');
   
   const baseURL = import.meta.env.VITE_DIFY_API_BASE_URL;
   if (!baseURL) {
