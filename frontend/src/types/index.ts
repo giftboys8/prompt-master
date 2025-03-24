@@ -1,5 +1,12 @@
 // 用户类型
-export interface User {
+export interface FrameworkSelectProps { User {
+  modelValue: number | null;
+  placeholder?: string;
+  disabled?: boolean;
+  showDescription?: boolean;
+}
+
+export interface
   id: number;
   username: string;
   email: string;

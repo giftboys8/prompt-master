@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清除提示词模板缓存</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-left: 4px solid #2196F3;
+            background-color: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <h1>清除提示词模板缓存</h1>
+    <div class="container">
+        <p>点击下方按钮清除浏览器中存储的所有提示词模板相关缓存：</p>
+        <ul>
+            <li>模板列表缓存</li>
+            <li>最近访问的模板</li>
+            <li>模板草稿</li>
+        </ul>
+        <button id="clearCache">清除所有模板缓存</button>
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('clearCache').addEventListener('click', function() {
+            try {
+                // 清除与模板相关的所有缓存
+                localStorage.removeItem('templates');
+                localStorage.removeItem('recent_templates');
+                localStorage.removeItem('template_drafts');
+                
+                // 显示结果
+                const resultDiv = document.getElementById('result');
+                resultDiv.textContent = '✅ 所有提示词模板缓存已成功清除！';
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                // 显示错误
+                const resultDiv = document.getElementById('result');
+                resultDiv.textContent = '❌ 清除缓存时发生错误：' + error.message;
+                resultDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

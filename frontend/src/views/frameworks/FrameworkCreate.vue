@@ -15,29 +15,54 @@
       <el-divider>模块管理</el-divider>
 
       <div class="module-section">
-        <div class="module-header">
+        <div class="module-list">
+          <div v-for="(module, index) in modules" :key="index" class="module-item">
+            <el-card class="module-card">
+              <el-form :model="module" :rules="moduleRules">
+                <el-row :gutter="20">
+                  <el-col :span="8">
+                    <el-form-item label="模块名称" prop="name">
+                      <el-input v-model="module.name" placeholder="请输入模块名称" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="模块描述" prop="description">
+                      <el-input v-model="module.description" placeholder="请输入模块描述" />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="2">
+                    <el-form-item label="排序" prop="order">
+                      <el-input-number 
+                        v-model="module.order" 
+                        :min="0" 
+                        :max="999"
+                        controls-position="right"
+                        size="small"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="2" class="action-buttons">
+                    <el-button 
+                      type="danger" 
+                      size="small" 
+                      circle
+                      @click="handleDeleteModule(index)"
+                    >
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </el-col>
+                </el-row>
+              </el-form>
+            </el-card>
+          </div>
+        </div>
+
+        <div class="add-module-button">
           <el-button type="primary" @click="handleAddModule">
+            <el-icon><Plus /></el-icon>
             添加模块
           </el-button>
         </div>
-
-        <el-table :data="modules" border>
-          <el-table-column prop="name" label="模块名称" />
-          <el-table-column prop="description" label="模块描述" show-overflow-tooltip />
-          <el-table-column prop="order" label="排序" width="100" />
-          <el-table-column label="操作" width="200">
-            <template #default="{ row, $index }">
-              <el-button-group>
-                <el-button type="primary" @click="handleEditModule($index)">
-                  编辑
-                </el-button>
-                <el-button type="danger" @click="handleDeleteModule($index)">
-                  删除
-                </el-button>
-              </el-button-group>
-            </template>
-          </el-table-column>
-        </el-table>
       </div>
 
       <div class="form-actions">
@@ -45,47 +70,6 @@
         <el-button type="primary" @click="handleSubmit">创建</el-button>
       </div>
     </el-form>
-
-    <!-- 模块表单对话框 -->
-    <el-dialog
-      v-model="moduleFormVisible"
-      :title="isEditModule ? '编辑模块' : '添加模块'"
-      width="500px"
-    >
-      <el-form
-        ref="moduleFormRef"
-        :model="moduleForm"
-        :rules="moduleRules"
-        label-width="100px"
-      >
-        <el-form-item label="模块名称" prop="name">
-          <el-input v-model="moduleForm.name" />
-        </el-form-item>
-        <el-form-item label="模块描述" prop="description">
-          <el-input
-            v-model="moduleForm.description"
-            type="textarea"
-            :rows="4"
-          />
-        </el-form-item>
-        <el-form-item label="排序" prop="order">
-          <el-input-number
-            v-model="moduleForm.order"
-            :min="0"
-            :max="999"
-            controls-position="right"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="moduleFormVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmitModule">
-            确定
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -93,6 +77,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
+import { Delete, Plus } from '@element-plus/icons-vue';
 import type { FormInstance, FormRules } from "element-plus";
 import {
   createFramework,
@@ -102,7 +87,6 @@ import {
 
 const router = useRouter();
 const formRef = ref<FormInstance>();
-const moduleFormRef = ref<FormInstance>();
 
 const form = ref({
   name: "",
@@ -110,12 +94,6 @@ const form = ref({
 });
 
 const modules = ref<FrameworkModule[]>([]);
-
-const moduleForm = ref<FrameworkModule>({
-  name: "",
-  description: "",
-  order: 0,
-});
 
 const rules: FormRules = {
   name: [
@@ -134,32 +112,13 @@ const moduleRules: FormRules = {
   order: [{ required: true, message: "请输入排序值", trigger: "blur" }],
 };
 
-const moduleFormVisible = ref(false);
-const isEditModule = ref(false);
-const currentModuleIndex = ref<number>(-1);
-
 // 添加模块
 const handleAddModule = () => {
-  isEditModule.value = false;
-  moduleForm.value = {
+  modules.value.push({
     name: "",
     description: "",
     order: modules.value.length,
-  };
-  moduleFormVisible.value = true;
-};
-
-// 编辑模块
-const handleEditModule = (index: number) => {
-  isEditModule.value = true;
-  currentModuleIndex.value = index;
-  const module = modules.value[index];
-  moduleForm.value = {
-    name: module.name,
-    description: module.description,
-    order: module.order || 0,
-  };
-  moduleFormVisible.value = true;
+  });
 };
 
 // 删除模块
@@ -171,27 +130,19 @@ const handleDeleteModule = (index: number) => {
   });
 };
 
-// 提交模块表单
-const handleSubmitModule = async () => {
-  if (!moduleFormRef.value) return;
-
-  await moduleFormRef.value.validate(async (valid) => {
-    if (valid) {
-      if (isEditModule.value) {
-        // 更新现有模块
-        modules.value[currentModuleIndex.value] = { ...moduleForm.value };
-      } else {
-        // 添加新模块
-        modules.value.push({ ...moduleForm.value });
-      }
-      moduleFormVisible.value = false;
-    }
-  });
-};
-
 // 提交框架表单
 const handleSubmit = async () => {
   if (!formRef.value) return;
+
+  // 验证所有模块是否都填写了必填字段
+  const hasEmptyModules = modules.value.some(
+    module => !module.name || !module.description
+  );
+
+  if (hasEmptyModules) {
+    ElMessage.error("请完整填写所有模块信息");
+    return;
+  }
 
   await formRef.value.validate(async (valid) => {
     if (valid) {
@@ -227,15 +178,28 @@ const handleCancel = () => {
 }
 
 .framework-form {
-  max-width: 800px;
+  max-width: 1200px;
 }
 
 .module-section {
   margin-top: 20px;
 }
 
-.module-header {
+.module-list {
   margin-bottom: 20px;
+}
+
+.module-item {
+  margin-bottom: 16px;
+}
+
+.module-card {
+  background-color: #f8f9fa;
+}
+
+.add-module-button {
+  margin-top: 16px;
+  margin-bottom: 24px;
 }
 
 .form-actions {
@@ -245,9 +209,17 @@ const handleCancel = () => {
   gap: 10px;
 }
 
-.dialog-footer {
+.action-buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.el-form-item__content) {
+  flex-wrap: nowrap;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
 }
 </style>

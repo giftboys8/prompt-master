@@ -23,6 +23,10 @@ export const getFrameworks = () => {
   return request({
     method: "get",
     url: "/admin/frameworks/",
+  }).then(response => {
+    // 确保返回的数据结构一致，无论是否为分页格式
+    console.log("API getFrameworks raw response:", response);
+    return response;
   });
 };
 

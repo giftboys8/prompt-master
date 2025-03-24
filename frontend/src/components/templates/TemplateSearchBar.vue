@@ -25,20 +25,12 @@
         :value="role.value"
       />
     </el-select>
-    <el-select
+    <framework-select
       v-model="selectedFramework"
-      clearable
       placeholder="框架类型"
       class="filter-select"
-      @change="handleSearch"
-    >
-      <el-option
-        v-for="framework in frameworkOptions"
-        :key="framework.value"
-        :label="framework.label"
-        :value="framework.value"
-      />
-    </el-select>
+      @change="handleFrameworkChange"
+    />
     <el-button type="primary" @click="handleSearch">搜索</el-button>
   </div>
 </template>
@@ -46,7 +38,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { Search } from "@element-plus/icons-vue";
-import { roleOptions, frameworkOptions } from "@/constants/template-options";
+import { roleOptions } from "@/constants/template-options";
+import FrameworkSelect from "@/components/FrameworkSelect.vue";
 
 const emit = defineEmits(["search"]);
 
@@ -60,6 +53,11 @@ const handleSearch = () => {
     role: selectedRole.value,
     framework: selectedFramework.value,
   });
+};
+
+const handleFrameworkChange = (value) => {
+  selectedFramework.value = value;
+  handleSearch();
 };
 </script>
 

@@ -30,9 +30,14 @@
               v-model="form.framework_type"
               placeholder="请选择框架类型"
               class="w-full"
+              :loading="loadingFrameworks"
             >
-              <el-option label="RTGO" value="RTGO" />
-              <el-option label="SPAR" value="SPAR" />
+              <el-option 
+                v-for="framework in frameworks" 
+                :key="framework.id" 
+                :label="framework.name" 
+                :value="framework.name" 
+              />
               <el-option label="自定义" value="CUSTOM" />
             </el-select>
           </el-form-item>
@@ -55,7 +60,8 @@
             </div>
           </template>
 
-          <template v-if="form.framework_type === 'RTGO'">
+          <div v-loading="loadingFrameworks" element-loading-text="加载框架内容...">
+            <template v-if="form.framework_type === 'RTGO'">
             <el-form-item label="角色(Role)" prop="content.role">
               <el-input
                 v-model="form.content.role"
@@ -129,9 +135,13 @@
                 placeholder="描述期望的结果"
               />
             </el-form-item>
-          </template>
+            </template>
 
-          <template v-else>
+            <template v-else-if="!form.framework_type">
+              <el-empty description="请先选择框架类型" />
+            </template>
+
+            <template v-else>
             <el-form-item label="自定义内容" prop="content.custom">
               <el-input
                 v-model="form.content.custom"
@@ -224,6 +234,7 @@ import { ElMessage } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { getTemplate, updateTemplate } from "@/api/templates";
+import { getFrameworks, type Framework } from "@/api/frameworks";
 import type { Template } from "@/types";
 
 const route = useRoute();
@@ -231,6 +242,8 @@ const router = useRouter();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
 const submitting = ref(false);
+const frameworks = ref<Framework[]>([]);
+const loadingFrameworks = ref(false);
 
 // 表单数据
 const form = ref<{
@@ -323,15 +336,48 @@ const variableRules = {
   description: [{ required: true, message: "请输入描述", trigger: "blur" }],
 };
 
+// 重置内容
+const resetContent = () => {
+  if (form.value) {
+    form.value.content = {
+      role: "",
+      task: "",
+      goal: "",
+      output: "",
+      situation: "",
+      purpose: "",
+      action: "",
+      result: "",
+      custom: "",
+    };
+  }
+};
+
 // 监听框架类型变化
 const stopWatch = watch(
   () => form.value?.framework_type,
-  (newType) => {
-    if (newType) {
+  (newType, oldType) => {
+    if (newType && newType !== oldType) {
+      // 重置内容
+      resetContent();
+      // 更新验证规则
       Object.assign(rules, getContentRules(newType));
     }
   },
 );
+
+// 获取所有框架
+const fetchFrameworks = async () => {
+  loadingFrameworks.value = true;
+  try {
+    const response = await getFrameworks();
+    frameworks.value = response;
+  } catch (error: any) {
+    ElMessage.error(error.message || "获取框架列表失败");
+  } finally {
+    loadingFrameworks.value = false;
+  }
+};
 
 // 组件卸载前清理
 onBeforeUnmount(() => {
@@ -429,7 +475,8 @@ const handleSubmit = async () => {
   });
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchFrameworks();
   if (route.params.id) {
     loadTemplate(route.params.id as string);
   } else {
@@ -463,6 +510,14 @@ onMounted(() => {
 
 .variable-item:last-child {
   margin-bottom: 0;
+}
+
+.el-empty {
+  padding: 40px 0;
+}
+
+.form-card :deep(.el-loading-mask) {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .form-actions {
