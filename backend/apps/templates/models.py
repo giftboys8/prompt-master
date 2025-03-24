@@ -60,7 +60,8 @@ class Template(models.Model):
         '框架类型',
         max_length=100,  # 增加长度以适应更长的框架名称
         choices=[],  # 初始为空，将在运行时动态填充
-        default='CUSTOM'
+        null=False,
+        blank=False
     )
 
     def __init__(self, *args, **kwargs):
@@ -71,8 +72,8 @@ class Template(models.Model):
         on_delete=models.PROTECT,
         related_name='templates',
         verbose_name='框架',
-        null=True,
-        blank=True
+        null=False,
+        blank=False
     )
     visibility = models.CharField(
         '可见性',

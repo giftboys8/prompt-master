@@ -208,7 +208,7 @@ const rules = reactive<FormRules>({
     { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
   ],
   framework: [
-    { required: false, message: "请选择框架", trigger: "change" },
+    { required: true, message: "请选择框架", trigger: "change" },
   ],
   description: [{ required: true, message: "请输入模版描述", trigger: "blur" }],
 });
