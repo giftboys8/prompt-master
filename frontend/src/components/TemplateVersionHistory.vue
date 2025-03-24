@@ -10,9 +10,9 @@
       <el-table :data="versions" style="width: 100%">
         <el-table-column prop="version_number" label="版本" width="80" />
         <el-table-column prop="name" label="名称" />
-        <el-table-column prop="framework_type" label="框架类型" width="100">
+        <el-table-column prop="framework" label="框架类型" width="100">
           <template #default="{ row }">
-            <el-tag>{{ row.framework_type }}</el-tag>
+            <el-tag>{{ row.framework?.type || '自定义' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column
@@ -56,11 +56,11 @@
       <template v-if="currentVersion">
         <h3>基本信息</h3>
         <p><strong>模板名称：</strong>{{ currentVersion.name }}</p>
-        <p><strong>框架类型：</strong>{{ currentVersion.framework_type }}</p>
+        <p><strong>框架类型：</strong>{{ currentVersion.framework?.type || '自定义' }}</p>
         <p><strong>描述：</strong>{{ currentVersion.description }}</p>
 
         <h3>提示词内容</h3>
-        <template v-if="currentVersion.framework_type === 'RTGO'">
+        <template v-if="currentVersion.framework?.type === 'RTGO'">
           <p><strong>角色(Role)：</strong>{{ currentVersion.content.role }}</p>
           <p><strong>任务(Task)：</strong>{{ currentVersion.content.task }}</p>
           <p><strong>目标(Goal)：</strong>{{ currentVersion.content.goal }}</p>
@@ -69,7 +69,7 @@
           </p>
         </template>
 
-        <template v-else-if="currentVersion.framework_type === 'SPAR'">
+        <template v-else-if="currentVersion.framework?.type === 'SPAR'">
           <p>
             <strong>情境(Situation)：</strong
             >{{ currentVersion.content.situation }}

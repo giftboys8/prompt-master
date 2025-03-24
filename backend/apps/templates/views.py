@@ -104,7 +104,8 @@ class TemplateViewSet(viewsets.ModelViewSet):
                     # 创建新模板实例
                     new_template = Template.objects.create(
                         name=f"{template.name} (副本)",
-                        framework_type=template.framework_type,
+                        framework=template.framework,
+                        framework_type=template.framework_type,  # 保持原模板的框架类型
                         description=template.description,
                         content=template.content,
                         variables=template.variables,
@@ -519,7 +520,9 @@ class TemplateTestViewSet(viewsets.ModelViewSet):
 
     def _generate_prompt(self, template, input_data):
         """根据模板和输入数据生成提示词"""
-        if template.framework_type == 'RTGO':
+        if template.framework_type == 'CUSTOM' or not template.framework:
+            prompt = template.content.get('custom', '')
+        elif template.framework_type == 'RTGO':
             prompt = f"# 角色（Role）\n{template.content['role']}\n\n"
             prompt += f"# 任务（Task）\n{template.content['task']}\n\n"
             prompt += f"# 目标（Goal）\n{template.content['goal']}\n\n"
@@ -529,8 +532,8 @@ class TemplateTestViewSet(viewsets.ModelViewSet):
             prompt += f"# 目的（Purpose）\n{template.content['purpose']}\n\n"
             prompt += f"# 行动（Action）\n{template.content['action']}\n\n"
             prompt += f"# 结果（Result）\n{template.content['result']}\n\n"
-        else:  # CUSTOM
-            prompt = template.content['custom']
+        else:
+            prompt = template.content.get('custom', '')
 
         # 替换变量
         for var in template.variables:

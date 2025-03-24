@@ -25,7 +25,7 @@ export function useTemplateList() {
     params: {
       search?: string;
       target_role?: string;
-      framework_type?: string;
+      framework?: any;
     } = {},
   ) => {
     loading.value = true;

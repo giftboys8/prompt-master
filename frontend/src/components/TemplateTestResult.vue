@@ -21,7 +21,9 @@ const props = defineProps<{
 
 // 格式化测试结果
 const formattedResult = computed(() => {
-  return md.render(props.result);
+  // 确保结果是字符串
+  const result = typeof props.result === 'string' ? props.result : String(props.result);
+  return md.render(result);
 });
 </script>
 
@@ -37,6 +39,8 @@ const formattedResult = computed(() => {
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
+  max-height: 80vh;
+  overflow-y: auto;
 
   h3 {
     color: var(--primary-color);
@@ -51,6 +55,10 @@ const formattedResult = computed(() => {
     font-size: 14px;
     line-height: 1.6;
     color: var(--text-primary);
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 
     :deep(pre) {
       background: var(--bg-dark);
@@ -58,6 +66,7 @@ const formattedResult = computed(() => {
       border-radius: 8px;
       overflow-x: auto;
       margin: 16px 0;
+      white-space: pre-wrap;
     }
 
     :deep(code) {
@@ -66,6 +75,30 @@ const formattedResult = computed(() => {
       padding: 2px 4px;
       border-radius: 4px;
       font-size: 0.9em;
+    }
+
+    :deep(p) {
+      margin: 8px 0;
+      white-space: pre-wrap;
+    }
+
+    :deep(img) {
+      max-width: 100%;
+      height: auto;
+    }
+
+    :deep(table) {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      overflow-x: auto;
+      display: block;
+    }
+
+    :deep(th), :deep(td) {
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      text-align: left;
     }
   }
 }

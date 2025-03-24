@@ -150,7 +150,7 @@ const {
 const searchParams = ref({
   search: "",
   target_role: "",
-  framework_type: "",
+  framework: null,
 });
 
 // 预览相关
@@ -178,7 +178,7 @@ const handleSearchParams = (params: {
   searchParams.value = {
     search: params.query,
     target_role: params.role,
-    framework_type: params.framework,
+    framework: params.framework,
   };
   currentPage.value = 1;
   loadData(searchParams.value);

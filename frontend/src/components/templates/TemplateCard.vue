@@ -9,7 +9,7 @@
         <div class="template-info">
           <h3 class="mb-2">{{ template.name }}</h3>
           <div class="mb-2">
-            <el-tag class="mr-2">{{ template.framework_type }}</el-tag>
+            <el-tag class="mr-2">{{ template.framework?.type || '自定义' }}</el-tag>
             <el-tag type="info" size="small">{{ template.modules?.length || 0 }} 个模块</el-tag>
           </div>
           <p class="description mb-2">{{ template.description }}</p>

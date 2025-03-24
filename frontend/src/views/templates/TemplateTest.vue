@@ -144,26 +144,51 @@ const generatePrompt = (
   variables: Record<string, string>,
 ) => {
   let prompt = "";
+  
+  // 调试日志：输出模板信息
+  console.log("模板信息:", {
+    framework_type: template.framework_type,
+    content: template.content,
+    variables: variables
+  });
 
-  if (template.framework_type === "RTGO") {
-    prompt = `角色：${template.content.role}\n`;
-    prompt += `任务：${template.content.task}\n`;
-    prompt += `目标：${template.content.goal}\n`;
-    prompt += `输出：${template.content.output}`;
-  } else if (template.framework_type === "SPAR") {
-    prompt = `情境：${template.content.situation}\n`;
-    prompt += `目的：${template.content.purpose}\n`;
-    prompt += `行动：${template.content.action}\n`;
-    prompt += `结果：${template.content.result}`;
+  // 直接获取模板内容的所有字段，组合成对话模式格式
+  const contentEntries = Object.entries(template.content).filter(([key, value]) => 
+    value && key !== 'custom' // 过滤掉空值和custom字段
+  );
+  
+  if (contentEntries.length > 0) {
+    // 按对话模式格式组织内容
+    contentEntries.forEach(([key, value]) => {
+      // 格式化键名，将驼峰命名转换为空格分隔的词组，并将首字母大写
+      const formattedKey = key
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (str) => str.toUpperCase());
+        
+      prompt += `${formattedKey}：${value}\n`;
+    });
+    
+    // 移除最后一个换行符
+    prompt = prompt.trim();
+  } else if (template.content.custom) {
+    // 如果没有其他内容但有custom字段，则使用custom
+    prompt = template.content.custom;
+    console.log("使用自定义模板内容:", template.content.custom);
   } else {
-    prompt = template.content.custom || "";
+    console.warn(`模板内容为空`);
+    prompt = "";
   }
+
+  // 调试日志：替换变量前的提示词
+  console.log("替换变量前的提示词:", prompt);
 
   // 替换变量
   Object.entries(variables).forEach(([key, value]) => {
     prompt = prompt.replace(new RegExp(`{{${key}}}`, "g"), value);
   });
 
+  // 调试日志：最终生成的提示词
+  console.log("最终生成的提示词:", prompt);
   return prompt;
 };
 
@@ -196,14 +221,27 @@ const runTest = async () => {
 
   try {
     const prompt = generatePrompt(selectedTemplate.value, variableInputs.value);
+    
+    // 调试日志：API调用前的状态
+    console.log("运行测试状态:", {
+      selectedTemplate: selectedTemplate.value,
+      variableInputs: variableInputs.value,
+      selectedApiKey: selectedApiKey.value,
+      prompt: prompt
+    });
 
     if (!import.meta.env.VITE_DIFY_API_BASE_URL) {
       throw new Error("Dify API基础URL未配置，请检查环境变量");
     }
 
+    // 确保 prompt 不为空
+    if (!prompt.trim()) {
+      throw new Error("生成的提示词为空，请检查模板内容和变量填写");
+    }
+
     const response = await sendMessage(
       {
-        query: prompt,
+        query: prompt.trim(), // 确保去除首尾空格
         inputs: variableInputs.value,
         response_mode: "blocking",
         user: "template_test_user",
@@ -349,17 +387,23 @@ onUnmounted(cleanup);
     .preview-panel {
       height: 100%;
       min-width: 0;
+      overflow: auto;
+      max-height: 60vh;
     }
 
     .settings-panel {
       height: 100%;
       min-width: 0;
+      overflow: auto;
+      max-height: 60vh;
     }
   }
 
   .result-container {
     margin-bottom: 24px;
     width: 100%;
+    max-height: 60vh;
+    overflow: auto;
   }
 
   .history-container {

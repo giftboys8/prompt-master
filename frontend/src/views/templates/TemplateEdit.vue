@@ -25,21 +25,12 @@
             <el-input v-model="form.name" placeholder="请输入模版名称" />
           </el-form-item>
 
-          <el-form-item label="框架类型" prop="framework_type">
-            <el-select
-              v-model="form.framework_type"
-              placeholder="请选择框架类型"
-              class="w-full"
-              :loading="loadingFrameworks"
-            >
-              <el-option 
-                v-for="framework in frameworks" 
-                :key="framework.id" 
-                :label="framework.name" 
-                :value="framework.name" 
-              />
-              <el-option label="自定义" value="CUSTOM" />
-            </el-select>
+          <el-form-item label="框架" prop="framework">
+            <FrameworkSelect
+              v-model="form.framework"
+              @change="handleFrameworkChange"
+              :showModules="true"
+            />
           </el-form-item>
 
           <el-form-item label="描述" prop="description">
@@ -61,96 +52,37 @@
           </template>
 
           <div v-loading="loadingFrameworks" element-loading-text="加载框架内容...">
-            <template v-if="form.framework_type === 'RTGO'">
-            <el-form-item label="角色(Role)" prop="content.role">
-              <el-input
-                v-model="form.content.role"
-                type="textarea"
-                rows="2"
-                placeholder="描述AI应该扮演的角色"
-              />
-            </el-form-item>
-
-            <el-form-item label="任务(Task)" prop="content.task">
-              <el-input
-                v-model="form.content.task"
-                type="textarea"
-                rows="2"
-                placeholder="描述需要完成的具体任务"
-              />
-            </el-form-item>
-
-            <el-form-item label="目标(Goal)" prop="content.goal">
-              <el-input
-                v-model="form.content.goal"
-                type="textarea"
-                rows="2"
-                placeholder="描述期望达到的目标"
-              />
-            </el-form-item>
-
-            <el-form-item label="输出(Output)" prop="content.output">
-              <el-input
-                v-model="form.content.output"
-                type="textarea"
-                rows="2"
-                placeholder="描述期望的输出格式和要求"
-              />
-            </el-form-item>
-          </template>
-
-          <template v-else-if="form.framework_type === 'SPAR'">
-            <el-form-item label="情境(Situation)" prop="content.situation">
-              <el-input
-                v-model="form.content.situation"
-                type="textarea"
-                rows="2"
-                placeholder="描述当前的情境或背景"
-              />
-            </el-form-item>
-
-            <el-form-item label="目的(Purpose)" prop="content.purpose">
-              <el-input
-                v-model="form.content.purpose"
-                type="textarea"
-                rows="2"
-                placeholder="描述想要达到的目的"
-              />
-            </el-form-item>
-
-            <el-form-item label="行动(Action)" prop="content.action">
-              <el-input
-                v-model="form.content.action"
-                type="textarea"
-                rows="2"
-                placeholder="描述需要采取的行动"
-              />
-            </el-form-item>
-
-            <el-form-item label="结果(Result)" prop="content.result">
-              <el-input
-                v-model="form.content.result"
-                type="textarea"
-                rows="2"
-                placeholder="描述期望的结果"
-              />
-            </el-form-item>
+            <template v-if="form.framework?.modules?.length">
+              <el-form-item
+                v-for="module in form.framework.modules"
+                :key="module.id"
+                :label="module.name"
+                :prop="'content.' + module.name.toLowerCase()"
+              >
+                <el-input
+                  v-model="form.content[module.name.toLowerCase()]"
+                  type="textarea"
+                  rows="2"
+                  :placeholder="module.description"
+                />
+              </el-form-item>
             </template>
 
-            <template v-else-if="!form.framework_type">
+            <template v-else-if="!form.framework">
               <el-empty description="请先选择框架类型" />
             </template>
 
             <template v-else>
-            <el-form-item label="自定义内容" prop="content.custom">
-              <el-input
-                v-model="form.content.custom"
-                type="textarea"
-                rows="6"
-                placeholder="请输入自定义的提示词内容"
-              />
-            </el-form-item>
-          </template>
+              <el-form-item label="自定义内容" prop="content.custom">
+                <el-input
+                  v-model="form.content.custom"
+                  type="textarea"
+                  rows="6"
+                  placeholder="请输入自定义的提示词内容"
+                />
+              </el-form-item>
+            </template>
+          </div>
         </el-card>
 
         <!-- 变量设置 -->
@@ -234,21 +166,22 @@ import { ElMessage } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { getTemplate, updateTemplate } from "@/api/templates";
-import { getFrameworks, type Framework } from "@/api/frameworks";
+import { getFramework, getFrameworks, type Framework } from "@/api/frameworks";
+import FrameworkSelect from "@/components/FrameworkSelect.vue";
 import type { Template } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
-const submitting = ref(false);
-const frameworks = ref<Framework[]>([]);
 const loadingFrameworks = ref(false);
+const frameworks = ref([]);
+const submitting = ref(false);
 
 // 表单数据
 const form = ref<{
   name: string;
-  framework_type: string;
+  framework: any;
   description: string;
   content: {
     role?: string;
@@ -266,7 +199,7 @@ const form = ref<{
     default_value: string;
     description: string;
   }>;
-}>();
+} | null>(null);
 
 // 表单验证规则
 const rules = reactive<FormRules>({
@@ -274,52 +207,38 @@ const rules = reactive<FormRules>({
     { required: true, message: "请输入模版名称", trigger: "blur" },
     { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
   ],
-  framework_type: [
-    { required: true, message: "请选择框架类型", trigger: "change" },
+  framework: [
+    { required: false, message: "请选择框架", trigger: "change" },
   ],
   description: [{ required: true, message: "请输入模版描述", trigger: "blur" }],
 });
 
 // 动态设置必填字段
-const getContentRules = (type: string) => {
-  if (type === "RTGO") {
-    return {
-      "content.role": [
-        { required: true, message: "请输入角色描述", trigger: "blur" },
-      ],
-      "content.task": [
-        { required: true, message: "请输入任务描述", trigger: "blur" },
-      ],
-      "content.goal": [
-        { required: true, message: "请输入目标描述", trigger: "blur" },
-      ],
-      "content.output": [
-        { required: true, message: "请输入输出要求", trigger: "blur" },
-      ],
-    };
-  } else if (type === "SPAR") {
-    return {
-      "content.situation": [
-        { required: true, message: "请输入情境描述", trigger: "blur" },
-      ],
-      "content.purpose": [
-        { required: true, message: "请输入目的描述", trigger: "blur" },
-      ],
-      "content.action": [
-        { required: true, message: "请输入行动描述", trigger: "blur" },
-      ],
-      "content.result": [
-        { required: true, message: "请输入结果描述", trigger: "blur" },
-      ],
-    };
-  } else if (type === "CUSTOM") {
-    return {
-      "content.custom": [
-        { required: true, message: "请输入自定义内容", trigger: "blur" },
-      ],
-    };
+const getContentRules = (framework: any) => {
+  const rules: Record<string, any> = {};
+  
+  if (framework?.modules?.length) {
+    framework.modules.forEach((module: any) => {
+      const fieldName = `content.${module.name.toLowerCase()}`;
+      rules[fieldName] = [
+        { 
+          required: true, 
+          message: `请输入${module.name}`, 
+          trigger: "blur" 
+        }
+      ];
+    });
+  } else {
+    rules["content.custom"] = [
+      { 
+        required: true, 
+        message: "请输入自定义内容", 
+        trigger: "blur" 
+      }
+    ];
   }
-  return {};
+  
+  return rules;
 };
 
 // 变量验证规则
@@ -338,42 +257,125 @@ const variableRules = {
 
 // 重置内容
 const resetContent = () => {
-  if (form.value) {
-    form.value.content = {
-      role: "",
-      task: "",
-      goal: "",
-      output: "",
-      situation: "",
-      purpose: "",
-      action: "",
-      result: "",
-      custom: "",
-    };
+  if (!form.value) return;
+  
+  console.log('重置内容，当前框架:', form.value.framework);
+  
+  // 创建新的content对象而不是修改原对象
+  const newContent = {};
+  
+  // 如果有框架模块，为每个模块创建对应的内容字段
+  if (form.value.framework?.modules?.length) {
+    form.value.framework.modules.forEach(module => {
+      const key = module.name.toLowerCase();
+      newContent[key] = "";
+    });
+  } else {
+    // 如果没有框架模块，则设置自定义内容字段
+    newContent.custom = "";
   }
+  
+  // 替换整个content对象，确保响应式更新
+  form.value.content = newContent;
+  
+  console.log('重置后的content:', form.value.content);
 };
 
-// 监听框架类型变化
+// 监听框架变化
 const stopWatch = watch(
-  () => form.value?.framework_type,
-  (newType, oldType) => {
-    if (newType && newType !== oldType) {
-      // 重置内容
-      resetContent();
+  () => form.value?.framework,
+  (newFramework, oldFramework) => {
+    if (!form.value) return;
+    
+    // 检查框架模块是否发生变化
+    const newModules = newFramework?.modules || [];
+    const oldModules = oldFramework?.modules || [];
+    if (JSON.stringify(newModules) !== JSON.stringify(oldModules)) {
+      console.log('框架变化，从:', oldFramework, '变为:', newFramework);
+      
+      // 保存旧的content值
+      const oldContent = { ...form.value.content };
+      
+      // 重置content对象
+      form.value.content = {};
+      
+      // 根据新的框架模块设置content字段
+      if (newModules.length > 0) {
+        newModules.forEach(module => {
+          const key = module.name.toLowerCase();
+          // 尝试保留原有值
+          form.value.content[key] = oldContent[key] || '';
+        });
+      } else {
+        // 如果没有模块，设置custom字段
+        form.value.content.custom = oldContent.custom || '';
+      }
+      
       // 更新验证规则
-      Object.assign(rules, getContentRules(newType));
+      Object.assign(rules, getContentRules(newFramework));
+      
+      console.log('框架变化后的content:', form.value.content);
     }
   },
+  { deep: true }  // 深度监听框架对象的变化
 );
 
-// 获取所有框架
-const fetchFrameworks = async () => {
+// 处理框架选择变化
+const handleFrameworkChange = async (framework: any) => {
+  if (!form.value) return;
+  
+  console.log('框架选择变化:', framework);
   loadingFrameworks.value = true;
+  
   try {
-    const response = await getFrameworks();
-    frameworks.value = response;
+    if (framework === null) {
+      // 清空框架
+      form.value.framework = null;
+      
+      // 设置为自定义内容
+      form.value.content = {
+        custom: form.value.content.custom || ""
+      };
+      
+      console.log('清空框架后的表单:', form.value);
+    } else {
+      // 框架对象已经由FrameworkSelect组件传递过来，无需再次获取
+      console.log('获取到的新框架信息:', framework);
+      
+      if (framework) {
+        // 先保存当前content的引用
+        const oldContent = { ...form.value.content };
+        
+        // 更新框架
+        form.value.framework = framework;
+        
+        // 创建新的content对象
+        const newContent = {};
+        
+        // 根据框架模块设置content字段
+        if (framework.modules?.length) {
+          framework.modules.forEach(module => {
+            const key = module.name.toLowerCase();
+            // 尝试保留原有值
+            newContent[key] = oldContent[key] || "";
+          });
+        } else {
+          // 如果没有模块，设置custom字段
+          newContent.custom = oldContent.custom || "";
+        }
+        
+        // 替换整个content对象
+        form.value.content = newContent;
+        
+        console.log('更新框架后的表单:', form.value);
+      }
+    }
+    
+    // 更新验证规则
+    Object.assign(rules, getContentRules(form.value.framework));
   } catch (error: any) {
-    ElMessage.error(error.message || "获取框架列表失败");
+    console.error('框架切换错误:', error);
+    ElMessage.error(error.message || "获取框架详情失败");
   } finally {
     loadingFrameworks.value = false;
   }
@@ -407,14 +409,74 @@ const loadTemplate = async (id: string) => {
   loading.value = true;
   try {
     const data = await getTemplate(Number(id));
+    console.log('API返回的原始数据:', data);
+
+    // 确保初始化表单数据结构
     form.value = {
       name: data.name,
-      framework_type: data.framework_type,
+      framework: null, // 先设置为null，后面再更新
       description: data.description,
-      content: data.content,
+      content: {},  // 先设置为空对象，后面再填充
       variables: data.variables || [],
     };
+
+    // 处理框架信息
+    let framework = null;
+    if (data.framework) {
+      try {
+        // 如果framework是数字（ID），则获取完整框架信息
+        if (typeof data.framework === 'number') {
+          framework = await getFramework(data.framework);
+        } else {
+          // 如果framework已经是完整对象，直接使用
+          framework = data.framework;
+        }
+        console.log('获取到的框架信息:', framework);
+      } catch (error) {
+        console.error('获取框架详情失败:', error);
+        ElMessage.warning('获取框架详情失败，将使用基础框架信息');
+      }
+    } else if (data.framework_type && data.framework_type !== 'CUSTOM') {
+      // 处理只有framework_type的情况
+      const matchingFramework = frameworks.value.find(f => f.name === data.framework_type);
+      if (matchingFramework) {
+        try {
+          framework = await getFramework(matchingFramework.id);
+          console.log('根据framework_type匹配到的框架:', framework);
+        } catch (error) {
+          console.error('获取匹配框架失败:', error);
+          ElMessage.warning('获取匹配框架详情失败');
+        }
+      }
+    }
+
+    // 更新表单中的框架信息
+    form.value.framework = framework;
+
+    // 处理内容字段
+    if (framework?.modules?.length) {
+      // 如果有框架模块，创建对应的内容字段
+      const newContent = {};
+      framework.modules.forEach(module => {
+        const key = module.name.toLowerCase();
+        newContent[key] = data.content?.[key] || '';
+      });
+      form.value.content = newContent;
+    } else {
+      // 如果没有框架模块或是自定义框架，使用custom字段
+      form.value.content = {
+        custom: data.content?.custom || ''
+      };
+    }
+
+    console.log('最终处理后的表单数据:', {
+      name: form.value.name,
+      framework: form.value.framework,
+      content: form.value.content,
+      variables: form.value.variables
+    });
   } catch (error: any) {
+    console.error('加载模板失败:', error);
     ElMessage.error(error.message || "加载失败");
     router.back();
   } finally {
@@ -430,36 +492,45 @@ const handleSubmit = async () => {
     if (valid) {
       submitting.value = true;
       try {
-        // 清理空的内容字段
+        // 深拷贝当前表单内容，避免直接修改表单数据
+        const formData = JSON.parse(JSON.stringify(form.value));
+        
+        // 准备提交数据
         const submissionData = {
-          ...form.value,
+          name: formData.name,
+          description: formData.description,
+          framework: formData.framework?.id || null,
           content: {},
+          variables: formData.variables,
+          framework_type: formData.framework ? formData.framework.name : 'CUSTOM'
         };
+        
+        console.log('提交的框架ID:', submissionData.framework);
 
-        if (form.value.framework_type === "RTGO") {
-          submissionData.content = {
-            role: form.value.content.role,
-            task: form.value.content.task,
-            goal: form.value.content.goal,
-            output: form.value.content.output,
-          };
-        } else if (form.value.framework_type === "SPAR") {
-          submissionData.content = {
-            situation: form.value.content.situation,
-            purpose: form.value.content.purpose,
-            action: form.value.content.action,
-            result: form.value.content.result,
-          };
+        // 处理content数据
+        if (formData.framework?.modules?.length) {
+          // 如果有框架模块，确保只包含框架定义的字段
+          const contentObj = {};
+          formData.framework.modules.forEach((module: any) => {
+            const key = module.name.toLowerCase();
+            contentObj[key] = formData.content[key] || '';
+          });
+          submissionData.content = contentObj;
         } else {
+          // 如果没有框架模块，使用自定义内容
           submissionData.content = {
-            custom: form.value.content.custom,
+            custom: formData.content.custom || '',
           };
         }
 
+        console.log("提交的模板数据:", submissionData);
+        
+        // 发送更新请求
         const result = await updateTemplate(
           Number(route.params.id),
           submissionData,
         );
+        
         if (result && result.id) {
           ElMessage.success("保存成功");
           router.push("/templates");
@@ -467,6 +538,7 @@ const handleSubmit = async () => {
           throw new Error("更新模板失败");
         }
       } catch (error: any) {
+        console.error("提交表单错误:", error);
         ElMessage.error(error.message || "保存失败");
       } finally {
         submitting.value = false;
@@ -476,10 +548,23 @@ const handleSubmit = async () => {
 };
 
 onMounted(async () => {
-  await fetchFrameworks();
-  if (route.params.id) {
-    loadTemplate(route.params.id as string);
-  } else {
+  try {
+    // 先加载框架数据
+    const response = await getFrameworks();
+    frameworks.value = response;
+    // 等框架数据加载完成后再加载模板数据
+    if (route.params.id) {
+      await loadTemplate(route.params.id as string);
+      // 确保表单验证规则更新
+      if (form.value?.framework) {
+        Object.assign(rules, getContentRules(form.value.framework));
+      }
+    } else {
+      router.back();
+    }
+  } catch (error: any) {
+    console.error('初始化失败:', error);
+    ElMessage.error(error.message || "页面初始化失败");
     router.back();
   }
 });

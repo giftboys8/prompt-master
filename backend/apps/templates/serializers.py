@@ -23,7 +23,7 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = [
-            'id', 'name', 'framework', 'description',
+            'id', 'name', 'framework', 'framework_type', 'description',
             'content', 'variables', 'order', 'target_role', 'created_at', 
             'updated_at', 'created_by', 'is_owner', 'can_edit', 'shared_with',
             'visibility'
@@ -59,42 +59,7 @@ class TemplateSerializer(serializers.ModelSerializer):
         if not isinstance(value, dict):
             raise serializers.ValidationError('内容必须是字典类型')
         
-        framework = self.initial_data.get('framework')
-        if not framework:
-            return value
-        framework_type = framework.type if hasattr(framework, 'type') else framework.get('type', '')
-        
-        if framework_type == 'RTGO':
-            required_fields = ['role', 'task', 'goal', 'output']
-            for field in required_fields:
-                if field not in value:
-                    raise serializers.ValidationError(f'RTGO框架必须包含{field}字段')
-                if not isinstance(value[field], str):
-                    raise serializers.ValidationError(f'{field}必须是字符串类型')
-                if not value[field].strip():
-                    raise serializers.ValidationError(f'{field}不能为空')
-        
-        elif framework_type == 'SPAR':
-            required_fields = ['situation', 'purpose', 'action', 'result']
-            for field in required_fields:
-                if field not in value:
-                    raise serializers.ValidationError(f'SPAR框架必须包含{field}字段')
-                if not isinstance(value[field], str):
-                    raise serializers.ValidationError(f'{field}必须是字符串类型')
-                if not value[field].strip():
-                    raise serializers.ValidationError(f'{field}不能为空')
-        
-        elif framework_type == 'CUSTOM':
-            if 'custom' not in value:
-                raise serializers.ValidationError('自定义框架必须包含custom字段')
-            if not isinstance(value['custom'], str):
-                raise serializers.ValidationError('custom必须是字符串类型')
-            if not value['custom'].strip():
-                raise serializers.ValidationError('custom不能为空')
-        
-        else:
-            raise serializers.ValidationError('无效的框架类型')
-        
+        # 框架类型验证已移至validate方法，通过framework对象获取
         return value
 
     def get_is_owner(self, obj):
@@ -115,36 +80,9 @@ class TemplateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        检查框架类型和内容是否匹配
+        验证数据
         """
-        framework = data.get('framework')
-        if not framework:
-            return data
-            
-        framework_type = framework.type if hasattr(framework, 'type') else ''
-        content = data.get('content', {})
-        
-        if framework_type == 'RTGO':
-            extra_fields = set(content.keys()) - {'role', 'task', 'goal', 'output'}
-            if extra_fields:
-                raise serializers.ValidationError({
-                    'content': f'RTGO框架不应包含以下字段：{", ".join(extra_fields)}'
-                })
-        
-        elif framework_type == 'SPAR':
-            extra_fields = set(content.keys()) - {'situation', 'purpose', 'action', 'result'}
-            if extra_fields:
-                raise serializers.ValidationError({
-                    'content': f'SPAR框架不应包含以下字段：{", ".join(extra_fields)}'
-                })
-        
-        elif framework_type == 'CUSTOM':
-            extra_fields = set(content.keys()) - {'custom'}
-            if extra_fields:
-                raise serializers.ValidationError({
-                    'content': f'自定义框架不应包含以下字段：{", ".join(extra_fields)}'
-                })
-        
+        # 移除框架内容字段的限制，允许根据框架类型灵活变化
         return data
 
 
@@ -167,15 +105,16 @@ class TemplateVersionSerializer(serializers.ModelSerializer):
 class TemplateTestSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(source='template.name', read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+    framework_type = serializers.CharField(source='template.framework_type', read_only=True)
 
     class Meta:
         model = TemplateTest
         fields = [
-            'id', 'template', 'template_name', 'model',
+            'id', 'template', 'template_name', 'model', 'framework_type',
             'input_data', 'output_content', 'prompt', 'dify_response',
             'created_at', 'created_by', 'created_by_username'
         ]
-        read_only_fields = ['created_by', 'created_by_username', 'output_content', 'prompt', 'dify_response']
+        read_only_fields = ['created_by', 'created_by_username', 'output_content', 'prompt', 'dify_response', 'framework_type']
 
     def validate_input_data(self, value):
         if not isinstance(value, dict):

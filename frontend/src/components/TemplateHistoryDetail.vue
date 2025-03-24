@@ -103,6 +103,11 @@ const formatMarkdown = (content: string) => {
 
 <style lang="scss" scoped>
 .history-detail-dialog {
+  :deep(.el-dialog__body) {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
   .detail-section {
     margin-bottom: 24px;
 
@@ -129,6 +134,10 @@ const formatMarkdown = (content: string) => {
         color: var(--text-primary);
         font-size: 14px;
         line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
 
         :deep(pre) {
           background: var(--bg-dark);
@@ -136,6 +145,7 @@ const formatMarkdown = (content: string) => {
           border-radius: 8px;
           overflow-x: auto;
           margin: 16px 0;
+          white-space: pre-wrap;
         }
 
         :deep(code) {
@@ -144,6 +154,30 @@ const formatMarkdown = (content: string) => {
           padding: 2px 4px;
           border-radius: 4px;
           font-size: 0.9em;
+        }
+
+        :deep(p) {
+          margin: 8px 0;
+          white-space: pre-wrap;
+        }
+
+        :deep(img) {
+          max-width: 100%;
+          height: auto;
+        }
+
+        :deep(table) {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 16px 0;
+          overflow-x: auto;
+          display: block;
+        }
+
+        :deep(th), :deep(td) {
+          border: 1px solid var(--border-color);
+          padding: 8px;
+          text-align: left;
         }
       }
     }

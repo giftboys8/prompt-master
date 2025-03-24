@@ -36,50 +36,10 @@
       <!-- 基础预览模式 -->
       <div v-if="currentPreviewMode === 'basic'" class="preview-section">
         <h4>提示词内容</h4>
-        <template v-if="template.framework_type === 'RTGO'">
-          <div class="content-item">
-            <h5>角色 (Role)</h5>
-            <p>{{ template.content.role }}</p>
-          </div>
-          <div class="content-item">
-            <h5>任务 (Task)</h5>
-            <p>{{ template.content.task }}</p>
-          </div>
-          <div class="content-item">
-            <h5>目标 (Goal)</h5>
-            <p>{{ template.content.goal }}</p>
-          </div>
-          <div class="content-item">
-            <h5>输出 (Output)</h5>
-            <p>{{ template.content.output }}</p>
-          </div>
-        </template>
-
-        <template v-else-if="template.framework_type === 'SPAR'">
-          <div class="content-item">
-            <h5>情境 (Situation)</h5>
-            <p>{{ template.content.situation }}</p>
-          </div>
-          <div class="content-item">
-            <h5>目的 (Purpose)</h5>
-            <p>{{ template.content.purpose }}</p>
-          </div>
-          <div class="content-item">
-            <h5>行动 (Action)</h5>
-            <p>{{ template.content.action }}</p>
-          </div>
-          <div class="content-item">
-            <h5>结果 (Result)</h5>
-            <p>{{ template.content.result }}</p>
-          </div>
-        </template>
-
-        <template v-else>
-          <div class="content-item">
-            <h5>自定义内容</h5>
-            <p>{{ template.content.custom }}</p>
-          </div>
-        </template>
+        <div v-for="(value, key) in template.content" :key="key" class="content-item">
+          <h5>{{ formatContentKey(key) }}</h5>
+          <p>{{ value }}</p>
+        </div>
       </div>
 
       <!-- 对话预览模式 -->
@@ -92,20 +52,8 @@
             <el-avatar :size="40" src="/ai-avatar.png" />
             <div class="message-content">
               <p>我是您的AI助手，我将按照以下方式为您服务：</p>
-              <template v-if="template.framework_type === 'RTGO'">
-                <p><strong>作为：</strong>{{ template.content.role }}</p>
-                <p><strong>任务：</strong>{{ template.content.task }}</p>
-                <p><strong>目标：</strong>{{ template.content.goal }}</p>
-                <p><strong>输出：</strong>{{ template.content.output }}</p>
-              </template>
-              <template v-else-if="template.framework_type === 'SPAR'">
-                <p><strong>情境：</strong>{{ template.content.situation }}</p>
-                <p><strong>目的：</strong>{{ template.content.purpose }}</p>
-                <p><strong>行动：</strong>{{ template.content.action }}</p>
-                <p><strong>结果：</strong>{{ template.content.result }}</p>
-              </template>
-              <template v-else>
-                <p>{{ template.content.custom }}</p>
+              <template v-for="(value, key) in template.content" :key="key">
+                <p><strong>{{ formatContentKey(key) }}：</strong>{{ value }}</p>
               </template>
             </div>
           </div>
@@ -127,24 +75,8 @@
 
       <div class="preview-section">
         <h4>提示词内容</h4>
-        <template v-if="template.framework_type === 'RTGO'">
-          <p><strong>角色(Role)：</strong>{{ template.content.role }}</p>
-          <p><strong>任务(Task)：</strong>{{ template.content.task }}</p>
-          <p><strong>目标(Goal)：</strong>{{ template.content.goal }}</p>
-          <p><strong>输出(Output)：</strong>{{ template.content.output }}</p>
-        </template>
-
-        <template v-else-if="template.framework_type === 'SPAR'">
-          <p>
-            <strong>情境(Situation)：</strong>{{ template.content.situation }}
-          </p>
-          <p><strong>目的(Purpose)：</strong>{{ template.content.purpose }}</p>
-          <p><strong>行动(Action)：</strong>{{ template.content.action }}</p>
-          <p><strong>结果(Result)：</strong>{{ template.content.result }}</p>
-        </template>
-
-        <template v-else>
-          <p><strong>自定义内容：</strong>{{ template.content.custom }}</p>
+        <template v-for="(value, key) in template.content" :key="key">
+          <p><strong>{{ formatContentKey(key) }}：</strong>{{ value }}</p>
         </template>
       </div>
     </div>
@@ -154,6 +86,7 @@
 
 <script setup lang="ts">
 import type { Template } from "@/types";
+import { ref } from "vue";
 
 defineProps<{
   modelValue?: boolean;
@@ -164,6 +97,21 @@ defineProps<{
 defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();
+
+const previewModes = [
+  { label: "基础预览", value: "basic", icon: "Document" },
+  { label: "对话预览", value: "chat", icon: "ChatRound" },
+];
+const currentPreviewMode = ref("basic");
+
+// 格式化内容键名
+const formatContentKey = (key: string) => {
+  // 将驼峰命名转换为空格分隔的词组，并将首字母大写
+  const formatted = key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (str) => str.toUpperCase());
+  return formatted;
+};
 </script>
 
 <style lang="scss" scoped>
@@ -171,10 +119,15 @@ defineEmits<{
 .template-preview-dialog {
   :deep(.el-dialog__body) {
     padding: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
   }
 
   .preview-section {
     margin-bottom: 20px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   .preview-section:last-child {
@@ -288,6 +241,10 @@ defineEmits<{
     margin: 8px 0;
     color: var(--el-text-color-regular);
     line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 
     strong {
       color: var(--el-text-color-primary);

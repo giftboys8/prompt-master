@@ -45,8 +45,27 @@ class Template(models.Model):
         ('PUBLIC', '公开'),
         ('SHARED', '共享'),
     ]
-
+    
+    @classmethod
+    def get_framework_type_choices(cls):
+        """动态获取框架类型选项"""
+        from frameworks.models import Framework
+        frameworks = Framework.objects.values_list('name', 'name')
+        choices = list(frameworks)
+        choices.append(('CUSTOM', '自定义'))  # 保留自定义选项
+        return choices
+    
     name = models.CharField('模板名称', max_length=100)
+    framework_type = models.CharField(
+        '框架类型',
+        max_length=100,  # 增加长度以适应更长的框架名称
+        choices=[],  # 初始为空，将在运行时动态填充
+        default='CUSTOM'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._meta.get_field('framework_type').choices = self.get_framework_type_choices()
     framework = models.ForeignKey(
         'frameworks.Framework',
         on_delete=models.PROTECT,
@@ -100,6 +119,7 @@ class Template(models.Model):
             version_number=version_number,
             name=self.name,
             framework=self.framework,
+            framework_type=self.framework_type,
             content=self.content,
             variables=self.variables,
             target_role=self.target_role,
@@ -153,16 +173,26 @@ class TemplateVersion(models.Model):
         related_name='versions',
         verbose_name='模板'
     )
-    version_number = models.PositiveIntegerField('版本号')
+    version_number = models.IntegerField('版本号')
     name = models.CharField('模板名称', max_length=100)
     framework = models.ForeignKey(
         'frameworks.Framework',
         on_delete=models.PROTECT,
-        related_name='+',
+        related_name='template_versions',
         verbose_name='框架',
         null=True,
         blank=True
     )
+    framework_type = models.CharField(
+        '框架类型',
+        max_length=100,
+        choices=[],  # 初始为空，将在运行时动态填充
+        default='CUSTOM'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._meta.get_field('framework_type').choices = Template.get_framework_type_choices()
     description = models.TextField('描述')
     content = models.JSONField('内容')
     variables = models.JSONField('变量', default=list)

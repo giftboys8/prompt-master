@@ -1,12 +1,13 @@
-// 用户类型
-export interface FrameworkSelectProps { User {
+// 框架选择组件属性
+export interface FrameworkSelectProps {
   modelValue: number | null;
   placeholder?: string;
   disabled?: boolean;
   showDescription?: boolean;
 }
 
-export interface
+// 用户类型
+export interface User {
   id: number;
   username: string;
   email: string;
@@ -18,7 +19,16 @@ export interface
 export interface Template {
   id: number;
   name: string;
-  framework_type: "RTGO" | "SPAR" | "CUSTOM";
+  framework: {
+    id: number;
+    name: string;
+    description?: string;
+    modules?: Array<{
+      id: number;
+      name: string;
+      description: string;
+    }>;
+  } | null;
   description: string;
   content: {
     role?: string;
@@ -60,7 +70,7 @@ export interface TemplateVersion {
   template: number;
   version_number: number;
   name: string;
-  framework_type: "RTGO" | "SPAR" | "CUSTOM";
+  framework: any;
   description: string;
   content: {
     role?: string;
