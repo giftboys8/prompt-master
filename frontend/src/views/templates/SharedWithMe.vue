@@ -58,18 +58,18 @@
     </div>
 
     <el-row :gutter="20">
-      <el-col 
-        v-for="template in sharedTemplates" 
-        :key="template.id" 
-        :xs="24" 
-        :sm="12" 
-        :md="8" 
-        :lg="6" 
+      <el-col
+        v-for="template in sharedTemplates"
+        :key="template.id"
+        :xs="24"
+        :sm="12"
+        :md="8"
+        :lg="6"
         class="mb-4"
       >
         <div class="template-item h-full">
-          <el-card 
-            class="box-card h-full" 
+          <el-card
+            class="box-card h-full"
             shadow="hover"
             @click.stop="handlePreview(template)"
           >
@@ -78,17 +78,14 @@
                 <h3>{{ template.name }}</h3>
                 <div class="template-tags">
                   <el-tag class="mr-2">{{ template.framework_type }}</el-tag>
-                  <el-tag 
-                    type="warning"
-                    class="mr-2"
-                  >共享</el-tag>
-                  <el-tag 
-                    :type="template.can_edit ? 'success' : 'info'"
-                  >{{ template.can_edit ? '可编辑' : '只读' }}</el-tag>
+                  <el-tag type="warning" class="mr-2">共享</el-tag>
+                  <el-tag :type="template.can_edit ? 'success' : 'info'">{{
+                    template.can_edit ? "可编辑" : "只读"
+                  }}</el-tag>
                 </div>
                 <p class="template-description">{{ template.description }}</p>
               </div>
-              
+
               <div class="template-footer">
                 <div class="template-meta">
                   <div class="meta-item">
@@ -100,7 +97,7 @@
                     <span>{{ formatDate(template.updated_at) }}</span>
                   </div>
                 </div>
-                
+
                 <div class="template-actions">
                   <el-button
                     type="primary"
@@ -133,8 +130,8 @@
     </el-row>
 
     <!-- 空状态 -->
-    <el-empty 
-      v-if="sharedTemplates.length === 0 && !loading" 
+    <el-empty
+      v-if="sharedTemplates.length === 0 && !loading"
       description="暂无共享模板"
     >
       <el-button type="primary" @click="router.push('/templates')">
@@ -148,7 +145,7 @@
     </div>
 
     <!-- 预览模板对话框 -->
-    <template-preview 
+    <template-preview
       v-model="previewDialogVisible"
       :template="currentTemplate"
       mode="dialog"
@@ -157,103 +154,110 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Search, User, Calendar, Monitor, CopyDocument, EditPen } from '@element-plus/icons-vue'
-import { getSharedWithMe } from '@/api/share'
-import { cloneTemplate } from '@/api/templates'
-import { useUserStore } from '@/stores/user'
-import TemplatePreview from '@/components/TemplatePreview.vue'
-import type { Template } from '@/types'
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import {
+  Search,
+  User,
+  Calendar,
+  Monitor,
+  CopyDocument,
+  EditPen,
+} from "@element-plus/icons-vue";
+import { getSharedWithMe } from "@/api/share";
+import { cloneTemplate } from "@/api/templates";
+import { useUserStore } from "@/stores/user";
+import TemplatePreview from "@/components/TemplatePreview.vue";
+import type { Template } from "@/types";
 
-const router = useRouter()
-const userStore = useUserStore()
+const router = useRouter();
+const userStore = useUserStore();
 
 // 数据
-const sharedTemplates = ref<Template[]>([])
-const loading = ref(false)
-const searchQuery = ref('')
-const selectedRole = ref('')
-const selectedFramework = ref('')
-const previewDialogVisible = ref(false)
-const currentTemplate = ref<Template | null>(null)
+const sharedTemplates = ref<Template[]>([]);
+const loading = ref(false);
+const searchQuery = ref("");
+const selectedRole = ref("");
+const selectedFramework = ref("");
+const previewDialogVisible = ref(false);
+const currentTemplate = ref<Template | null>(null);
 
 // 选项
 const roleOptions = [
-  { value: 'DEVELOPER', label: '开发者' },
-  { value: 'PRODUCT_MANAGER', label: '产品经理' },
-  { value: 'TESTER', label: '测试' },
-  { value: 'DESIGNER', label: '设计师' },
-  { value: 'OPERATION', label: '运营' },
-]
+  { value: "DEVELOPER", label: "开发者" },
+  { value: "PRODUCT_MANAGER", label: "产品经理" },
+  { value: "TESTER", label: "测试" },
+  { value: "DESIGNER", label: "设计师" },
+  { value: "OPERATION", label: "运营" },
+];
 
 const frameworkOptions = [
-  { value: 'RTGO', label: 'RTGO框架' },
-  { value: 'SPAR', label: 'SPAR框架' },
-  { value: 'CUSTOM', label: '自定义框架' },
-]
+  { value: "RTGO", label: "RTGO框架" },
+  { value: "SPAR", label: "SPAR框架" },
+  { value: "CUSTOM", label: "自定义框架" },
+];
 
 // 获取共享给我的模板
 const fetchSharedTemplates = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await getSharedWithMe()
-    sharedTemplates.value = response.results
+    const response = await getSharedWithMe();
+    sharedTemplates.value = response.results;
   } catch (error) {
-    console.error('获取共享模板失败:', error)
-    ElMessage.error('获取共享模板失败')
+    console.error("获取共享模板失败:", error);
+    ElMessage.error("获取共享模板失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 搜索处理
 const handleSearch = () => {
-  fetchSharedTemplates()
-}
+  fetchSharedTemplates();
+};
 
 // 格式化日期
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString()
-}
+  const date = new Date(dateString);
+  return date.toLocaleDateString();
+};
 
 // 获取模板所有者名称
 const getOwnerName = (template: Template) => {
   // 这里应该根据实际API返回的数据结构进行调整
   // 假设API返回了所有者信息
-  return template.created_by_username || '未知用户'
-}
+  return template.created_by_username || "未知用户";
+};
 
 // 预览模板
 const handlePreview = (template: Template) => {
-  currentTemplate.value = template
-  previewDialogVisible.value = true
-}
+  currentTemplate.value = template;
+  previewDialogVisible.value = true;
+};
 
 // 测试模板
 const handleTest = (template: Template) => {
   router.push({
-    name: 'template-test',
-    query: { id: template.id.toString() }
-  })
-}
+    name: "template-test",
+    query: { id: template.id.toString() },
+  });
+};
 
 // 克隆模板
 const handleClone = async (template: Template) => {
   // 这里应该实现克隆模板的逻辑
-  ElMessage.success('克隆功能待实现')
-}
+  ElMessage.success("克隆功能待实现");
+};
 
 // 编辑模板
 const handleEdit = (id: string | number) => {
-  router.push(`/templates/${id}/edit`)
-}
+  router.push(`/templates/${id}/edit`);
+};
 
 onMounted(() => {
-  fetchSharedTemplates()
-})
+  fetchSharedTemplates();
+});
 </script>
 
 <style scoped>
@@ -292,7 +296,7 @@ onMounted(() => {
   .search-bar {
     flex-direction: column;
   }
-  
+
   .filter-select {
     width: 100%;
   }
@@ -402,16 +406,16 @@ onMounted(() => {
   .template-actions :deep(.el-button) {
     padding: 8px;
   }
-  
+
   .template-footer {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .template-meta {
     order: 2;
   }
-  
+
   .template-actions {
     order: 1;
     width: 100%;

@@ -5,24 +5,24 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted } from "vue";
 
 onMounted(() => {
   // 添加动态背景动画
-  const app = document.querySelector('.app-container')
+  const app = document.querySelector(".app-container");
   if (app) {
-    app.addEventListener('mousemove', (e) => {
-      const x = e.clientX / window.innerWidth
-      const y = e.clientY / window.innerHeight
-      app.style.setProperty('--mouse-x', `${x}`)
-      app.style.setProperty('--mouse-y', `${y}`)
-    })
+    app.addEventListener("mousemove", (e) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      app.style.setProperty("--mouse-x", `${x}`);
+      app.style.setProperty("--mouse-y", `${y}`);
+    });
   }
-})
+});
 </script>
 
 <style>
-@import '@/styles/tech-theme.scss';
+@import "@/styles/tech-theme.scss";
 
 #app {
   height: 100vh;
@@ -37,25 +37,24 @@ onMounted(() => {
 }
 
 .app-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    radial-gradient(
-      circle at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.5) * 100%),
-      rgba(14, 165, 233, 0.15),
-      transparent 25%
-    );
+  background: radial-gradient(
+    circle at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.5) * 100%),
+    rgba(14, 165, 233, 0.15),
+    transparent 25%
+  );
   pointer-events: none;
   transition: all 0.3s ease;
   z-index: 0;
 }
 
 .app-container::after {
-  content: '';
+  content: "";
   position: fixed;
   top: -50%;
   left: -50%;
@@ -72,15 +71,36 @@ onMounted(() => {
 }
 
 @keyframes grain {
-  0%, 100% { transform: translate(0, 0); }
-  10% { transform: translate(-5%, -10%); }
-  20% { transform: translate(-15%, 5%); }
-  30% { transform: translate(7%, -25%); }
-  40% { transform: translate(-5%, 25%); }
-  50% { transform: translate(-15%, 10%); }
-  60% { transform: translate(15%, 0%); }
-  70% { transform: translate(0%, 15%); }
-  80% { transform: translate(3%, 35%); }
-  90% { transform: translate(-10%, 10%); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-5%, -10%);
+  }
+  20% {
+    transform: translate(-15%, 5%);
+  }
+  30% {
+    transform: translate(7%, -25%);
+  }
+  40% {
+    transform: translate(-5%, 25%);
+  }
+  50% {
+    transform: translate(-15%, 10%);
+  }
+  60% {
+    transform: translate(15%, 0%);
+  }
+  70% {
+    transform: translate(0%, 15%);
+  }
+  80% {
+    transform: translate(3%, 35%);
+  }
+  90% {
+    transform: translate(-10%, 10%);
+  }
 }
 </style>

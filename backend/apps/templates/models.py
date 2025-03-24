@@ -40,12 +40,6 @@ class TemplateTest(models.Model):
         return f'{self.template.name} - {self.model} Test'
 
 class Template(models.Model):
-    FRAMEWORK_CHOICES = [
-        ('RTGO', 'RTGO'),
-        ('SPAR', 'SPAR'),
-        ('CUSTOM', 'Custom'),
-    ]
-    
     VISIBILITY_CHOICES = [
         ('PRIVATE', '私有'),
         ('PUBLIC', '公开'),
@@ -53,13 +47,20 @@ class Template(models.Model):
     ]
 
     name = models.CharField('模板名称', max_length=100)
+    framework = models.ForeignKey(
+        'frameworks.Framework',
+        on_delete=models.PROTECT,
+        related_name='templates',
+        verbose_name='框架',
+        null=True,
+        blank=True
+    )
     visibility = models.CharField(
         '可见性',
         max_length=10,
         choices=VISIBILITY_CHOICES,
         default='PRIVATE'
     )
-    framework_type = models.CharField('框架类型', max_length=10, choices=FRAMEWORK_CHOICES)
     description = models.TextField('描述')
     content = models.JSONField('内容')
     variables = models.JSONField('变量', default=list)
@@ -98,8 +99,7 @@ class Template(models.Model):
             template=self,
             version_number=version_number,
             name=self.name,
-            framework_type=self.framework_type,
-            description=self.description,
+            framework=self.framework,
             content=self.content,
             variables=self.variables,
             target_role=self.target_role,
@@ -155,10 +155,13 @@ class TemplateVersion(models.Model):
     )
     version_number = models.PositiveIntegerField('版本号')
     name = models.CharField('模板名称', max_length=100)
-    framework_type = models.CharField(
-        '框架类型',
-        max_length=10,
-        choices=Template.FRAMEWORK_CHOICES
+    framework = models.ForeignKey(
+        'frameworks.Framework',
+        on_delete=models.PROTECT,
+        related_name='+',
+        verbose_name='框架',
+        null=True,
+        blank=True
     )
     description = models.TextField('描述')
     content = models.JSONField('内容')
@@ -187,7 +190,7 @@ class TemplateVersion(models.Model):
         """恢复到此版本"""
         template = self.template
         template.name = self.name
-        template.framework_type = self.framework_type
+        template.framework = self.framework
         template.description = self.description
         template.content = self.content
         template.variables = self.variables

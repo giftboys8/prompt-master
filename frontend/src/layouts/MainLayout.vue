@@ -8,7 +8,7 @@
             <h1>PromptMaster</h1>
           </div>
         </div>
-        
+
         <div class="right-section">
           <el-menu
             router
@@ -36,6 +36,12 @@
                 <span>场景管理</span>
               </template>
             </el-menu-item>
+            <el-menu-item index="/frameworks">
+              <template #title>
+                <el-icon><Folder /></el-icon>
+                <span>模板框架</span>
+              </template>
+            </el-menu-item>
             <el-menu-item index="/contents">
               <template #title>
                 <el-icon><Collection /></el-icon>
@@ -49,7 +55,7 @@
               </template>
             </el-menu-item>
           </el-menu>
-          
+
           <div class="user-info">
             <template v-if="userStore.isLoggedIn()">
               <el-dropdown @command="handleCommand">
@@ -70,7 +76,9 @@
                     <el-dropdown-item disabled>
                       <span class="dropdown-username">{{ username }}</span>
                     </el-dropdown-item>
-                    <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                    <el-dropdown-item divided command="logout"
+                      >退出登录</el-dropdown-item
+                    >
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -80,9 +88,7 @@
                 <el-button type="primary" @click="showLoginDialog = true">
                   登录
                 </el-button>
-                <el-button @click="router.push('/register')">
-                  注册
-                </el-button>
+                <el-button @click="router.push('/register')"> 注册 </el-button>
               </div>
             </template>
           </div>
@@ -94,7 +100,9 @@
       <el-breadcrumb class="breadcrumb">
         <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
         <template v-for="(item, index) in breadcrumbItems" :key="index">
-          <el-breadcrumb-item :to="item.path">{{ item.title }}</el-breadcrumb-item>
+          <el-breadcrumb-item :to="item.path">{{
+            item.title
+          }}</el-breadcrumb-item>
         </template>
       </el-breadcrumb>
     </div>
@@ -140,13 +148,18 @@
       <template #footer>
         <div class="dialog-footer">
           <div class="dialog-footer-left">
-            <span class="register-link">没有账号？
+            <span class="register-link"
+              >没有账号？
               <a href="#" @click.prevent="goToRegister">立即注册</a>
             </span>
           </div>
           <div class="dialog-footer-right">
             <el-button @click="showLoginDialog = false">取消</el-button>
-            <el-button type="primary" :loading="loginLoading" @click="handleLogin">
+            <el-button
+              type="primary"
+              :loading="loginLoading"
+              @click="handleLogin"
+            >
               登录
             </el-button>
           </div>
@@ -157,11 +170,21 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { HomeFilled, Document, Grid, Collection, ArrowDown, User, Lock, Key } from '@element-plus/icons-vue'
+import { defineComponent } from "vue";
+import {
+  HomeFilled,
+  Document,
+  Grid,
+  Collection,
+  ArrowDown,
+  User,
+  Lock,
+  Key,
+  Folder,
+} from "@element-plus/icons-vue";
 
 export default defineComponent({
-  name: 'MainLayout',
+  name: "MainLayout",
   components: {
     HomeFilled,
     Document,
@@ -170,107 +193,117 @@ export default defineComponent({
     ArrowDown,
     User,
     Lock,
-    Key
-  }
-})
+    Key,
+    Folder,
+  },
+});
 </script>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import type { FormInstance } from 'element-plus'
+import { ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user";
+import { ElMessage } from "element-plus";
+import type { FormInstance } from "element-plus";
 
-const route = useRoute()
-const router = useRouter()
-const userStore = useUserStore()
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
 
 // 用户信息
 const username = computed(() => {
-  const user = userStore.user
-  if (!user) return '未登录'
-  return user.username
-})
+  const user = userStore.user;
+  if (!user) return "未登录";
+  return user.username;
+});
 
 const userRole = computed(() => {
-  const user = userStore.user
-  if (!user) return ''
-  return user.is_staff ? '管理员' : '普通用户'
-})
+  const user = userStore.user;
+  if (!user) return "";
+  return user.is_staff ? "管理员" : "普通用户";
+});
 
 // 面包屑导航
 const breadcrumbItems = computed(() => {
-  const matched = route.matched
+  const matched = route.matched;
   return matched
-    .filter(item => item.meta?.title)
-    .map(item => ({
+    .filter((item) => item.meta?.title)
+    .map((item) => ({
       path: item.path,
-      title: item.meta?.title
-    }))
-})
+      title: item.meta?.title,
+    }));
+});
 
 // 登录相关
-const showLoginDialog = ref(false)
-const loginLoading = ref(false)
-const loginFormRef = ref<FormInstance>()
+const showLoginDialog = ref(false);
+const loginLoading = ref(false);
+const loginFormRef = ref<FormInstance>();
 const loginForm = ref({
-  username: '',
-  password: ''
-})
+  username: "",
+  password: "",
+});
 
 const loginRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
-}
+  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+  password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+};
 
 const handleLogin = () => {
-  if (!loginFormRef.value) return
-  
+  if (!loginFormRef.value) return;
+
   loginFormRef.value.validate((valid) => {
     if (valid) {
-      loginLoading.value = true
-      userStore.login(loginForm.value.username, loginForm.value.password)
+      loginLoading.value = true;
+      userStore
+        .login(loginForm.value.username, loginForm.value.password)
         .then((success) => {
           if (success) {
-            showLoginDialog.value = false
-            ElMessage.success('登录成功')
+            showLoginDialog.value = false;
+            ElMessage.success("登录成功");
           }
         })
         .finally(() => {
-          loginLoading.value = false
-        })
+          loginLoading.value = false;
+        });
     }
-  })
-}
+  });
+};
 
 // 菜单点击
 const handleMenuClick = (index: string) => {
   // 可以添加菜单点击的处理逻辑
-  console.log('Menu clicked:', index);
-}
+  console.log("Menu clicked:", index);
+};
 
 // 下拉菜单命令处理
 const handleCommand = (command: string) => {
-  if (command === 'logout') {
-    userStore.logout()
+  if (command === "logout") {
+    userStore.logout();
   }
-}
+};
 
 // 跳转到注册页面
 const goToRegister = () => {
-  showLoginDialog.value = false
-  router.push('/register')
-}
+  showLoginDialog.value = false;
+  router.push("/register");
+};
 </script>
 
 <style scoped>
 .layout-container {
   height: 100vh;
   background: var(--bg-dark);
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05) 0%, transparent 20%),
-    radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 20%);
+  background-image:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(14, 165, 233, 0.05) 0%,
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(168, 85, 247, 0.05) 0%,
+      transparent 20%
+    );
 }
 
 .header {
@@ -316,7 +349,7 @@ const goToRegister = () => {
 .logo-animation h1 {
   margin: 0;
   font-size: 24px;
-  font-family: 'Orbitron', sans-serif;
+  font-family: "Orbitron", sans-serif;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -461,7 +494,8 @@ const goToRegister = () => {
   box-shadow: none;
 }
 
-:deep(.el-input__wrapper:hover), :deep(.el-input__wrapper.is-focus) {
+:deep(.el-input__wrapper:hover),
+:deep(.el-input__wrapper.is-focus) {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 1px var(--primary-color);
 }
@@ -499,8 +533,17 @@ const goToRegister = () => {
 }
 
 @keyframes pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.scenes',
     'apps.templates',
     'apps.contents',
+    'frameworks',
 ]
 
 MIDDLEWARE = [

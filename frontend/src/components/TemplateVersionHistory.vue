@@ -15,7 +15,11 @@
             <el-tag>{{ row.framework_type }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="created_by_username" label="创建者" width="120" />
+        <el-table-column
+          prop="created_by_username"
+          label="创建者"
+          width="120"
+        />
         <el-table-column prop="created_at" label="创建时间" width="180">
           <template #default="{ row }">
             {{ new Date(row.created_at).toLocaleString() }}
@@ -60,18 +64,31 @@
           <p><strong>角色(Role)：</strong>{{ currentVersion.content.role }}</p>
           <p><strong>任务(Task)：</strong>{{ currentVersion.content.task }}</p>
           <p><strong>目标(Goal)：</strong>{{ currentVersion.content.goal }}</p>
-          <p><strong>输出(Output)：</strong>{{ currentVersion.content.output }}</p>
+          <p>
+            <strong>输出(Output)：</strong>{{ currentVersion.content.output }}
+          </p>
         </template>
 
         <template v-else-if="currentVersion.framework_type === 'SPAR'">
-          <p><strong>情境(Situation)：</strong>{{ currentVersion.content.situation }}</p>
-          <p><strong>目的(Purpose)：</strong>{{ currentVersion.content.purpose }}</p>
-          <p><strong>行动(Action)：</strong>{{ currentVersion.content.action }}</p>
-          <p><strong>结果(Result)：</strong>{{ currentVersion.content.result }}</p>
+          <p>
+            <strong>情境(Situation)：</strong
+            >{{ currentVersion.content.situation }}
+          </p>
+          <p>
+            <strong>目的(Purpose)：</strong>{{ currentVersion.content.purpose }}
+          </p>
+          <p>
+            <strong>行动(Action)：</strong>{{ currentVersion.content.action }}
+          </p>
+          <p>
+            <strong>结果(Result)：</strong>{{ currentVersion.content.result }}
+          </p>
         </template>
 
         <template v-else>
-          <p><strong>自定义内容：</strong>{{ currentVersion.content.custom }}</p>
+          <p>
+            <strong>自定义内容：</strong>{{ currentVersion.content.custom }}
+          </p>
         </template>
 
         <h3>变量列表</h3>
@@ -91,7 +108,12 @@
       append-to-body
       destroy-on-close
     >
-      <p>确定要恢复到版本 v{{ versionToRestore?.version_number }} 吗？此操作将创建一个新版本。</p>
+      <p>
+        确定要恢复到版本 v{{
+          versionToRestore?.version_number
+        }}
+        吗？此操作将创建一个新版本。
+      </p>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="restoreDialogVisible = false">取消</el-button>
@@ -109,112 +131,112 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getTemplateVersions, restoreTemplateVersion } from '@/api/templates'
-import type { TemplateVersion } from '@/types'
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ElMessage } from "element-plus";
+import { getTemplateVersions, restoreTemplateVersion } from "@/api/templates";
+import type { TemplateVersion } from "@/types";
 
 const props = defineProps<{
-  modelValue: boolean
-  templateId: number
-}>()
+  modelValue: boolean;
+  templateId: number;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'restored'): void
-}>()
+  (e: "update:modelValue", value: boolean): void;
+  (e: "restored"): void;
+}>();
 
-const dialogVisible = ref(props.modelValue)
-const loading = ref(false)
-const versions = ref<TemplateVersion[]>([])
+const dialogVisible = ref(props.modelValue);
+const loading = ref(false);
+const versions = ref<TemplateVersion[]>([]);
 
 // 预览相关
-const previewDialogVisible = ref(false)
-const currentVersion = ref<TemplateVersion | null>(null)
+const previewDialogVisible = ref(false);
+const currentVersion = ref<TemplateVersion | null>(null);
 
 // 恢复相关
-const restoreDialogVisible = ref(false)
-const versionToRestore = ref<TemplateVersion | null>(null)
-const restoring = ref(false)
+const restoreDialogVisible = ref(false);
+const versionToRestore = ref<TemplateVersion | null>(null);
+const restoring = ref(false);
 
 // 监听对话框可见性
 const stopWatch = watch(
   () => props.modelValue,
   (val) => {
-    dialogVisible.value = val
+    dialogVisible.value = val;
     if (val && props.templateId) {
-      loadVersions()
+      loadVersions();
     }
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
 watch(
   () => dialogVisible.value,
   (val) => {
-    emit('update:modelValue', val)
+    emit("update:modelValue", val);
     if (!val) {
       // 清理状态
-      versions.value = []
-      currentVersion.value = null
-      versionToRestore.value = null
+      versions.value = [];
+      currentVersion.value = null;
+      versionToRestore.value = null;
     }
-  }
-)
+  },
+);
 
 // 加载版本历史
 const loadVersions = async () => {
-  if (!props.templateId) return
+  if (!props.templateId) return;
 
-  loading.value = true
+  loading.value = true;
   try {
-    versions.value = await getTemplateVersions(props.templateId)
+    versions.value = await getTemplateVersions(props.templateId);
   } catch (error: any) {
-    ElMessage.error(error.message || '加载失败')
+    ElMessage.error(error.message || "加载失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 预览版本
 const handlePreview = (version: TemplateVersion) => {
-  currentVersion.value = version
-  previewDialogVisible.value = true
-}
+  currentVersion.value = version;
+  previewDialogVisible.value = true;
+};
 
 // 恢复版本
 const handleRestore = (version: TemplateVersion) => {
-  versionToRestore.value = version
-  restoreDialogVisible.value = true
-}
+  versionToRestore.value = version;
+  restoreDialogVisible.value = true;
+};
 
 // 确认恢复
 const confirmRestore = async () => {
-  if (!versionToRestore.value) return
+  if (!versionToRestore.value) return;
 
-  restoring.value = true
+  restoring.value = true;
   try {
-    await restoreTemplateVersion(props.templateId, versionToRestore.value.id)
-    ElMessage.success('恢复成功')
-    restoreDialogVisible.value = false
-    emit('restored')
-    loadVersions() // 重新加载版本列表
+    await restoreTemplateVersion(props.templateId, versionToRestore.value.id);
+    ElMessage.success("恢复成功");
+    restoreDialogVisible.value = false;
+    emit("restored");
+    loadVersions(); // 重新加载版本列表
   } catch (error: any) {
-    ElMessage.error(error.message || '恢复失败')
+    ElMessage.error(error.message || "恢复失败");
   } finally {
-    restoring.value = false
+    restoring.value = false;
   }
-}
+};
 
 // 关闭对话框
 const handleClose = () => {
-  dialogVisible.value = false
-}
+  dialogVisible.value = false;
+};
 
 // 组件卸载前清理
 onBeforeUnmount(() => {
-  stopWatch()
-})
+  stopWatch();
+});
 </script>
 
 <style scoped>

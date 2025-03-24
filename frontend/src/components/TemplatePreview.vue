@@ -14,7 +14,11 @@
     <div v-if="template" class="preview-content scrollable">
       <div class="preview-header">
         <el-radio-group v-model="currentPreviewMode" size="large">
-          <el-radio-button v-for="mode in previewModes" :key="mode.value" :label="mode.value">
+          <el-radio-button
+            v-for="mode in previewModes"
+            :key="mode.value"
+            :label="mode.value"
+          >
             <el-icon>
               <component :is="mode.icon" />
             </el-icon>
@@ -79,7 +83,10 @@
       </div>
 
       <!-- 对话预览模式 -->
-      <div v-else-if="currentPreviewMode === 'chat'" class="preview-section chat-preview">
+      <div
+        v-else-if="currentPreviewMode === 'chat'"
+        class="preview-section chat-preview"
+      >
         <div class="chat-container">
           <div class="message system">
             <el-avatar :size="40" src="/ai-avatar.png" />
@@ -128,7 +135,9 @@
         </template>
 
         <template v-else-if="template.framework_type === 'SPAR'">
-          <p><strong>情境(Situation)：</strong>{{ template.content.situation }}</p>
+          <p>
+            <strong>情境(Situation)：</strong>{{ template.content.situation }}
+          </p>
           <p><strong>目的(Purpose)：</strong>{{ template.content.purpose }}</p>
           <p><strong>行动(Action)：</strong>{{ template.content.action }}</p>
           <p><strong>结果(Result)：</strong>{{ template.content.result }}</p>
@@ -144,16 +153,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Template } from '@/types'
+import type { Template } from "@/types";
 
 defineProps<{
   modelValue?: boolean;
   template: Template | null;
-  mode?: 'dialog' | 'inline';
+  mode?: "dialog" | "inline";
 }>();
 
 defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
+  (e: "update:modelValue", value: boolean): void;
 }>();
 </script>
 
@@ -255,7 +264,7 @@ defineEmits<{
     color: var(--el-color-primary);
     font-size: 18px;
     margin-bottom: 16px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: "Orbitron", sans-serif;
     border-bottom: 1px solid var(--el-border-color);
     padding-bottom: 8px;
   }

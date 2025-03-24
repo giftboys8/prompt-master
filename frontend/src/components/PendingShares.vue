@@ -20,24 +20,16 @@
           <el-table-column prop="can_edit" label="权限">
             <template #default="{ row }">
               <el-tag :type="row.can_edit ? 'success' : 'info'">
-                {{ row.can_edit ? '可编辑' : '只读' }}
+                {{ row.can_edit ? "可编辑" : "只读" }}
               </el-tag>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="200">
             <template #default="{ row }">
-              <el-button
-                type="success"
-                size="small"
-                @click="handleAccept(row)"
-              >
+              <el-button type="success" size="small" @click="handleAccept(row)">
                 接受
               </el-button>
-              <el-button
-                type="danger"
-                size="small"
-                @click="handleReject(row)"
-              >
+              <el-button type="danger" size="small" @click="handleReject(row)">
                 拒绝
               </el-button>
             </template>
@@ -49,88 +41,91 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getPendingShares, acceptShare, rejectShare } from '@/api/share'
-import type { SharedTemplate } from '@/types'
+import { ref, onMounted, watch } from "vue";
+import { ElMessage } from "element-plus";
+import { getPendingShares, acceptShare, rejectShare } from "@/api/share";
+import type { SharedTemplate } from "@/types";
 
 const props = defineProps<{
-  modelValue: boolean
-}>()
+  modelValue: boolean;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-  (e: 'refresh'): void
-}>()
+  (e: "update:modelValue", value: boolean): void;
+  (e: "refresh"): void;
+}>();
 
-const dialogVisible = ref(props.modelValue)
-const loading = ref(false)
-const pendingShares = ref<SharedTemplate[]>([])
+const dialogVisible = ref(props.modelValue);
+const loading = ref(false);
+const pendingShares = ref<SharedTemplate[]>([]);
 
 // 监听对话框可见性
-watch(() => props.modelValue, (val) => {
-  dialogVisible.value = val
-})
+watch(
+  () => props.modelValue,
+  (val) => {
+    dialogVisible.value = val;
+  },
+);
 
 watch(dialogVisible, (val) => {
-  emit('update:modelValue', val)
-})
+  emit("update:modelValue", val);
+});
 
 // 加载待处理的共享请求
 const loadPendingShares = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await getPendingShares()
-    pendingShares.value = response
+    const response = await getPendingShares();
+    pendingShares.value = response;
   } catch (error) {
-    ElMessage.error('获取待处理共享请求失败')
+    ElMessage.error("获取待处理共享请求失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 处理关闭对话框
 const handleClose = () => {
-  emit('update:modelValue', false)
-}
+  emit("update:modelValue", false);
+};
 
 // 接受共享请求
 const handleAccept = async (share: SharedTemplate) => {
   try {
-    await acceptShare(share.id)
-    ElMessage.success('已接受共享请求')
-    await loadPendingShares()
-    emit('refresh')
+    await acceptShare(share.id);
+    ElMessage.success("已接受共享请求");
+    await loadPendingShares();
+    emit("refresh");
   } catch (error) {
-    ElMessage.error('接受共享请求失败')
+    ElMessage.error("接受共享请求失败");
   }
-}
+};
 
 // 拒绝共享请求
 const handleReject = async (share: SharedTemplate) => {
   try {
-    await rejectShare(share.id)
-    ElMessage.success('已拒绝共享请求')
-    await loadPendingShares()
-    emit('refresh')
+    await rejectShare(share.id);
+    ElMessage.success("已拒绝共享请求");
+    await loadPendingShares();
+    emit("refresh");
   } catch (error) {
-    ElMessage.error('拒绝共享请求失败')
+    ElMessage.error("拒绝共享请求失败");
   }
-}
+};
 
 // 组件挂载时加载数据
 onMounted(() => {
   if (dialogVisible.value) {
-    loadPendingShares()
+    loadPendingShares();
   }
-})
+});
 
 // 监听对话框打开，重新加载数据
 watch(dialogVisible, (val) => {
   if (val) {
-    loadPendingShares()
+    loadPendingShares();
   }
-})
+});
 </script>
 
 <style scoped>

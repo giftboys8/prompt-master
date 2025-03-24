@@ -20,7 +20,9 @@
               <span>智能管理</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500;">提供专业的提示词模板管理功能，支持多种框架，让AI对话更加规范和高效。</p>
+          <p style="color: #666666; font-size: 16px; font-weight: 500">
+            提供专业的提示词模板管理功能，支持多种框架，让AI对话更加规范和高效。
+          </p>
         </el-card>
 
         <el-card class="intro-card">
@@ -30,7 +32,9 @@
               <span>场景联动</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500;">灵活的场景配置系统，针对不同应用场景快速调用合适的提示词模板。</p>
+          <p style="color: #666666; font-size: 16px; font-weight: 500">
+            灵活的场景配置系统，针对不同应用场景快速调用合适的提示词模板。
+          </p>
         </el-card>
 
         <el-card class="intro-card">
@@ -40,7 +44,9 @@
               <span>数据分析</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500;">完整的数据分析功能，帮助您了解提示词使用情况，持续优化对话效果。</p>
+          <p style="color: #666666; font-size: 16px; font-weight: 500">
+            完整的数据分析功能，帮助您了解提示词使用情况，持续优化对话效果。
+          </p>
         </el-card>
       </div>
     </div>
@@ -158,10 +164,18 @@
     <div class="quick-start">
       <h2>立即开始</h2>
       <div class="action-buttons">
-        <el-button type="primary" size="large" @click="router.push('/templates')">
+        <el-button
+          type="primary"
+          size="large"
+          @click="router.push('/templates')"
+        >
           <el-icon><Document /></el-icon>浏览模板
         </el-button>
-        <el-button type="success" size="large" @click="router.push('/templates/create')">
+        <el-button
+          type="success"
+          size="large"
+          @click="router.push('/templates/create')"
+        >
           <el-icon><Plus /></el-icon>创建模板
         </el-button>
       </div>
@@ -170,10 +184,19 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { Document, Plus, Monitor, Connection, DataAnalysis, Share, Timer, Refresh } from '@element-plus/icons-vue'
+import { useRouter } from "vue-router";
+import {
+  Document,
+  Plus,
+  Monitor,
+  Connection,
+  DataAnalysis,
+  Share,
+  Timer,
+  Refresh,
+} from "@element-plus/icons-vue";
 
-const router = useRouter()
+const router = useRouter();
 </script>
 
 <style scoped>

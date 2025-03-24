@@ -23,7 +23,7 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = [
-            'id', 'name', 'framework_type', 'description',
+            'id', 'name', 'framework', 'description',
             'content', 'variables', 'order', 'target_role', 'created_at', 
             'updated_at', 'created_by', 'is_owner', 'can_edit', 'shared_with',
             'visibility'
@@ -59,7 +59,10 @@ class TemplateSerializer(serializers.ModelSerializer):
         if not isinstance(value, dict):
             raise serializers.ValidationError('内容必须是字典类型')
         
-        framework_type = self.initial_data.get('framework_type')
+        framework = self.initial_data.get('framework')
+        if not framework:
+            return value
+        framework_type = framework.type if hasattr(framework, 'type') else framework.get('type', '')
         
         if framework_type == 'RTGO':
             required_fields = ['role', 'task', 'goal', 'output']
@@ -114,7 +117,11 @@ class TemplateSerializer(serializers.ModelSerializer):
         """
         检查框架类型和内容是否匹配
         """
-        framework_type = data.get('framework_type')
+        framework = data.get('framework')
+        if not framework:
+            return data
+            
+        framework_type = framework.type if hasattr(framework, 'type') else ''
         content = data.get('content', {})
         
         if framework_type == 'RTGO':
@@ -148,7 +155,7 @@ class TemplateVersionSerializer(serializers.ModelSerializer):
         model = TemplateVersion
         fields = [
             'id', 'template', 'version_number', 'name',
-            'framework_type', 'description', 'content',
+            'framework', 'description', 'content',
             'variables', 'target_role', 'is_current', 'created_at',
             'created_by', 'created_by_username'
         ]

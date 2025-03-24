@@ -31,23 +31,23 @@
 </template>
 
 <script setup lang="ts">
-import type { ShareFormState } from '@/composables/useTemplateShare'
-import type { User } from '@/types'
+import type { ShareFormState } from "@/composables/useTemplateShare";
+import type { User } from "@/types";
 
 defineProps<{
-  form: ShareFormState
-  loading: boolean
-  userOptions: User[]
-}>()
+  form: ShareFormState;
+  loading: boolean;
+  userOptions: User[];
+}>();
 
 const emit = defineEmits<{
-  (e: 'search', query: string): void
-  (e: 'update:form', value: ShareFormState): void
-}>()
+  (e: "search", query: string): void;
+  (e: "update:form", value: ShareFormState): void;
+}>();
 
 const onSearch = (query: string) => {
-  emit('search', query)
-}
+  emit("search", query);
+};
 </script>
 
 <style scoped>

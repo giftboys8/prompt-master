@@ -1,9 +1,9 @@
 // 缓存键名枚举
 export enum CacheKey {
-  TEMPLATES = 'templates',
-  USER_PREFERENCES = 'user_preferences',
-  RECENT_TEMPLATES = 'recent_templates',
-  TEMPLATE_DRAFTS = 'template_drafts'
+  TEMPLATES = "templates",
+  USER_PREFERENCES = "user_preferences",
+  RECENT_TEMPLATES = "recent_templates",
+  TEMPLATE_DRAFTS = "template_drafts",
 }
 
 // 缓存配置接口
@@ -49,13 +49,13 @@ export class CacheManager {
     const cacheItem: CacheItem<T> = {
       data,
       timestamp: Date.now(),
-      expire: config.expire
+      expire: config.expire,
     };
 
     try {
       this.storage.setItem(key, JSON.stringify(cacheItem));
     } catch (error) {
-      console.error('Cache set error:', error);
+      console.error("Cache set error:", error);
       // 如果存储失败（可能是存储空间已满），尝试清理过期缓存
       this.clearExpired();
     }
@@ -72,16 +72,19 @@ export class CacheManager {
 
     try {
       const cacheItem: CacheItem<T> = JSON.parse(item);
-      
+
       // 检查是否过期
-      if (cacheItem.expire && Date.now() - cacheItem.timestamp > cacheItem.expire) {
+      if (
+        cacheItem.expire &&
+        Date.now() - cacheItem.timestamp > cacheItem.expire
+      ) {
         this.remove(key);
         return null;
       }
 
       return cacheItem.data;
     } catch (error) {
-      console.error('Cache get error:', error);
+      console.error("Cache get error:", error);
       return null;
     }
   }
@@ -112,7 +115,10 @@ export class CacheManager {
         if (item) {
           try {
             const cacheItem: CacheItem<any> = JSON.parse(item);
-            if (cacheItem.expire && Date.now() - cacheItem.timestamp > cacheItem.expire) {
+            if (
+              cacheItem.expire &&
+              Date.now() - cacheItem.timestamp > cacheItem.expire
+            ) {
               this.remove(key);
             }
           } catch (error) {
@@ -146,7 +152,7 @@ export class CacheManager {
    */
   public isSupported(): boolean {
     try {
-      const testKey = '__test__';
+      const testKey = "__test__";
       this.storage.setItem(testKey, testKey);
       this.storage.removeItem(testKey);
       return true;

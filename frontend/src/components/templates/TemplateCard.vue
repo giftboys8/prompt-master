@@ -1,38 +1,52 @@
 <template>
   <div class="template-item h-full">
-    <el-card 
-      class="box-card h-full" 
+    <el-card
+      class="box-card h-full"
       shadow="hover"
       @click.stop="$emit('preview', template)"
     >
       <div class="template-content">
         <div class="template-info">
           <h3 class="mb-2">{{ template.name }}</h3>
-          <el-tag class="mb-2">{{ template.framework_type }}</el-tag>
+          <div class="mb-2">
+            <el-tag class="mr-2">{{ template.framework_type }}</el-tag>
+            <el-tag type="info" size="small">{{ template.modules?.length || 0 }} 个模块</el-tag>
+          </div>
           <p class="description mb-2">{{ template.description }}</p>
-          <p class="time mb-2">创建时间：{{ new Date(template.created_at).toLocaleString() }}</p>
+          <p class="time mb-2">
+            创建时间：{{ formatDate(template.created_at) }}
+          </p>
+          <p class="time mb-2">
+            最后更新：{{ formatDate(template.updated_at) }}
+          </p>
         </div>
         <div class="template-actions" @click.stop>
           <el-button-group>
-            <el-button type="primary" text @click="$emit('edit', template)">编辑</el-button>
-            <el-button type="primary" text @click="$emit('test', template)">测试</el-button>
+            <el-button type="primary" text @click="$emit('edit', template)"
+              >编辑</el-button
+            >
+            <el-button type="primary" text @click="$emit('test', template)"
+              >测试</el-button
+            >
             <el-button type="primary" text @click="$emit('history', template)">
               <el-icon><Timer /></el-icon>
             </el-button>
             <el-button type="primary" text @click="$emit('clone', template)">
               <el-icon><CopyDocument /></el-icon>
             </el-button>
-            <el-button 
+            <el-button
               v-if="user?.id === template.created_by"
-              type="primary" 
-              text 
+              type="primary"
+              text
               @click="$emit('share', template)"
               title="打开分享对话框"
             >
               <el-icon><Share /></el-icon>
               <span class="button-text">分享</span>
             </el-button>
-            <el-button type="danger" text @click="$emit('delete', template)">删除</el-button>
+            <el-button type="danger" text @click="$emit('delete', template)"
+              >删除</el-button
+            >
           </el-button-group>
         </div>
       </div>
@@ -41,21 +55,26 @@
 </template>
 
 <script setup lang="ts">
-import { Timer, CopyDocument, Share } from '@element-plus/icons-vue'
-import type { Template } from '@/types'
-import { useUserStore } from '@/stores/user'
-import { storeToRefs } from 'pinia'
+import { Timer, CopyDocument, Share } from "@element-plus/icons-vue";
+import type { Template } from "@/types";
+import { useUserStore } from "@/stores/user";
+import { storeToRefs } from "pinia";
+import dayjs from 'dayjs';
 
-const { user } = storeToRefs(useUserStore())
+const formatDate = (dateString: string) => {
+  return dayjs(dateString).format('YYYY-MM-DD HH:mm:ss');
+};
+
+const { user } = storeToRefs(useUserStore());
 
 defineProps({
   template: {
     type: Object as () => Template,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview', 'share'])
+defineEmits(["edit", "test", "history", "clone", "delete", "preview", "share"]);
 </script>
 
 <style scoped>
@@ -106,7 +125,7 @@ defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview', 'share'])
 .template-actions {
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid #EBEEF5;
+  border-top: 1px solid #ebeef5;
 }
 
 .template-actions :deep(.el-button-group) {
@@ -140,6 +159,10 @@ defineEmits(['edit', 'test', 'history', 'clone', 'delete', 'preview', 'share'])
 
 .mb-2 {
   margin-bottom: 8px;
+}
+
+.mr-2 {
+  margin-right: 8px;
 }
 
 .h-full {

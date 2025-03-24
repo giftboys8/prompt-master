@@ -1,13 +1,17 @@
 <template>
-  <el-form @submit.prevent="$emit('run-test')" label-position="top" class="variable-form">
+  <el-form
+    @submit.prevent="$emit('run-test')"
+    label-position="top"
+    class="variable-form"
+  >
     <div class="api-key-section">
       <h3>API密钥选择</h3>
       <div class="api-key-description">
         请选择用于测试的API密钥，确保选择的密钥处于启用状态。
       </div>
       <el-form-item required>
-        <el-select 
-          v-model="selectedApiKey" 
+        <el-select
+          v-model="selectedApiKey"
           placeholder="选择API密钥"
           filterable
           class="api-key-select"
@@ -31,7 +35,7 @@
       <div class="variables-description">
         请填写以下变量的值，这些值将用于生成最终的提示词。
       </div>
-      
+
       <el-form-item
         v-for="variable in template.variables"
         :key="variable.name"
@@ -40,7 +44,9 @@
         <template #label>
           <div class="variable-label">
             <span>{{ variable.name }}</span>
-            <span class="variable-description-inline">({{ variable.description }})</span>
+            <span class="variable-description-inline"
+              >({{ variable.description }})</span
+            >
           </div>
         </template>
         <div class="variable-input">
@@ -50,7 +56,9 @@
             :placeholder="'请输入' + variable.name"
           >
             <template #append v-if="variable.default_value">
-              <el-button @click="useDefaultValue(variable.name, variable.default_value)">
+              <el-button
+                @click="useDefaultValue(variable.name, variable.default_value)"
+              >
                 使用默认值
               </el-button>
             </template>
@@ -60,9 +68,9 @@
     </div>
 
     <el-form-item>
-      <el-button 
-        type="primary" 
-        native-type="submit" 
+      <el-button
+        type="primary"
+        native-type="submit"
         :disabled="!isFormValid"
         :loading="isRunning"
       >
@@ -73,68 +81,71 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import type { Template } from '@/types'
-import { getApiKeys } from '@/api/apikeys'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted } from "vue";
+import type { Template } from "@/types";
+import { getApiKeys } from "@/api/apikeys";
+import { ElMessage } from "element-plus";
 
 const props = defineProps<{
-  template: Template
-  variables: Record<string, string>
-  isRunning: boolean
-}>()
+  template: Template;
+  variables: Record<string, string>;
+  isRunning: boolean;
+}>();
 
 // API密钥相关
-const apiKeys = ref<any[]>([])
-const selectedApiKey = ref<any>(null)
+const apiKeys = ref<any[]>([]);
+const selectedApiKey = ref<any>(null);
 
 // 获取API密钥列表
 const fetchApiKeys = async () => {
   try {
-    const response = await getApiKeys()
+    const response = await getApiKeys();
     if (response && response.results) {
-      apiKeys.value = response.results.filter((key: any) => key.is_active)
+      apiKeys.value = response.results.filter((key: any) => key.is_active);
     }
   } catch (error: any) {
-    ElMessage.error('获取API密钥列表失败：' + (error.message || '未知错误'))
+    ElMessage.error("获取API密钥列表失败：" + (error.message || "未知错误"));
   }
-}
+};
 
 // 处理API密钥选择
 const handleApiKeyChange = (key: any) => {
-  selectedApiKey.value = key
-  emit('update:apiKey', key)
-}
+  selectedApiKey.value = key;
+  emit("update:apiKey", key);
+};
 
 onMounted(() => {
-  fetchApiKeys()
-})
+  fetchApiKeys();
+});
 
 const emit = defineEmits<{
-  (e: 'update:variables', value: Record<string, string>): void
-  (e: 'update:apiKey', value: any): void
-  (e: 'run-test'): void
+  (e: "update:variables", value: Record<string, string>): void;
+  (e: "update:apiKey", value: any): void;
+  (e: "run-test"): void;
 }>();
 
 // 计算表单是否有效
 const isFormValid = computed(() => {
-  return selectedApiKey.value && props.template.variables.every(
-    variable => !!props.variables[variable.name]
-  )
-})
+  return (
+    selectedApiKey.value &&
+    props.template.variables.every(
+      (variable) => !!props.variables[variable.name],
+    )
+  );
+});
 
 // 处理变量输入
 const handleVariableInput = (name: string, value: string) => {
-  emit('update:variables', {
+  emit("update:variables", {
     ...props.variables,
-    [name]: value
-  })
-}
+    [name]: value,
+  });
+};
 
 // 使用默认值
 const useDefaultValue = (variableName: string, defaultValue: string) => {
-  handleVariableInput(variableName, defaultValue)
-}
+  handleVariableInput(variableName, defaultValue);
+};
 </script>
 
 <style lang="scss" scoped>
@@ -161,7 +172,7 @@ const useDefaultValue = (variableName: string, defaultValue: string) => {
     color: var(--primary-color);
     font-size: 18px;
     margin-bottom: 16px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: "Orbitron", sans-serif;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
   }

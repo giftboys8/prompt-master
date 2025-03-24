@@ -15,7 +15,7 @@
     <div class="operation-bar">
       <!-- 搜索栏组件 -->
       <template-search-bar @search="handleSearchParams" />
-      
+
       <!-- 操作栏组件 -->
       <template-operation-bar
         @import="handleImport"
@@ -38,7 +38,7 @@
       >
         <template #item="{ element: template }">
           <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="4" class="mb-4">
-            <template-card 
+            <template-card
               :template="template"
               @edit="handleEdit"
               @test="handleTest"
@@ -99,9 +99,9 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="deleteDialogVisible = false">取消</el-button>
-          <el-button 
-            type="danger" 
-            @click="confirmDelete" 
+          <el-button
+            type="danger"
+            @click="confirmDelete"
             :loading="deleteLoading"
           >
             确定
@@ -113,22 +113,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import draggable from 'vuedraggable'
+import { ref, watch, onMounted, onBeforeMount } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import draggable from "vuedraggable";
+import { useTemplateList } from "@/composables/useTemplateList";
 
-import TemplateCard from '@/components/templates/TemplateCard.vue'
-import TemplateShareDialog from '@/components/templates/TemplateShareDialog.vue'
-import TemplateSearchBar from '@/components/templates/TemplateSearchBar.vue'
-import TemplateOperationBar from '@/components/templates/TemplateOperationBar.vue'
-import TemplateVersionHistory from '@/components/TemplateVersionHistory.vue'
-import TemplatePreview from '@/components/TemplatePreview.vue'
+import TemplateCard from "@/components/templates/TemplateCard.vue";
+import TemplateShareDialog from "@/components/templates/TemplateShareDialog.vue";
+import TemplateSearchBar from "@/components/templates/TemplateSearchBar.vue";
+import TemplateOperationBar from "@/components/templates/TemplateOperationBar.vue";
+import TemplateVersionHistory from "@/components/TemplateVersionHistory.vue";
+import TemplatePreview from "@/components/TemplatePreview.vue";
 
-import { useTemplateList } from '@/composables/useTemplateList'
-import type { Template } from '@/types'
+import type { Template } from "@/types";
 
-const router = useRouter()
+const router = useRouter();
 
 // 使用组合式函数管理模板列表
 const {
@@ -143,166 +143,242 @@ const {
   importTemplate,
   exportTemplate,
   cloneTemplateItem,
-  removeTemplate
-} = useTemplateList()
+  removeTemplate,
+} = useTemplateList();
 
 // 搜索参数
 const searchParams = ref({
-  search: '',
-  target_role: '',
-  framework_type: ''
-})
+  search: "",
+  target_role: "",
+  framework_type: "",
+});
 
 // 预览相关
-const previewVisible = ref(false)
-const selectedTemplate = ref<Template | null>(null)
-const currentTemplate = ref<Template | null>(null)
+const previewVisible = ref(false);
+const selectedTemplate = ref<Template | null>(null);
+const currentTemplate = ref<Template | null>(null);
 
 // 版本历史相关
-const versionHistoryVisible = ref(false)
+const versionHistoryVisible = ref(false);
 
 // 分享相关
-const shareDialogVisible = ref(false)
+const shareDialogVisible = ref(false);
 
 // 删除相关
-const deleteDialogVisible = ref(false)
-const deleteLoading = ref(false)
-const templateToDelete = ref<Template | null>(null)
+const deleteDialogVisible = ref(false);
+const deleteLoading = ref(false);
+const templateToDelete = ref<Template | null>(null);
 
 // 处理搜索参数
-const handleSearchParams = (params: { query: string, role: string, framework: string }) => {
+const handleSearchParams = (params: {
+  query: string;
+  role: string;
+  framework: string;
+}) => {
   searchParams.value = {
     search: params.query,
     target_role: params.role,
-    framework_type: params.framework
-  }
-  currentPage.value = 1
-  loadData(searchParams.value)
-}
+    framework_type: params.framework,
+  };
+  currentPage.value = 1;
+  loadData(searchParams.value);
+};
 
 // 处理拖拽结束
 const handleDragEnd = async () => {
-  await updateOrder()
-}
+  await updateOrder();
+};
 
 // 导入模板
 const handleImport = async (file: any) => {
-  await importTemplate(file.raw)
-}
+  await importTemplate(file.raw);
+};
 
 // 导出模板
 const handleExport = async () => {
-  await exportTemplate()
-}
+  await exportTemplate();
+};
 
 // 创建模板
 const handleCreate = () => {
-  router.push('/templates/create')
-}
+  router.push("/templates/create");
+};
 
 // 编辑模板
 const handleEdit = (template: Template) => {
   router.push({
     path: `/templates/${template.id}/edit`,
-    query: { name: template.name }
-  })
-}
+    query: { name: template.name },
+  });
+};
 
 // 测试模板
 const handleTest = (template: Template) => {
   router.push({
-    name: 'template-test',
-    params: { id: template.id }
-  })
-}
+    name: "template-test",
+    params: { id: template.id },
+  });
+};
 
 // 克隆模板
 const handleClone = async (template: Template) => {
-  await cloneTemplateItem(template.id)
-}
+  await cloneTemplateItem(template.id);
+};
 
 // 分享模板
 const handleShare = (template: Template) => {
   if (!template) {
-    ElMessage.error('模板信息不存在')
-    return
+    ElMessage.error("模板信息不存在");
+    return;
   }
-  currentTemplate.value = template
-  shareDialogVisible.value = true
-  ElMessage.info('请在弹出的对话框中选择用户和权限，然后点击"分享"按钮完成分享操作')
-}
+  currentTemplate.value = template;
+  shareDialogVisible.value = true;
+  ElMessage.info(
+    '请在弹出的对话框中选择用户和权限，然后点击"分享"按钮完成分享操作',
+  );
+};
 
 // 打开版本历史
 const handleVersionHistory = (template: Template) => {
-  currentTemplate.value = template
-  versionHistoryVisible.value = true
-}
+  currentTemplate.value = template;
+  versionHistoryVisible.value = true;
+};
 
 // 预览模板
 const handlePreview = (template: Template) => {
-  selectedTemplate.value = template
-  previewVisible.value = true
-}
+  selectedTemplate.value = template;
+  previewVisible.value = true;
+};
 
 // 处理预览弹窗的显示状态
 const handlePreviewVisibleChange = (val: boolean) => {
-  previewVisible.value = val
+  previewVisible.value = val;
   if (!val) {
-    selectedTemplate.value = null
+    selectedTemplate.value = null;
   }
-}
+};
 
 // 删除模板
 const handleDelete = (template: Template) => {
-  templateToDelete.value = template
-  deleteDialogVisible.value = true
-}
+  templateToDelete.value = template;
+  deleteDialogVisible.value = true;
+};
 
 // 确认删除
 const confirmDelete = async () => {
-  if (!templateToDelete.value) return
+  if (!templateToDelete.value) return;
 
-  deleteLoading.value = true
+  deleteLoading.value = true;
   try {
-    await removeTemplate(templateToDelete.value.id)
-    deleteDialogVisible.value = false
+    await removeTemplate(templateToDelete.value.id);
+    deleteDialogVisible.value = false;
   } finally {
-    deleteLoading.value = false
+    deleteLoading.value = false;
   }
-}
+};
 
 // 分页相关
 const handleSizeChange = (val: number) => {
-  pageSize.value = val
-  loadData(searchParams.value)
-}
+  pageSize.value = val;
+  loadData(searchParams.value);
+};
 
 const handleCurrentChange = (val: number) => {
-  currentPage.value = val
-  loadData(searchParams.value)
-}
+  currentPage.value = val;
+  loadData(searchParams.value);
+};
 
 // 监听预览对话框关闭
 watch(previewVisible, (val) => {
   if (!val) {
-    selectedTemplate.value = null
+    selectedTemplate.value = null;
   }
-})
+});
 
 // 监听删除对话框关闭
 watch(deleteDialogVisible, (val) => {
   if (!val) {
-    templateToDelete.value = null
+    templateToDelete.value = null;
   }
-})
+});
 
 // 初始化
 onMounted(() => {
-  loadData()
-})
+  loadData();
+});
 </script>
 
 <style scoped>
+.page-container {
+  padding: 20px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.operation-bar {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.template-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px; /* 抵消子元素的margin */
+}
+
+.template-grid > * {
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.drag-tip {
+  margin-left: 20px;
+  flex: 1;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 拖拽时的样式 */
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}
+
+/* 确保flex布局正确应用 */
+.is-flex {
+  display: flex !important;
+}
+
+.flex-wrap {
+  flex-wrap: wrap !important;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+/* 确保卡片容器具有合适的高度 */
+.el-col {
+  height: auto;
+  min-height: 200px;
+  display: flex;
+}
 .page-container {
   padding: 20px;
 }
@@ -346,7 +422,7 @@ onMounted(() => {
 .ghost {
   opacity: 0.5;
   background: #c8ebfb;
-  border: 1px dashed #409EFF;
+  border: 1px dashed #409eff;
 }
 
 /* 模板网格布局 */

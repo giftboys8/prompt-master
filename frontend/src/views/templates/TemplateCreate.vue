@@ -18,13 +18,17 @@
             <span>基本信息</span>
           </div>
         </template>
-        
+
         <el-form-item label="模版名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入模版名称" />
         </el-form-item>
 
         <el-form-item label="框架类型" prop="framework_type">
-          <el-select v-model="form.framework_type" placeholder="请选择框架类型" class="w-full">
+          <el-select
+            v-model="form.framework_type"
+            placeholder="请选择框架类型"
+            class="w-full"
+          >
             <el-option label="RTGO" value="RTGO" />
             <el-option label="SPAR" value="SPAR" />
             <el-option label="自定义" value="CUSTOM" />
@@ -148,7 +152,11 @@
           </div>
         </template>
 
-        <div v-for="(variable, index) in form.variables" :key="index" class="variable-item">
+        <div
+          v-for="(variable, index) in form.variables"
+          :key="index"
+          class="variable-item"
+        >
           <el-row :gutter="20">
             <el-col :span="8">
               <el-form-item
@@ -156,7 +164,10 @@
                 :prop="'variables.' + index + '.name'"
                 :rules="variableRules.name"
               >
-                <el-input v-model="variable.name" placeholder="请输入变量名称" />
+                <el-input
+                  v-model="variable.name"
+                  placeholder="请输入变量名称"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -165,7 +176,10 @@
                 :prop="'variables.' + index + '.default_value'"
                 :rules="variableRules.default_value"
               >
-                <el-input v-model="variable.default_value" placeholder="请输入默认值" />
+                <el-input
+                  v-model="variable.default_value"
+                  placeholder="请输入默认值"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="6">
@@ -174,7 +188,10 @@
                 :prop="'variables.' + index + '.description'"
                 :rules="variableRules.description"
               >
-                <el-input v-model="variable.description" placeholder="请输入描述" />
+                <el-input
+                  v-model="variable.description"
+                  placeholder="请输入描述"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="2" class="flex items-center">
@@ -198,162 +215,181 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Plus, Delete } from '@element-plus/icons-vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import { createTemplate } from '@/api/templates'
+import { ref, reactive, watch } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { Plus, Delete } from "@element-plus/icons-vue";
+import type { FormInstance, FormRules } from "element-plus";
+import { createTemplate } from "@/api/templates";
 
-const router = useRouter()
-const formRef = ref<FormInstance>()
-const loading = ref(false)
+const router = useRouter();
+const formRef = ref<FormInstance>();
+const loading = ref(false);
 
 // 表单数据
 const form = reactive({
-  name: '',
-  framework_type: '',
-  description: '',
+  name: "",
+  framework_type: "",
+  description: "",
   content: {
-    role: '',
-    task: '',
-    goal: '',
-    output: '',
-    situation: '',
-    purpose: '',
-    action: '',
-    result: '',
-    custom: ''
+    role: "",
+    task: "",
+    goal: "",
+    output: "",
+    situation: "",
+    purpose: "",
+    action: "",
+    result: "",
+    custom: "",
   },
   variables: [] as Array<{
-    name: string
-    default_value: string
-    description: string
-  }>
-})
+    name: string;
+    default_value: string;
+    description: string;
+  }>,
+});
 
 // 表单验证规则
 const rules = reactive<FormRules>({
   name: [
-    { required: true, message: '请输入模版名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+    { required: true, message: "请输入模版名称", trigger: "blur" },
+    { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
   ],
   framework_type: [
-    { required: true, message: '请选择框架类型', trigger: 'change' }
+    { required: true, message: "请选择框架类型", trigger: "change" },
   ],
-  description: [
-    { required: true, message: '请输入模版描述', trigger: 'blur' }
-  ]
-})
+  description: [{ required: true, message: "请输入模版描述", trigger: "blur" }],
+});
 
 // 动态设置必填字段
 const getContentRules = (type: string) => {
-  if (type === 'RTGO') {
+  if (type === "RTGO") {
     return {
-      'content.role': [{ required: true, message: '请输入角色描述', trigger: 'blur' }],
-      'content.task': [{ required: true, message: '请输入任务描述', trigger: 'blur' }],
-      'content.goal': [{ required: true, message: '请输入目标描述', trigger: 'blur' }],
-      'content.output': [{ required: true, message: '请输入输出要求', trigger: 'blur' }]
-    }
-  } else if (type === 'SPAR') {
+      "content.role": [
+        { required: true, message: "请输入角色描述", trigger: "blur" },
+      ],
+      "content.task": [
+        { required: true, message: "请输入任务描述", trigger: "blur" },
+      ],
+      "content.goal": [
+        { required: true, message: "请输入目标描述", trigger: "blur" },
+      ],
+      "content.output": [
+        { required: true, message: "请输入输出要求", trigger: "blur" },
+      ],
+    };
+  } else if (type === "SPAR") {
     return {
-      'content.situation': [{ required: true, message: '请输入情境描述', trigger: 'blur' }],
-      'content.purpose': [{ required: true, message: '请输入目的描述', trigger: 'blur' }],
-      'content.action': [{ required: true, message: '请输入行动描述', trigger: 'blur' }],
-      'content.result': [{ required: true, message: '请输入结果描述', trigger: 'blur' }]
-    }
-  } else if (type === 'CUSTOM') {
+      "content.situation": [
+        { required: true, message: "请输入情境描述", trigger: "blur" },
+      ],
+      "content.purpose": [
+        { required: true, message: "请输入目的描述", trigger: "blur" },
+      ],
+      "content.action": [
+        { required: true, message: "请输入行动描述", trigger: "blur" },
+      ],
+      "content.result": [
+        { required: true, message: "请输入结果描述", trigger: "blur" },
+      ],
+    };
+  } else if (type === "CUSTOM") {
     return {
-      'content.custom': [{ required: true, message: '请输入自定义内容', trigger: 'blur' }]
-    }
+      "content.custom": [
+        { required: true, message: "请输入自定义内容", trigger: "blur" },
+      ],
+    };
   }
-  return {}
-}
+  return {};
+};
 
 // 监听框架类型变化
-watch(() => form.framework_type, (newType) => {
-  if (newType) {
-    Object.assign(rules, getContentRules(newType))
-  }
-})
+watch(
+  () => form.framework_type,
+  (newType) => {
+    if (newType) {
+      Object.assign(rules, getContentRules(newType));
+    }
+  },
+);
 
 // 变量验证规则
 const variableRules = {
   name: [
-    { required: true, message: '请输入变量名称', trigger: 'blur' },
-    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: '变量名称只能包含字母、数字和下划线，且不能以数字开头', trigger: 'blur' }
+    { required: true, message: "请输入变量名称", trigger: "blur" },
+    {
+      pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
+      message: "变量名称只能包含字母、数字和下划线，且不能以数字开头",
+      trigger: "blur",
+    },
   ],
-  default_value: [
-    { required: true, message: '请输入默认值', trigger: 'blur' }
-  ],
-  description: [
-    { required: true, message: '请输入描述', trigger: 'blur' }
-  ]
-}
+  default_value: [{ required: true, message: "请输入默认值", trigger: "blur" }],
+  description: [{ required: true, message: "请输入描述", trigger: "blur" }],
+};
 
 // 添加变量
 const addVariable = () => {
   form.variables.push({
-    name: '',
-    default_value: '',
-    description: ''
-  })
-}
+    name: "",
+    default_value: "",
+    description: "",
+  });
+};
 
 // 删除变量
 const removeVariable = (index: number) => {
-  form.variables.splice(index, 1)
-}
+  form.variables.splice(index, 1);
+};
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!formRef.value) return
+  if (!formRef.value) return;
 
   await formRef.value.validate(async (valid) => {
     if (valid) {
-      loading.value = true
+      loading.value = true;
       try {
         // 清理空的内容字段
         const submissionData = {
           ...form,
-          content: {}
-        }
+          content: {},
+        };
 
-        if (form.framework_type === 'RTGO') {
+        if (form.framework_type === "RTGO") {
           submissionData.content = {
             role: form.content.role,
             task: form.content.task,
             goal: form.content.goal,
-            output: form.content.output
-          }
-        } else if (form.framework_type === 'SPAR') {
+            output: form.content.output,
+          };
+        } else if (form.framework_type === "SPAR") {
           submissionData.content = {
             situation: form.content.situation,
             purpose: form.content.purpose,
             action: form.content.action,
-            result: form.content.result
-          }
+            result: form.content.result,
+          };
         } else {
           submissionData.content = {
-            custom: form.content.custom
-          }
+            custom: form.content.custom,
+          };
         }
 
-        const result = await createTemplate(submissionData)
+        const result = await createTemplate(submissionData);
         if (result && result.id) {
-          ElMessage.success('保存成功')
-          router.push('/templates')
+          ElMessage.success("保存成功");
+          router.push("/templates");
         } else {
-          throw new Error('创建模板失败')
+          throw new Error("创建模板失败");
         }
       } catch (error: any) {
-        ElMessage.error(error.message || '保存失败')
+        ElMessage.error(error.message || "保存失败");
       } finally {
-        loading.value = false
+        loading.value = false;
       }
     }
-  })
-}
+  });
+};
 </script>
 
 <style scoped>

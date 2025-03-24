@@ -6,9 +6,7 @@
       :sub-title="error.stack"
     >
       <template #extra>
-        <el-button type="primary" @click="handleRetry">
-          重试
-        </el-button>
+        <el-button type="primary" @click="handleRetry"> 重试 </el-button>
       </template>
     </el-result>
   </div>
@@ -16,25 +14,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onErrorCaptured } from 'vue'
+import { ref, onErrorCaptured } from "vue";
 
 const props = defineProps<{
-  onRetry?: () => void
-}>()
+  onRetry?: () => void;
+}>();
 
-const error = ref<Error | null>(null)
+const error = ref<Error | null>(null);
 
 onErrorCaptured((err: Error) => {
-  error.value = err
-  return false // 阻止错误继续传播
-})
+  error.value = err;
+  return false; // 阻止错误继续传播
+});
 
 const handleRetry = () => {
-  error.value = null
+  error.value = null;
   if (props.onRetry) {
-    props.onRetry()
+    props.onRetry();
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>

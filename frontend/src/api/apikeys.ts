@@ -1,4 +1,4 @@
-import request from './request';
+import request from "./request";
 
 export interface ApiKeyData {
   id?: number;
@@ -14,8 +14,8 @@ export interface ApiKeyData {
 // 获取所有API秘钥
 export function getApiKeys() {
   return request({
-    url: '/apikeys/',
-    method: 'get'
+    url: "/apikeys/",
+    method: "get",
   });
 }
 
@@ -23,16 +23,16 @@ export function getApiKeys() {
 export function getApiKey(id: number) {
   return request({
     url: `/apikeys/${id}/`,
-    method: 'get'
+    method: "get",
   });
 }
 
 // 创建API秘钥
 export function createApiKey(data: ApiKeyData) {
   return request({
-    url: '/apikeys/',
-    method: 'post',
-    data
+    url: "/apikeys/",
+    method: "post",
+    data,
   });
 }
 
@@ -40,8 +40,8 @@ export function createApiKey(data: ApiKeyData) {
 export function updateApiKey(id: number, data: ApiKeyData) {
   return request({
     url: `/apikeys/${id}/`,
-    method: 'put',
-    data
+    method: "put",
+    data,
   });
 }
 
@@ -49,7 +49,7 @@ export function updateApiKey(id: number, data: ApiKeyData) {
 export function deleteApiKey(id: number) {
   return request({
     url: `/apikeys/${id}/`,
-    method: 'delete'
+    method: "delete",
   });
 }
 
@@ -57,6 +57,6 @@ export function deleteApiKey(id: number) {
 export function validateApiKey(id: number) {
   return request({
     url: `/apikeys/${id}/validate/`,
-    method: 'post'
+    method: "post",
   });
 }

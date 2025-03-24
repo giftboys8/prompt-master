@@ -44,23 +44,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Search } from '@element-plus/icons-vue'
-import { roleOptions, frameworkOptions } from '@/constants/template-options'
+import { ref } from "vue";
+import { Search } from "@element-plus/icons-vue";
+import { roleOptions, frameworkOptions } from "@/constants/template-options";
 
-const emit = defineEmits(['search'])
+const emit = defineEmits(["search"]);
 
-const searchQuery = ref('')
-const selectedRole = ref('')
-const selectedFramework = ref('')
+const searchQuery = ref("");
+const selectedRole = ref("");
+const selectedFramework = ref("");
 
 const handleSearch = () => {
-  emit('search', {
+  emit("search", {
     query: searchQuery.value,
     role: selectedRole.value,
-    framework: selectedFramework.value
-  })
-}
+    framework: selectedFramework.value,
+  });
+};
 </script>
 
 <style scoped>
@@ -78,7 +78,7 @@ const handleSearch = () => {
   .search-bar {
     flex-direction: column;
   }
-  
+
   .filter-select {
     width: 100%;
   }

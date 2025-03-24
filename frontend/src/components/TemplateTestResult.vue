@@ -6,23 +6,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import MarkdownIt from 'markdown-it'
+import { computed } from "vue";
+import MarkdownIt from "markdown-it";
 
 const md = new MarkdownIt({
   linkify: true,
   typographer: true,
-  breaks: true
-})
+  breaks: true,
+});
 
 const props = defineProps<{
-  result: string
-}>()
+  result: string;
+}>();
 
 // 格式化测试结果
 const formattedResult = computed(() => {
-  return md.render(props.result)
-})
+  return md.render(props.result);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -42,7 +42,7 @@ const formattedResult = computed(() => {
     color: var(--primary-color);
     font-size: 18px;
     margin-bottom: 16px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: "Orbitron", sans-serif;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
   }
@@ -61,7 +61,7 @@ const formattedResult = computed(() => {
     }
 
     :deep(code) {
-      font-family: 'Fira Code', monospace;
+      font-family: "Fira Code", monospace;
       background: var(--bg-dark);
       padding: 2px 4px;
       border-radius: 4px;

@@ -20,13 +20,13 @@
 </template>
 
 <script setup lang="ts">
-import { Upload, Download, Plus } from '@element-plus/icons-vue'
+import { Upload, Download, Plus } from "@element-plus/icons-vue";
 
-const emit = defineEmits(['import', 'export', 'create'])
+const emit = defineEmits(["import", "export", "create"]);
 
 const handleImport = (file: any) => {
-  emit('import', file)
-}
+  emit("import", file);
+};
 </script>
 
 <style scoped>

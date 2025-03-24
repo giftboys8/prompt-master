@@ -1,20 +1,25 @@
 // 导入变量和混合器
-@use 'variables' as *;
+@use "variables" as *;
 
 // 导入Google字体
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@400;500;600&display=swap");
 
 // 基础样式
 body {
   background-color: var(--bg-dark);
   color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   min-height: 100vh;
 }
 
 // 标题样式
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Orbitron', sans-serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Orbitron", sans-serif;
   font-weight: 600;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
@@ -33,7 +38,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 12px;
   overflow: hidden;
   @include hover-effect;
-  
+
   .el-card__header {
     border-bottom: 1px solid var(--border-color);
   }
@@ -42,21 +47,21 @@ h1, h2, h3, h4, h5, h6 {
 .el-menu {
   background: transparent !important;
   border: none !important;
-  
+
   .el-menu-item {
     color: var(--text-secondary) !important;
-    
+
     &:hover {
       color: var(--text-primary) !important;
       background: var(--bg-hover) !important;
     }
-    
+
     &.is-active {
       color: var(--primary-color) !important;
       background: var(--glass-bg) !important;
-      
+
       &::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: 0;
         left: 0;
@@ -70,24 +75,39 @@ h1, h2, h3, h4, h5, h6 {
 
 // 动画
 @keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes loading {
-  0% { width: 0; left: 0; }
-  50% { width: 100%; left: 0; }
-  100% { width: 0; left: 100%; }
+  0% {
+    width: 0;
+    left: 0;
+  }
+  50% {
+    width: 100%;
+    left: 0;
+  }
+  100% {
+    width: 0;
+    left: 100%;
+  }
 }
 
 // AI特效元素
 .ai-card {
   position: relative;
   overflow: hidden;
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -50%;
     left: -50%;
@@ -119,7 +139,7 @@ h1, h2, h3, h4, h5, h6 {
 .loading-effect {
   position: relative;
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;

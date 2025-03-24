@@ -1,9 +1,9 @@
 <template>
   <div class="test-history">
     <h3>历史记录</h3>
-    <el-empty 
-      v-if="!isLoading && (!history || history.length === 0)" 
-      description="暂无测试记录" 
+    <el-empty
+      v-if="!isLoading && (!history || history.length === 0)"
+      description="暂无测试记录"
     />
     <el-table
       v-else
@@ -18,18 +18,12 @@
         width="180"
         :formatter="formatDate"
       />
-      <el-table-column
-        label="模型"
-        width="120"
-      >
+      <el-table-column label="模型" width="120">
         <template #default="{ row }">
           {{ getModelName(row) }}
         </template>
       </el-table-column>
-      <el-table-column
-        label="输入数据"
-        min-width="200"
-      >
+      <el-table-column label="输入数据" min-width="200">
         <template #default="{ row }">
           <el-tooltip
             effect="dark"
@@ -42,27 +36,18 @@
           </el-tooltip>
         </template>
       </el-table-column>
-      <el-table-column
-        label="输出内容"
-        min-width="300"
-      >
+      <el-table-column label="输出内容" min-width="300">
         <template #default="{ row }">
           <div class="output-content-preview">
-            {{ parseTestResult(row.output_content)?.answer || row.output_content }}
+            {{
+              parseTestResult(row.output_content)?.answer || row.output_content
+            }}
           </div>
         </template>
       </el-table-column>
-      <el-table-column
-        fixed="right"
-        label="操作"
-        width="100"
-      >
+      <el-table-column fixed="right" label="操作" width="100">
         <template #default="{ row }">
-          <el-button
-            type="primary"
-            link
-            @click="$emit('view-detail', row)"
-          >
+          <el-button type="primary" link @click="$emit('view-detail', row)">
             查看详情
           </el-button>
         </template>
@@ -72,38 +57,38 @@
 </template>
 
 <script setup lang="ts">
-import type { TemplateTest } from '@/types'
+import type { TemplateTest } from "@/types";
 
 defineProps<{
-  history: TemplateTest[]
-  isLoading: boolean
-}>()
+  history: TemplateTest[];
+  isLoading: boolean;
+}>();
 
 defineEmits<{
-  (e: 'view-detail', record: TemplateTest): void
-}>()
+  (e: "view-detail", record: TemplateTest): void;
+}>();
 
 // 格式化日期
 const formatDate = (row: TemplateTest) => {
-  return new Date(row.created_at).toLocaleString()
-}
+  return new Date(row.created_at).toLocaleString();
+};
 
 // 解析测试结果
 const parseTestResult = (content: string) => {
   try {
-    return JSON.parse(content)
+    return JSON.parse(content);
   } catch (e) {
-    return null
+    return null;
   }
-}
+};
 
 // 获取模型名称
 const getModelName = (record: TemplateTest) => {
   if (record.model) {
-    return record.model
+    return record.model;
   }
-  return record.dify_response?.model || 'Dify API'
-}
+  return record.dify_response?.model || "Dify API";
+};
 </script>
 
 <style lang="scss" scoped>
@@ -115,7 +100,7 @@ const getModelName = (record: TemplateTest) => {
     color: var(--primary-color);
     font-size: 18px;
     margin-bottom: 16px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: "Orbitron", sans-serif;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
   }
@@ -126,7 +111,7 @@ const getModelName = (record: TemplateTest) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: 'Fira Code', monospace;
+  font-family: "Fira Code", monospace;
   font-size: 12px;
 }
 </style>

@@ -26,7 +26,11 @@
 
     <el-table v-loading="loading" :data="scenes" style="width: 100%">
       <el-table-column prop="name" label="场景名称" />
-      <el-table-column prop="description" label="场景描述" show-overflow-tooltip />
+      <el-table-column
+        prop="description"
+        label="场景描述"
+        show-overflow-tooltip
+      />
       <el-table-column prop="created_at" label="创建时间" width="180">
         <template #default="{ row }">
           {{ new Date(row.created_at).toLocaleString() }}
@@ -35,8 +39,12 @@
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button-group>
-            <el-button type="primary" text @click="handleEdit(row)">编辑</el-button>
-            <el-button type="danger" text @click="handleDelete(row)">删除</el-button>
+            <el-button type="primary" text @click="handleEdit(row)"
+              >编辑</el-button
+            >
+            <el-button type="danger" text @click="handleDelete(row)"
+              >删除</el-button
+            >
           </el-button-group>
         </template>
       </el-table-column>
@@ -57,44 +65,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Search, Plus } from '@element-plus/icons-vue'
-import type { Scene } from '@/types'
+import { ref } from "vue";
+import { Search, Plus } from "@element-plus/icons-vue";
+import type { Scene } from "@/types";
 
 // 状态
-const loading = ref(false)
-const scenes = ref<Scene[]>([])
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchQuery = ref('')
+const loading = ref(false);
+const scenes = ref<Scene[]>([]);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const searchQuery = ref("");
 
 // 方法
 const handleSearch = () => {
   // TODO: 实现搜索功能
-}
+};
 
 const handleAdd = () => {
   // TODO: 实现新增功能
-}
+};
 
 const handleEdit = (row: Scene) => {
   // TODO: 实现编辑功能
-}
+};
 
 const handleDelete = (row: Scene) => {
   // TODO: 实现删除功能
-}
+};
 
 const handleSizeChange = (val: number) => {
-  pageSize.value = val
+  pageSize.value = val;
   // TODO: 重新加载数据
-}
+};
 
 const handleCurrentChange = (val: number) => {
-  currentPage.value = val
+  currentPage.value = val;
   // TODO: 重新加载数据
-}
+};
 </script>
 
 <style scoped>

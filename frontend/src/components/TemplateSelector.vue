@@ -1,7 +1,7 @@
 <template>
   <div class="template-selector">
     <el-form-item label="选择模板" required>
-      <el-select 
+      <el-select
         :model-value="modelValue"
         placeholder="请选择模板"
         @update:modelValue="$emit('update:modelValue', $event)"
@@ -26,23 +26,23 @@
 </template>
 
 <script setup lang="ts">
-import type { Template } from '@/types'
+import type { Template } from "@/types";
 
 defineProps<{
-  modelValue: number | null
-  templates: Template[]
-}>()
+  modelValue: number | null;
+  templates: Template[];
+}>();
 
 defineEmits<{
-  (e: 'update:modelValue', value: number): void
-  (e: 'change', value: number): void
-}>()
+  (e: "update:modelValue", value: number): void;
+  (e: "change", value: number): void;
+}>();
 </script>
 
 <style lang="scss" scoped>
 .template-selector {
   margin-bottom: 24px;
-  
+
   .template-select {
     width: 100%;
   }

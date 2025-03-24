@@ -20,7 +20,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
     serializer_class = TemplateSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['framework_type']
+    filterset_fields = ['framework', 'visibility', 'target_role']
     search_fields = ['name', 'description']
     ordering_fields = ['created_at', 'name', 'order']
     parser_classes = [JSONParser, MultiPartParser]
@@ -29,57 +29,40 @@ class TemplateViewSet(viewsets.ModelViewSet):
         serializer.save(created_by=self.request.user)
 
     def get_queryset(self):
-        # 获取用户创建的模板和分享给用户的模板
-        user_templates = Template.objects.filter(created_by=self.request.user)
-        shared_templates = Template.objects.filter(shares__shared_with=self.request.user)
-        
-        # 使用OR查询代替union操作
-        queryset = Template.objects.filter(
-            Q(id__in=user_templates.values_list('id', flat=True)) | 
-            Q(id__in=shared_templates.values_list('id', flat=True))
-        )
-        
-        # 添加角色筛选
-        target_role = self.request.query_params.get('target_role', None)
-        if target_role:
-            queryset = queryset.filter(target_role__icontains=target_role)
-        
-        # 添加模糊搜索（名称、描述和内容）
-        search = self.request.query_params.get('search', None)
-        if search:
-            content_filters = Q()
+        try:
+            # 获取用户创建的模板和分享给用户的模板
+            queryset = Template.objects.filter(
+                Q(created_by=self.request.user) |
+                Q(shares__shared_with=self.request.user) |
+                Q(visibility='PUBLIC')
+            ).distinct()
             
-            # 先尝试搜索名称和描述
+            # 添加角色筛选
+            target_role = self.request.query_params.get('target_role', None)
+            if target_role:
+                queryset = queryset.filter(target_role__icontains=target_role)
+            
+            # 添加模糊搜索（名称和描述）
+            search = self.request.query_params.get('search', None)
+            if search:
+                queryset = queryset.filter(
+                    Q(name__icontains=search) |
+                    Q(description__icontains=search)
+                )
+            
+            return queryset
+            
+        except Exception as e:
+            # 记录错误但返回空查询集
+            print(f"Error in get_queryset: {str(e)}")
+            return Template.objects.none()
+        
+        # 合并内容搜索结果
+        if 'templates_with_content_match' in locals() and templates_with_content_match:
             queryset = queryset.filter(
-                Q(name__icontains=search) | 
-                Q(description__icontains=search)
+                Q() | Q(id__in=templates_with_content_match)
             )
             
-            # 然后搜索JSON内容字段
-            templates_with_content_match = []
-            for template in Template.objects.filter(created_by=self.request.user):
-                content = template.content
-                if content:
-                    # 检查各种可能的内容字段
-                    if isinstance(content, str):
-                        try:
-                            content_dict = json.loads(content)
-                        except:
-                            content_dict = {}
-                    else:
-                        content_dict = content
-                        
-                    for key, value in content_dict.items():
-                        if value and isinstance(value, str) and search.lower() in value.lower():
-                            templates_with_content_match.append(template.id)
-                            break
-            
-            # 合并内容搜索结果
-            if templates_with_content_match:
-                queryset = queryset.filter(
-                    Q() | Q(id__in=templates_with_content_match)
-                )
-                
         return queryset
         
     @action(detail=False, methods=['post'])

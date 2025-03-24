@@ -36,8 +36,12 @@
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button-group>
-            <el-button type="primary" text @click="handleView(row)">查看</el-button>
-            <el-button type="danger" text @click="handleDelete(row)">删除</el-button>
+            <el-button type="primary" text @click="handleView(row)"
+              >查看</el-button
+            >
+            <el-button type="danger" text @click="handleDelete(row)"
+              >删除</el-button
+            >
           </el-button-group>
         </template>
       </el-table-column>
@@ -58,44 +62,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Search, Plus } from '@element-plus/icons-vue'
-import type { Content } from '@/types'
+import { ref } from "vue";
+import { Search, Plus } from "@element-plus/icons-vue";
+import type { Content } from "@/types";
 
 // 状态
-const loading = ref(false)
-const contents = ref<Content[]>([])
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchQuery = ref('')
+const loading = ref(false);
+const contents = ref<Content[]>([]);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const searchQuery = ref("");
 
 // 方法
 const handleSearch = () => {
   // TODO: 实现搜索功能
-}
+};
 
 const handleAdd = () => {
   // TODO: 实现新增功能
-}
+};
 
 const handleView = (row: Content) => {
   // TODO: 实现查看功能
-}
+};
 
 const handleDelete = (row: Content) => {
   // TODO: 实现删除功能
-}
+};
 
 const handleSizeChange = (val: number) => {
-  pageSize.value = val
+  pageSize.value = val;
   // TODO: 重新加载数据
-}
+};
 
 const handleCurrentChange = (val: number) => {
-  currentPage.value = val
+  currentPage.value = val;
   // TODO: 重新加载数据
-}
+};
 </script>
 
 <style scoped>

@@ -31,64 +31,74 @@
       <div class="detail-section">
         <h4>生成的提示词</h4>
         <div class="detail-content code-block">
-          <pre>{{ parseTestResult(record.output_content)?.prompt || '未找到提示词' }}</pre>
+          <pre>{{
+            parseTestResult(record.output_content)?.prompt || "未找到提示词"
+          }}</pre>
         </div>
       </div>
 
       <div class="detail-section">
         <h4>输出内容</h4>
-        <div class="detail-content markdown-content" v-html="formatMarkdown(parseTestResult(record.output_content)?.answer || record.output_content)" />
+        <div
+          class="detail-content markdown-content"
+          v-html="
+            formatMarkdown(
+              parseTestResult(record.output_content)?.answer ||
+                record.output_content,
+            )
+          "
+        />
       </div>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { TemplateTest } from '@/types'
-import MarkdownIt from 'markdown-it'
+import { computed } from "vue";
+import type { TemplateTest } from "@/types";
+import MarkdownIt from "markdown-it";
 
 const md = new MarkdownIt({
   linkify: true,
   typographer: true,
-  breaks: true
-})
+  breaks: true,
+});
 
 const props = defineProps<{
-  visible: boolean
-  record: TemplateTest | null
-}>()
+  visible: boolean;
+  record: TemplateTest | null;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:visible', value: boolean): void
-}>()
+  (e: "update:visible", value: boolean): void;
+}>();
 
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (value) => emit('update:visible', value)
-})
+  set: (value) => emit("update:visible", value),
+});
 
 // 获取模型名称
 const getModelName = (record: TemplateTest) => {
   if (record.model) {
-    return record.model
+    return record.model;
   }
-  return record.dify_response?.model || 'Dify API'
-}
+  return record.dify_response?.model || "Dify API";
+};
 
 // 解析测试结果
 const parseTestResult = (content: string) => {
   try {
-    return JSON.parse(content)
+    return JSON.parse(content);
   } catch (e) {
-    return null
+    return null;
   }
-}
+};
 
 // 格式化Markdown
 const formatMarkdown = (content: string) => {
-  return content ? md.render(content) : ''
-}
+  return content ? md.render(content) : "";
+};
 </script>
 
 <style lang="scss" scoped>
@@ -109,7 +119,7 @@ const formatMarkdown = (content: string) => {
       border: 1px solid var(--border-color);
 
       &.code-block {
-        font-family: 'Fira Code', monospace;
+        font-family: "Fira Code", monospace;
         font-size: 14px;
         line-height: 1.5;
         overflow-x: auto;
@@ -129,7 +139,7 @@ const formatMarkdown = (content: string) => {
         }
 
         :deep(code) {
-          font-family: 'Fira Code', monospace;
+          font-family: "Fira Code", monospace;
           background: var(--bg-dark);
           padding: 2px 4px;
           border-radius: 4px;
