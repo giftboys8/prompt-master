@@ -6,11 +6,12 @@ User = get_user_model()
 
 class TemplateTest(models.Model):
     MODEL_CHOICES = [
-        ('GPT-3.5', 'GPT-3.5'),
-        ('GPT-4', 'GPT-4'),
-        ('CLAUDE', 'Claude'),
-        # 添加其他模型选项
-    ]
+    ('GPT-3.5', 'GPT-3.5'),
+    ('GPT-4', 'GPT-4'),
+    ('CLAUDE', 'Claude'),
+    ('Dify API', 'Dify API'),
+    # 添加其他模型选项
+]
 
     template = models.ForeignKey(
         'Template',
