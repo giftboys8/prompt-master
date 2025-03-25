@@ -39,7 +39,7 @@ const formattedResult = computed(() => {
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
-  max-height: 80vh;
+  max-height: 60vh;
   overflow-y: auto;
 
   h3 {
@@ -55,10 +55,10 @@ const formattedResult = computed(() => {
     font-size: 14px;
     line-height: 1.6;
     color: var(--text-primary);
-    white-space: normal;
+    white-space: pre-wrap;
     overflow-wrap: break-word;
     word-wrap: break-word;
-    word-break: break-word;
+    word-break: break-all;
 
     :deep(pre) {
       background: var(--bg-dark);

@@ -25,7 +25,7 @@
     </div>
 
     <!-- 模板列表 -->
-    <el-row :gutter="20">
+    <div class="template-container">
       <draggable
         v-model="sortedTemplates"
         v-loading="loading"
@@ -33,11 +33,10 @@
         :animation="150"
         ghost-class="ghost"
         @end="handleDragEnd"
-        class="el-row template-grid"
-        :class="{ 'is-flex': true, 'flex-wrap': true }"
+        class="template-grid"
       >
         <template #item="{ element: template }">
-          <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="4" class="mb-4">
+          <div class="template-item-wrapper">
             <template-card
               :template="template"
               @edit="handleEdit"
@@ -48,10 +47,10 @@
               @delete="handleDelete"
               @preview="handlePreview"
             />
-          </el-col>
+          </div>
         </template>
       </draggable>
-    </el-row>
+    </div>
 
     <!-- 分页器 -->
     <div class="pagination-container">
@@ -426,6 +425,10 @@ onMounted(() => {
 }
 
 /* 模板网格布局 */
+.template-container {
+  width: 100%;
+}
+
 .template-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -433,10 +436,44 @@ onMounted(() => {
   width: 100%;
 }
 
-@media (max-width: 576px) {
+.template-item-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* 响应式布局断点 */
+@media (max-width: 480px) {
   .template-grid {
     grid-template-columns: 1fr;
     gap: 15px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .template-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .template-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1441px) {
+  .template-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 25px;
   }
 }
 
@@ -455,34 +492,14 @@ onMounted(() => {
 }
 
 /* 响应式布局辅助类 */
-:deep(.el-row) {
-  margin: 0 !important;
-  width: 100%;
-  justify-content: flex-start;
-}
-
 :deep(.draggable) {
   width: 100%;
-  display: flex;
-  flex-wrap: wrap;
 }
 
-/* 卡片容器响应式间距 */
-@media (max-width: 576px) {
-  .el-col {
-    padding: 0 8px !important;
-  }
-}
-
-@media (min-width: 577px) and (max-width: 992px) {
-  .el-col {
-    padding: 0 12px !important;
-  }
-}
-
-@media (min-width: 993px) {
-  .el-col {
-    padding: 0 15px !important;
-  }
+/* 确保拖拽组件正常工作 */
+:deep(.sortable-ghost) {
+  opacity: 0.5;
+  background: #c8ebfb;
+  border: 1px dashed #409eff;
 }
 </style>

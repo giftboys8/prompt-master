@@ -500,16 +500,15 @@ onUnmounted(cleanup);
     .settings-panel {
       height: 100%;
       min-width: 0;
-      overflow: auto;
-      max-height: 60vh;
+      overflow: visible; /* 修改为visible，避免双重滚动条 */
+      max-height: none; /* 移除最大高度限制 */
     }
   }
 
   .result-container {
     margin-bottom: 24px;
     width: 100%;
-    max-height: 60vh;
-    overflow: auto;
+    /* 移除max-height和overflow属性，让子组件控制滚动 */
   }
 
   .history-container {
