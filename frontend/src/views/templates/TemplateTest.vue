@@ -239,6 +239,13 @@ const runTest = async () => {
       throw new Error("生成的提示词为空，请检查模板内容和变量填写");
     }
 
+    console.log("发送到Dify API的数据:", {
+      query: prompt.trim(),
+      inputs: variableInputs.value,
+      response_mode: "blocking",
+      user: "template_test_user",
+    });
+
     const response = await sendMessage(
       {
         query: prompt.trim(), // 确保去除首尾空格
@@ -248,6 +255,8 @@ const runTest = async () => {
       },
       selectedApiKey.value.key,
     );
+
+    console.log("Dify API响应:", response);
 
     if (!response || typeof response !== "object") {
       throw new Error("API响应格式不正确：未收到响应数据");
@@ -264,17 +273,112 @@ const runTest = async () => {
 
     testResult.value = answer;
 
+    console.log("准备保存测试记录，数据:", {
+      template: selectedTemplate.value.id,
+      model: response.metadata?.model || "Dify API",
+      input_data: variableInputs.value,
+      dify_response: response,
+    });
+
     try {
-      await saveTemplateTest({
+      // 确保所有必要的数据都存在
+      if (!selectedTemplate.value?.id) {
+        throw new Error("模板ID不存在");
+      }
+
+      if (!response.answer) {
+        throw new Error("API响应中缺少answer字段");
+      }
+
+      // 简化并验证 dify_response 对象
+      const simplifiedResponse = {
+        answer: response.answer,
+        metadata: {
+          model: response.metadata?.model || "Dify API",
+          ...response.metadata
+        },
+        usage: response.usage || {},
+      };
+      
+      // 准备并验证发送到后端的数据
+      // 确保将 Proxy 对象转换为普通对象并且处理可能的空值
+      const processedInputData = {};
+      
+      // 检查变量输入是否有效
+      if (variableInputs.value && typeof variableInputs.value === 'object') {
+        // 遍历模板中定义的所有变量
+        selectedTemplate.value.variables.forEach(variable => {
+          const varName = variable.name;
+          const varValue = variableInputs.value[varName];
+          
+          // 只添加有值的变量
+          if (varValue !== undefined && varValue !== null && varValue !== '') {
+            processedInputData[varName] = varValue;
+          }
+        });
+      }
+      
+      console.log("处理后的输入数据:", processedInputData);
+      
+      const testData = {
         template: selectedTemplate.value.id,
         model: response.metadata?.model || "Dify API",
-        input_data: variableInputs.value,
-        dify_response: response,
-      });
-      ElMessage.success("测试运行成功，记录已保存");
-    } catch (saveError) {
-      ElMessage.warning("测试结果已显示，但保存记录失败");
+        input_data: processedInputData,
+        dify_response: simplifiedResponse,
+      };
+
+      // 详细的数据验证
+      if (!testData.template) {
+        throw new Error("模板ID不能为空");
+      }
+      if (!testData.model) {
+        throw new Error("模型名称不能为空");
+      }
+      // 检查 input_data 是否为空
+      const inputDataKeys = Object.keys(testData.input_data);
+      if (inputDataKeys.length === 0) {
+        // 如果没有有效的输入数据，但模板需要变量，则提供默认值
+        if (selectedTemplate.value.variables.length > 0) {
+          // 创建一个默认的输入数据对象
+          const defaultInputData = {};
+          selectedTemplate.value.variables.forEach(variable => {
+            defaultInputData[variable.name] = variable.default_value || `测试值_${variable.name}`;
+          });
+          testData.input_data = defaultInputData;
+          console.log("使用默认输入数据:", defaultInputData);
+        } else {
+          // 如果模板没有变量但仍需要输入数据，创建一个空对象但添加一个标记字段
+          testData.input_data = { "_no_variables_required": true };
+        }
+      }
+      
+      // 最终检查 - 确保有输入数据
+      if (Object.keys(testData.input_data).length === 0) {
+        throw new Error("输入数据不能为空，请至少填写一个变量值");
+      }
+      if (!testData.dify_response || !testData.dify_response.answer) {
+        throw new Error("API响应数据不完整");
+      }
+
+      console.log("准备发送到后端的数据:", JSON.stringify(testData, null, 2));
+
+    const saveResponse = await saveTemplateTest(testData);
+    console.log("保存测试记录响应:", saveResponse);
+    ElMessage.success("测试运行成功，记录已保存");
+  } catch (saveError: any) {
+    console.error("保存测试记录失败:", saveError);
+    if (saveError.response) {
+      console.error("错误状态码:", saveError.response.status);
+      console.error("错误响应数据:", saveError.response.data);
     }
+    let errorMessage = "测试结果已显示，但保存记录失败";
+    if (saveError.message) {
+      errorMessage = `保存失败：${saveError.message}`;
+    } else if (saveError.response?.data?.error) {
+      errorMessage = `保存失败：${saveError.response.data.error}`;
+    }
+    ElMessage.warning(errorMessage);
+  }
 
     await fetchTestHistory();
   } catch (error: any) {
@@ -285,8 +389,10 @@ const runTest = async () => {
       errorMessage = responseData?.error
         ? `API错误：${responseData.error}`
         : `API错误：${error.response.status} - ${error.response.statusText || "未知错误"}`;
+      console.error("API错误详情:", error.response);
     }
 
+    console.error("测试运行失败:", error);
     ElMessage.error("测试运行失败：" + errorMessage);
     testResult.value = `## 错误信息\n\n测试运行失败: ${errorMessage}\n\n请检查以下可能的问题:\n\n- Dify API密钥是否正确\n- API服务器是否可访问\n- 网络连接是否正常`;
   } finally {
