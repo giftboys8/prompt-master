@@ -150,9 +150,20 @@ export const saveTemplateTest = (data: {
   input_data: Record<string, any>;
   dify_response: any;
 }) => {
+  console.log("saveTemplateTest 函数被调用，参数:", JSON.stringify(data, null, 2));
   return request({
     url: "/templates/tests/run_test/",
     method: "post",
     data,
+  }).then(response => {
+    console.log("saveTemplateTest 成功响应:", response);
+    return response;
+  }).catch(error => {
+    console.error("saveTemplateTest 错误:", error);
+    if (error.response) {
+      console.error("错误状态码:", error.response.status);
+      console.error("错误响应数据:", error.response.data);
+    }
+    throw error;
   });
 };

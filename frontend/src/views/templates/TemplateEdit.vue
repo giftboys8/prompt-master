@@ -37,7 +37,7 @@
             <el-input
               v-model="form.description"
               type="textarea"
-              rows="3"
+              :rows="3"
               placeholder="请输入模版描述"
             />
           </el-form-item>
@@ -62,7 +62,7 @@
                 <el-input
                   v-model="form.content[module.name.toLowerCase()]"
                   type="textarea"
-                  rows="2"
+                  :rows="2"
                   :placeholder="module.description"
                 />
               </el-form-item>
@@ -77,7 +77,7 @@
                 <el-input
                   v-model="form.content.custom"
                   type="textarea"
-                  rows="6"
+                  :rows="6"
                   placeholder="请输入自定义的提示词内容"
                 />
               </el-form-item>

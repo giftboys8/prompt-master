@@ -45,7 +45,7 @@ const emit = defineEmits(["search"]);
 
 const searchQuery = ref("");
 const selectedRole = ref("");
-const selectedFramework = ref("");
+const selectedFramework = ref(null);
 
 const handleSearch = () => {
   emit("search", {
