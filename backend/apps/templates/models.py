@@ -69,11 +69,11 @@ class Template(models.Model):
         self._meta.get_field('framework_type').choices = self.get_framework_type_choices()
     framework = models.ForeignKey(
         'frameworks.Framework',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name='templates',
         verbose_name='框架',
-        null=False,
-        blank=False
+        null=True,
+        blank=True
     )
     visibility = models.CharField(
         '可见性',
@@ -178,7 +178,7 @@ class TemplateVersion(models.Model):
     name = models.CharField('模板名称', max_length=100)
     framework = models.ForeignKey(
         'frameworks.Framework',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name='template_versions',
         verbose_name='框架',
         null=True,

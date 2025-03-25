@@ -29,7 +29,7 @@
       <div class="preview-section">
         <h4>基本信息</h4>
         <p><strong>模板名称：</strong>{{ template.name }}</p>
-        <p><strong>框架类型：</strong>{{ template.framework_type }}</p>
+        <p><strong>框架类型：</strong>{{ template.framework_type === 'CUSTOM' ? '自定义' : template.framework_type }}</p>
         <p><strong>描述：</strong>{{ template.description }}</p>
       </div>
 

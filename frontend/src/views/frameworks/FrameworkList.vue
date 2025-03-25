@@ -40,6 +40,18 @@
         </template>
       </el-table-column>
     </el-table>
+    
+    <div class="pagination-container">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -57,6 +69,9 @@ import {
 const router = useRouter();
 const loading = ref(false);
 const frameworks = ref<Framework[]>([]);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -68,8 +83,9 @@ const formatDate = (dateString) => {
 const fetchFrameworks = async () => {
   loading.value = true;
   try {
-    const response = await getFrameworks();
-    frameworks.value = response.results || [];
+    const response = await getFrameworks(currentPage.value, pageSize.value);
+    frameworks.value = response.results;
+    total.value = response.count;
   } catch (error) {
     console.error("获取框架列表失败:", error);
     ElMessage.error("获取框架列表失败");
@@ -106,6 +122,19 @@ const handleDelete = (row: Framework) => {
   });
 };
 
+// 处理页码变化
+const handleCurrentChange = (page: number) => {
+  currentPage.value = page;
+  fetchFrameworks();
+};
+
+// 处理每页条数变化
+const handleSizeChange = (size: number) => {
+  pageSize.value = size;
+  currentPage.value = 1;
+  fetchFrameworks();
+};
+
 // 初始化
 onMounted(() => {
   fetchFrameworks();
@@ -113,6 +142,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .framework-list {
   padding: 20px;
 }

@@ -1,11 +1,19 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 
 class Framework(models.Model):
     """Framework model for template frameworks like RTGO"""
     name = models.CharField(_('Framework Name'), max_length=100, unique=True)
     description = models.TextField(_('Framework Description'))
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name=_('Created By'),
+        related_name='created_frameworks'
+    )
     created_at = models.DateTimeField(_('Created At'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Updated At'), auto_now=True)
     

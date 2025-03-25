@@ -19,17 +19,23 @@ export interface Framework {
 }
 
 // 获取所有框架
-export const getFrameworks = () => {
+export const getFrameworks = (page = 1, pageSize = 10) => {
   return request({
     method: "get",
     url: "/admin/frameworks/",
     params: {
-      with_modules: true // 添加参数以获取模块信息
+      with_modules: true, // 添加参数以获取模块信息
+      page,
+      page_size: pageSize
     }
   }).then(response => {
-    // 确保返回的数据结构一致，无论是否为分页格式
     console.log("API getFrameworks raw response:", response);
-    return response;
+    return {
+      results: response.results || [],
+      count: response.count || 0,
+      next: response.next,
+      previous: response.previous
+    };
   });
 };
 
