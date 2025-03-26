@@ -260,7 +260,6 @@ const handleFrameworkChange = async (frameworkId: number | null) => {
     // 更新验证规则
     Object.assign(rules, getContentRules(form.framework));
   } catch (error: any) {
-    console.error('Framework fetch error:', error);
     ElMessage.error(error.message || "获取框架详情失败");
   } finally {
     loading.value = false;

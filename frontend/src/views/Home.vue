@@ -1,52 +1,60 @@
 <template>
   <div class="home-container">
     <!-- 欢迎区域 -->
-    <div class="welcome-section">
+    <div class="welcome-section ai-card">
       <h1 class="title">Welcome to PromptMaster</h1>
       <p class="subtitle">智能提示词管理系统</p>
       <p class="description">
         专业的提示词工程管理平台，让AI对话更智能、更高效
       </p>
+      <div class="action-buttons">
+        <el-button type="primary" size="large" @click="$router.push('/templates')">
+          开始使用
+        </el-button>
+        <el-button size="large" @click="$router.push('/docs')">
+          查看文档
+        </el-button>
+      </div>
     </div>
 
     <!-- 系统介绍 -->
     <div class="intro-section">
       <h2>系统介绍</h2>
       <div class="intro-cards">
-        <el-card class="intro-card">
+        <el-card class="intro-card ai-card">
           <template #header>
             <div class="card-header">
               <el-icon><Monitor /></el-icon>
               <span>智能管理</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500">
-            提供专业的提示词模板管理功能，支持多种框架，让AI对话更加规范和高效。
-          </p>
+          <div class="card-content">
+            <p>提供专业的提示词模板管理功能，支持多种框架，让AI对话更加规范和高效。</p>
+          </div>
         </el-card>
 
-        <el-card class="intro-card">
+        <el-card class="intro-card ai-card">
           <template #header>
             <div class="card-header">
               <el-icon><Connection /></el-icon>
               <span>场景联动</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500">
-            灵活的场景配置系统，针对不同应用场景快速调用合适的提示词模板。
-          </p>
+          <div class="card-content">
+            <p>灵活的场景配置系统，针对不同应用场景快速调用合适的提示词模板。</p>
+          </div>
         </el-card>
 
-        <el-card class="intro-card">
+        <el-card class="intro-card ai-card">
           <template #header>
             <div class="card-header">
               <el-icon><DataAnalysis /></el-icon>
               <span>数据分析</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500">
-            完整的数据分析功能，帮助您了解提示词使用情况，持续优化对话效果。
-          </p>
+          <div class="card-content">
+            <p>完整的数据分析功能，帮助您了解提示词使用情况，持续优化对话效果。</p>
+          </div>
         </el-card>
       </div>
     </div>
@@ -55,7 +63,7 @@
     <div class="features-section">
       <h2>亮点功能</h2>
       <div class="feature-list">
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Document /></el-icon>
           </div>
@@ -65,7 +73,7 @@
           </div>
         </div>
 
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Share /></el-icon>
           </div>
@@ -75,7 +83,7 @@
           </div>
         </div>
 
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Timer /></el-icon>
           </div>
@@ -85,7 +93,7 @@
           </div>
         </div>
 
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Refresh /></el-icon>
           </div>
@@ -100,346 +108,178 @@
     <!-- 经典案例 -->
     <div class="cases-section">
       <h2>经典案例</h2>
-      <el-row :gutter="24">
-        <el-col :xs="24" :sm="12" :md="8">
-          <el-card class="case-card" shadow="hover">
-            <template #header>
-              <div class="case-header">
-                <h3>智能客服对话</h3>
-                <el-tag size="small" type="success">RTGO框架</el-tag>
-              </div>
-            </template>
-            <div class="case-content">
-              <p>通过RTGO框架构建的客服对话模板，提供专业、亲切的服务体验</p>
-              <ul>
-                <li>准确理解用户意图</li>
-                <li>个性化回答定制</li>
-                <li>情感化表达优化</li>
-              </ul>
+      <div class="case-list">
+        <el-card v-for="i in 3" :key="i" class="case-card ai-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <h3>案例 {{ i }}</h3>
             </div>
-          </el-card>
-        </el-col>
-
-        <el-col :xs="24" :sm="12" :md="8">
-          <el-card class="case-card" shadow="hover">
-            <template #header>
-              <div class="case-header">
-                <h3>营销文案生成</h3>
-                <el-tag size="small" type="warning">SPAR框架</el-tag>
-              </div>
-            </template>
-            <div class="case-content">
-              <p>基于SPAR框架的营销文案模板，生成吸引力强的推广内容</p>
-              <ul>
-                <li>场景化文案构建</li>
-                <li>目标受众分析</li>
-                <li>转化率优化</li>
-              </ul>
-            </div>
-          </el-card>
-        </el-col>
-
-        <el-col :xs="24" :sm="12" :md="8">
-          <el-card class="case-card" shadow="hover">
-            <template #header>
-              <div class="case-header">
-                <h3>技术文档撰写</h3>
-                <el-tag size="small" type="info">自定义框架</el-tag>
-              </div>
-            </template>
-            <div class="case-content">
-              <p>自定义框架支持的技术文档模板，提供专业规范的文档输出</p>
-              <ul>
-                <li>结构化内容组织</li>
-                <li>专业术语规范</li>
-                <li>示例代码生成</li>
-              </ul>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
-
-    <!-- 快速入口 -->
-    <div class="quick-start">
-      <h2>立即开始</h2>
-      <div class="action-buttons">
-        <el-button
-          type="primary"
-          size="large"
-          @click="router.push('/templates')"
-        >
-          <el-icon><Document /></el-icon>浏览模板
-        </el-button>
-        <el-button
-          type="success"
-          size="large"
-          @click="router.push('/templates/create')"
-        >
-          <el-icon><Plus /></el-icon>创建模板
-        </el-button>
+          </template>
+          <div class="case-content">
+            <p>这里是案例描述内容，展示如何使用提示词管理系统优化AI对话效果。</p>
+          </div>
+        </el-card>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
-import {
-  Document,
-  Plus,
-  Monitor,
-  Connection,
-  DataAnalysis,
-  Share,
-  Timer,
-  Refresh,
-} from "@element-plus/icons-vue";
-
-const router = useRouter();
+import { Monitor, Connection, DataAnalysis, Document, Share, Timer, Refresh } from '@element-plus/icons-vue';
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../styles/variables' as *;
+
 .home-container {
-  padding: 32px;
-  max-width: 1200px;
+  padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-/* 欢迎区域 */
 .welcome-section {
   text-align: center;
-  margin-bottom: 64px;
-  animation: fadeInUp 0.8s ease;
+  padding: 4rem 2rem;
+  margin-bottom: 4rem;
+  border-radius: 16px;
+  @include glass-morphism;
+
+  .title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .subtitle {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .description {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
 }
 
-.title {
-  font-size: 48px;
-  margin-bottom: 16px;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(96, 165, 250, 0.3);
-}
+.intro-section,
+.features-section,
+.cases-section {
+  margin-bottom: 4rem;
 
-.subtitle {
-  font-size: 24px;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
-}
-
-.description {
-  font-size: 16px;
-  color: var(--text-secondary);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* 通用标题样式 */
-h2 {
-  font-size: 32px;
-  margin-bottom: 32px;
-  text-align: center;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* 系统介绍 */
-.intro-section {
-  margin-bottom: 64px;
+  h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
 }
 
 .intro-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-}
+  gap: 2rem;
 
-.intro-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  transition: all 0.3s ease;
-}
+  .intro-card {
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+    }
 
-.intro-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: 8px 0;
-}
-
-.card-header .el-icon {
-  font-size: 24px;
-  color: var(--primary-color);
-}
-
-/* 亮点功能 */
-.features-section {
-  margin-bottom: 64px;
-  padding: 48px 0;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid var(--glass-border);
+    .card-content {
+      p {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+    }
+  }
 }
 
 .feature-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 32px;
-  padding: 0 32px;
-}
+  gap: 2rem;
 
-.feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
+  .feature-item {
+    padding: 1.5rem;
+    border-radius: 12px;
+    @include glass-morphism;
 
-.feature-icon {
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-}
+    .feature-icon {
+      font-size: 2rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
 
-.feature-icon .el-icon {
-  font-size: 24px;
-  color: var(--primary-color);
-}
+    .feature-content {
+      h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
 
-.feature-content h3 {
-  font-size: 18px;
-  margin-bottom: 8px;
-  color: var(--text-primary);
-}
-
-.feature-content p {
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* 经典案例 */
-.cases-section {
-  margin-bottom: 64px;
-}
-
-.case-card {
-  height: 100%;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  transition: all 0.3s ease;
-  margin-bottom: 24px;
-}
-
-.case-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.case-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.case-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: var(--text-primary);
-}
-
-.case-content {
-  color: var(--text-secondary);
-}
-
-.case-content ul {
-  list-style: none;
-  padding: 0;
-  margin: 16px 0 0;
-}
-
-.case-content li {
-  margin: 8px 0;
-  padding-left: 20px;
-  position: relative;
-}
-
-.case-content li::before {
-  content: "•";
-  color: var(--primary-color);
-  position: absolute;
-  left: 0;
-}
-
-/* 快速入口 */
-.quick-start {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-}
-
-.action-buttons .el-button {
-  min-width: 160px;
-}
-
-/* 动画 */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+      p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+    }
   }
 }
 
-/* 响应式调整 */
+.case-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+
+  .case-card {
+    .card-header {
+      h3 {
+        margin: 0;
+        font-size: 1.25rem;
+      }
+    }
+
+    .case-content {
+      p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+// 响应式调整
 @media (max-width: 768px) {
-  .home-container {
-    padding: 16px;
-  }
+  .welcome-section {
+    padding: 2rem 1rem;
 
-  .title {
-    font-size: 36px;
-  }
+    .title {
+      font-size: 2rem;
+    }
 
-  .subtitle {
-    font-size: 20px;
-  }
-
-  h2 {
-    font-size: 28px;
-  }
-
-  .feature-list {
-    grid-template-columns: 1fr;
+    .subtitle {
+      font-size: 1.25rem;
+    }
   }
 
   .action-buttons {
     flex-direction: column;
   }
 
-  .action-buttons .el-button {
-    width: 100%;
+  .intro-cards,
+  .feature-list,
+  .case-list {
+    grid-template-columns: 1fr;
   }
 }
 </style>

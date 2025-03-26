@@ -7,12 +7,42 @@ import { ElMessage } from "element-plus";
 export const useUserStore = defineStore("user", () => {
   const user = ref<User | null>(null);
   const token = ref<string | null>(localStorage.getItem("token"));
+  const permissions = ref<string[]>([]);
 
   // 获取用户信息
   const fetchUserInfo = async () => {
     try {
       const data = await getUserInfo();
       user.value = data;
+      
+      // 设置默认权限 - 根据用户角色设置权限
+      // 这里假设所有用户至少有基本查看权限
+      const defaultPermissions = [
+        'template:view', 
+        'framework:view', 
+        'scene:view', 
+        'content:view'
+      ];
+      
+      // 如果是管理员，添加更多权限
+      if (data.is_staff) {
+        defaultPermissions.push(
+          'template:create', 'template:edit', 'template:delete',
+          'framework:create', 'framework:edit', 'framework:delete',
+          'scene:create', 'scene:edit', 'scene:delete',
+          'content:create', 'content:edit', 'content:delete',
+          'apikey:view', 'apikey:create', 'apikey:delete'
+        );
+      }
+      
+      // 如果API返回了权限，使用API返回的权限
+      if (data.permissions) {
+        permissions.value = data.permissions;
+      } else {
+        // 否则使用默认权限
+        permissions.value = defaultPermissions;
+      }
+      
       return true;
     } catch (error: any) {
       console.error("获取用户信息失败:", error);
@@ -60,14 +90,15 @@ export const useUserStore = defineStore("user", () => {
   };
 
   // 登出
-  const logout = () => {
+  const logout = (showMessage = false) => {
     user.value = null;
     token.value = null;
+    permissions.value = [];
     localStorage.removeItem("token");
     localStorage.removeItem("refresh_token");
 
     // 如果是手动登出，显示消息
-    if (arguments.length > 0 && arguments[0] === true) {
+    if (showMessage) {
       ElMessage.success("已成功退出登录");
     }
 
@@ -88,6 +119,7 @@ export const useUserStore = defineStore("user", () => {
   return {
     user,
     token,
+    permissions,
     login,
     logout,
     isLoggedIn,

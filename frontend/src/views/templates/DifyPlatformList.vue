@@ -398,7 +398,6 @@ const fetchPlatforms = async () => {
     const res = await getDifyPlatforms();
     platforms.value = res.results || [];
   } catch (error) {
-    console.error("获取平台列表失败:", error);
     ElMessage.error("获取平台列表失败");
   } finally {
     loading.value = false;
@@ -411,7 +410,6 @@ const fetchApplications = async (platformId: number) => {
     const res = await getDifyApplications({ platform: platformId });
     applications.value = res.results || [];
   } catch (error) {
-    console.error("获取应用列表失败:", error);
     ElMessage.error("获取应用列表失败");
   }
 };
@@ -443,7 +441,6 @@ const togglePlatformStatus = async (platform: DifyPlatform) => {
     ElMessage.success(`${platform.is_active ? "禁用" : "启用"}平台成功`);
     fetchPlatforms();
   } catch (error) {
-    console.error("更新平台状态失败:", error);
     ElMessage.error("更新平台状态失败");
   }
 };
@@ -465,7 +462,6 @@ const confirmDelete = (platform: DifyPlatform) => {
         ElMessage.success("删除平台成功");
         fetchPlatforms();
       } catch (error) {
-        console.error("删除平台失败:", error);
         ElMessage.error("删除平台失败");
       }
     })
@@ -501,7 +497,6 @@ const submitPlatformForm = async () => {
         platformDialogVisible.value = false;
         fetchPlatforms();
       } catch (error) {
-        console.error("保存平台失败:", error);
         ElMessage.error("保存平台失败");
       }
     }
@@ -564,7 +559,6 @@ const confirmDeleteApp = (application: DifyApplication) => {
           fetchPlatforms();
         }
       } catch (error) {
-        console.error("删除应用失败:", error);
         ElMessage.error("删除应用失败");
       }
     })
@@ -582,7 +576,6 @@ const setAsDefault = async (application: DifyApplication) => {
       fetchApplications(currentPlatform.value.id);
     }
   } catch (error) {
-    console.error("设置默认应用失败:", error);
     ElMessage.error("设置默认应用失败");
   }
 };
@@ -624,7 +617,6 @@ const submitApplicationForm = async () => {
           fetchPlatforms();
         }
       } catch (error) {
-        console.error("保存应用失败:", error);
         ElMessage.error("保存应用失败");
       }
     }

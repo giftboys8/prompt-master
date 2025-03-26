@@ -204,7 +204,6 @@ const fetchSharedTemplates = async () => {
     const response = await getSharedWithMe();
     sharedTemplates.value = response.results;
   } catch (error) {
-    console.error("获取共享模板失败:", error);
     ElMessage.error("获取共享模板失败");
   } finally {
     loading.value = false;

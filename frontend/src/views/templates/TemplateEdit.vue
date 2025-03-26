@@ -259,8 +259,6 @@ const variableRules = {
 const resetContent = () => {
   if (!form.value) return;
   
-  console.log('重置内容，当前框架:', form.value.framework);
-  
   // 创建新的content对象而不是修改原对象
   const newContent = {};
   
@@ -278,7 +276,6 @@ const resetContent = () => {
   // 替换整个content对象，确保响应式更新
   form.value.content = newContent;
   
-  console.log('重置后的content:', form.value.content);
 };
 
 // 监听框架变化
@@ -291,8 +288,6 @@ const stopWatch = watch(
     const newModules = newFramework?.modules || [];
     const oldModules = oldFramework?.modules || [];
     if (JSON.stringify(newModules) !== JSON.stringify(oldModules)) {
-      console.log('框架变化，从:', oldFramework, '变为:', newFramework);
-      
       // 保存旧的content值
       const oldContent = { ...form.value.content };
       
@@ -314,7 +309,6 @@ const stopWatch = watch(
       // 更新验证规则
       Object.assign(rules, getContentRules(newFramework));
       
-      console.log('框架变化后的content:', form.value.content);
     }
   },
   { deep: true }  // 深度监听框架对象的变化
@@ -324,7 +318,6 @@ const stopWatch = watch(
 const handleFrameworkChange = async (framework: any) => {
   if (!form.value) return;
   
-  console.log('框架选择变化:', framework);
   loadingFrameworks.value = true;
   
   try {
@@ -337,11 +330,8 @@ const handleFrameworkChange = async (framework: any) => {
         custom: form.value.content.custom || ""
       };
       
-      console.log('清空框架后的表单:', form.value);
     } else {
       // 框架对象已经由FrameworkSelect组件传递过来，无需再次获取
-      console.log('获取到的新框架信息:', framework);
-      
       if (framework) {
         // 先保存当前content的引用
         const oldContent = { ...form.value.content };
@@ -367,14 +357,12 @@ const handleFrameworkChange = async (framework: any) => {
         // 替换整个content对象
         form.value.content = newContent;
         
-        console.log('更新框架后的表单:', form.value);
       }
     }
     
     // 更新验证规则
     Object.assign(rules, getContentRules(form.value.framework));
   } catch (error: any) {
-    console.error('框架切换错误:', error);
     ElMessage.error(error.message || "获取框架详情失败");
   } finally {
     loadingFrameworks.value = false;
@@ -409,8 +397,6 @@ const loadTemplate = async (id: string) => {
   loading.value = true;
   try {
     const data = await getTemplate(Number(id));
-    console.log('API返回的原始数据:', data);
-
     // 确保初始化表单数据结构
     form.value = {
       name: data.name,
@@ -431,9 +417,7 @@ const loadTemplate = async (id: string) => {
           // 如果framework已经是完整对象，直接使用
           framework = data.framework;
         }
-        console.log('获取到的框架信息:', framework);
       } catch (error) {
-        console.error('获取框架详情失败:', error);
         ElMessage.warning('获取框架详情失败，将使用基础框架信息');
       }
     } else if (data.framework_type && data.framework_type !== 'CUSTOM') {
@@ -442,9 +426,7 @@ const loadTemplate = async (id: string) => {
       if (matchingFramework) {
         try {
           framework = await getFramework(matchingFramework.id);
-          console.log('根据framework_type匹配到的框架:', framework);
         } catch (error) {
-          console.error('获取匹配框架失败:', error);
           ElMessage.warning('获取匹配框架详情失败');
         }
       }
@@ -469,14 +451,7 @@ const loadTemplate = async (id: string) => {
       };
     }
 
-    console.log('最终处理后的表单数据:', {
-      name: form.value.name,
-      framework: form.value.framework,
-      content: form.value.content,
-      variables: form.value.variables
-    });
   } catch (error: any) {
-    console.error('加载模板失败:', error);
     ElMessage.error(error.message || "加载失败");
     router.back();
   } finally {
@@ -505,7 +480,6 @@ const handleSubmit = async () => {
           framework_type: formData.framework ? formData.framework.name : 'CUSTOM'
         };
         
-        console.log('提交的框架ID:', submissionData.framework);
 
         // 处理content数据
         if (formData.framework?.modules?.length) {
@@ -523,7 +497,6 @@ const handleSubmit = async () => {
           };
         }
 
-        console.log("提交的模板数据:", submissionData);
         
         // 发送更新请求
         const result = await updateTemplate(
@@ -538,7 +511,6 @@ const handleSubmit = async () => {
           throw new Error("更新模板失败");
         }
       } catch (error: any) {
-        console.error("提交表单错误:", error);
         ElMessage.error(error.message || "保存失败");
       } finally {
         submitting.value = false;
@@ -563,7 +535,6 @@ onMounted(async () => {
       router.back();
     }
   } catch (error: any) {
-    console.error('初始化失败:', error);
     ElMessage.error(error.message || "页面初始化失败");
     router.back();
   }

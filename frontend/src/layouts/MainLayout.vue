@@ -278,7 +278,7 @@ const handleMenuClick = (index: string) => {
 // 下拉菜单命令处理
 const handleCommand = (command: string) => {
   if (command === "logout") {
-    userStore.logout();
+    userStore.logout(true);
   }
 };
 

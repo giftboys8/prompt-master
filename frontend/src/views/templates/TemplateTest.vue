@@ -1,519 +1,452 @@
 <template>
-  <div class="template-test">
-    <div class="page-header">
-      <h2>模板测试</h2>
-      <el-button
-        @click="router.push({ name: 'template-list' })"
-        type="primary"
-        plain
-      >
-        <el-icon><Back /></el-icon>
-        返回列表
-      </el-button>
-    </div>
-
-    <!-- 选择模板部分 -->
-    <template-selector
-      v-model="selectedTemplateId"
-      :templates="templates"
-      @change="handleTemplateChange"
-    />
-
-    <!-- 主要内容区域：两栏布局 -->
-    <div class="main-content">
-      <!-- 左侧：模板预览 -->
-      <template-preview
-        :template="selectedTemplate"
-        mode="inline"
-        class="preview-panel"
-      />
-
-      <!-- 右侧：变量设置 -->
-      <div class="settings-panel">
-        <template-variable-form
-          v-if="selectedTemplate"
-          :template="selectedTemplate"
-          v-model:variables="variableInputs"
-          v-model:apiKey="selectedApiKey"
-          :is-running="isRunning"
-          @run-test="runTest"
-        />
+  <div class="template-test-container">
+    <div class="template-test-header">
+      <h1>模板测试</h1>
+      <p v-if="template">当前测试: {{ template.name }}</p>
+      <div v-else class="template-select">
+        <FrameworkSelect v-model="selectedFramework" />
+        <a-select
+          v-model:value="selectedTemplateId"
+          placeholder="选择模板"
+          style="width: 250px"
+          :loading="templatesLoading"
+          @change="loadTemplate"
+        >
+          <a-select-option v-for="item in templates" :key="item.id" :value="item.id">
+            {{ item.name }}
+          </a-select-option>
+        </a-select>
       </div>
     </div>
 
-    <!-- 测试结果 -->
-    <div class="result-container">
-      <template-test-result v-if="testResult" :result="testResult" />
-    </div>
+    <div class="template-test-content">
+      <div class="template-form">
+        <template v-if="template">
+          <div class="template-preview">
+            <div class="template-info">
+              <h2>{{ template.name }}</h2>
+              <p class="description">{{ template.description }}</p>
+              <div class="tags">
+                <a-tag v-if="template.framework_type">{{ template.framework_type }}</a-tag>
+                <a-tag v-if="template.category">{{ template.category }}</a-tag>
+              </div>
+            </div>
+            
+            <a-form
+              :model="formState"
+              layout="vertical"
+            >
+              <div v-for="(field, index) in template.variables" :key="index" class="form-field">
+                <a-form-item :label="field.name" :name="field.key">
+                  <a-input
+                    v-if="field.type === 'text'"
+                    v-model:value="formState[field.key]"
+                    :placeholder="field.description || `请输入${field.name}`"
+                  />
+                  <a-textarea
+                    v-else-if="field.type === 'textarea'"
+                    v-model:value="formState[field.key]"
+                    :placeholder="field.description || `请输入${field.name}`"
+                    :rows="4"
+                  />
+                  <a-select
+                    v-else-if="field.type === 'select'"
+                    v-model:value="formState[field.key]"
+                    :placeholder="field.description || `请选择${field.name}`"
+                  >
+                    <a-select-option 
+                      v-for="(option, optIndex) in field.options" 
+                      :key="optIndex" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </a-select-option>
+                  </a-select>
+                  <a-radio-group 
+                    v-else-if="field.type === 'radio'"
+                    v-model:value="formState[field.key]"
+                  >
+                    <a-radio 
+                      v-for="(option, optIndex) in field.options" 
+                      :key="optIndex" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </a-radio>
+                  </a-radio-group>
+                </a-form-item>
+              </div>
+            </a-form>
+          </div>
 
-    <!-- 历史记录 -->
-    <div class="history-container">
-      <template-test-history
-        :history="testHistory"
-        :is-loading="isLoadingHistory"
-        @view-detail="showHistoryDetail"
-      />
-    </div>
+          <div class="action-buttons">
+            <a-button type="primary" @click="generatePrompt" :loading="generating">
+              生成提示词
+            </a-button>
+            <a-button @click="resetForm">
+              重置
+            </a-button>
+          </div>
+        </template>
+        <div v-else-if="!selectedTemplateId" class="empty-state">
+          <a-empty description="请选择一个模板进行测试" />
+        </div>
+        <div v-else-if="templateLoading" class="loading-state">
+          <a-spin tip="加载模板中..." />
+        </div>
+      </div>
 
-    <!-- 历史记录详情对话框 -->
-    <template-history-detail
-      v-model:visible="historyDetailVisible"
-      :record="selectedHistoryRecord"
-    />
+      <div class="result-panel">
+        <div class="result-header">
+          <h3>生成结果</h3>
+          <div class="result-actions">
+            <a-tooltip title="复制到剪贴板">
+              <a-button 
+                type="text" 
+                :disabled="!generatedPrompt" 
+                @click="copyToClipboard"
+              >
+                <template #icon><CopyOutlined /></template>
+              </a-button>
+            </a-tooltip>
+          </div>
+        </div>
+        <a-spin :spinning="generating">
+          <div 
+            class="result-content" 
+            :class="{ 'has-content': generatedPrompt }"
+          >
+            <pre v-if="generatedPrompt">{{ generatedPrompt }}</pre>
+            <a-empty v-else description="填写表单并点击生成按钮" />
+          </div>
+        </a-spin>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Back } from "@element-plus/icons-vue";
-import { ref, computed, onMounted, watch, onUnmounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { ElMessage } from "element-plus";
-import {
-  getTemplateList,
-  getTemplateTests,
-  saveTemplateTest,
-} from "@/api/templates";
-import { sendMessage } from "@/api/dify";
-import type { Template, TemplateTest as ITemplateTest } from "@/types";
+import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { message } from 'ant-design-vue';
+import { CopyOutlined } from '@ant-design/icons-vue';
+import FrameworkSelect from '@/components/FrameworkSelect.vue';
+import { useTemplateCache } from '@/hooks/useTemplateCache';
+import { getTemplates, getTemplate } from '@/api/templates';
+import type { Template } from '@/types';
 
-// 导入拆分的组件
-import TemplateSelector from "@/components/TemplateSelector.vue";
-import TemplatePreview from "@/components/TemplatePreview.vue";
-import TemplateVariableForm from "@/components/TemplateVariableForm.vue";
-import TemplateTestResult from "@/components/TemplateTestResult.vue";
-import TemplateTestHistory from "@/components/TemplateTestHistory.vue";
-import TemplateHistoryDetail from "@/components/TemplateHistoryDetail.vue";
-
-const router = useRouter();
 const route = useRoute();
+const { getFromCache, saveToCache } = useTemplateCache();
 
-// 接收路由参数
-defineProps<{
-  id?: string | number;
-}>();
-
-// 状态管理
+// 状态变量
+const template = ref<Template | null>(null);
 const templates = ref<Template[]>([]);
-const selectedTemplate = ref<Template | null>(null);
-const selectedTemplateId = ref<number | null>(null);
-const variableInputs = ref<Record<string, string>>({});
-const selectedApiKey = ref<any>(null);
-const testResult = ref("");
-const isRunning = ref(false);
-const testHistory = ref<ITemplateTest[]>([]);
-const isLoadingHistory = ref(false);
-const historyDetailVisible = ref(false);
-const selectedHistoryRecord = ref<ITemplateTest | null>(null);
+const selectedTemplateId = ref<string | null>(route.params.id as string || null);
+const selectedFramework = ref<string | null>(null);
+const templatesLoading = ref(false);
+const templateLoading = ref(false);
+const generating = ref(false);
+const generatedPrompt = ref('');
+const formState = reactive<Record<string, any>>({});
 
-// 处理模板选择变化
-const handleTemplateChange = async (templateId: number) => {
-  selectedTemplateId.value = templateId;
-  const template = templates.value.find((t) => t.id === templateId) || null;
-  selectedTemplate.value = template;
-
-  // 重置变量输入和测试结果
-  variableInputs.value = {};
-  testResult.value = "";
-
-  // 如果模板有变量，初始化变量输入对象
-  if (selectedTemplate.value) {
-    selectedTemplate.value.variables.forEach((variable) => {
-      variableInputs.value[variable.name] = "";
+// 加载模板列表
+const loadTemplates = async () => {
+  try {
+    templatesLoading.value = true;
+    const response = await getTemplates({
+      framework_id: selectedFramework.value || undefined,
+      page: 1,
+      page_size: 100
     });
+    templates.value = response.data.results;
+  } catch (error) {
+    message.error('加载模板列表失败');
+  } finally {
+    templatesLoading.value = false;
   }
-
-  // 获取测试历史
-  await fetchTestHistory();
 };
 
-// 获取模板列表
-const fetchTemplates = async () => {
+// 加载单个模板
+const loadTemplate = async (id: string) => {
   try {
-    const response = await getTemplateList();
-    if (response && response.results) {
-      templates.value = response.results;
+    templateLoading.value = true;
+    
+    // 尝试从缓存获取
+    const cachedTemplate = getFromCache(id);
+    if (cachedTemplate) {
+      template.value = cachedTemplate;
+      initFormState();
+      templateLoading.value = false;
+      return;
     }
-  } catch (error: any) {
-    ElMessage.error("获取模板列表失败：" + (error.message || "未知错误"));
+    
+    const response = await getTemplate(id);
+    template.value = response.data;
+    saveToCache(response.data);
+    initFormState();
+  } catch (error) {
+    message.error('加载模板失败');
+    template.value = null;
+  } finally {
+    templateLoading.value = false;
   }
+};
+
+// 初始化表单状态
+const initFormState = () => {
+  if (!template.value) return;
+  
+  const newState: Record<string, any> = {};
+  template.value.variables.forEach(variable => {
+    newState[variable.key] = variable.default_value || '';
+  });
+  
+  Object.assign(formState, newState);
 };
 
 // 生成提示词
-const generatePrompt = (
-  template: Template,
-  variables: Record<string, string>,
-) => {
-  let prompt = "";
+const generatePrompt = () => {
+  if (!template.value) return;
   
-  // 调试日志：输出模板信息
-  console.log("模板信息:", {
-    framework_type: template.framework_type,
-    content: template.content,
-    variables: variables
-  });
-
-  // 直接获取模板内容的所有字段，组合成对话模式格式
-  const contentEntries = Object.entries(template.content).filter(([key, value]) => 
-    value && key !== 'custom' // 过滤掉空值和custom字段
-  );
+  generating.value = true;
   
-  if (contentEntries.length > 0) {
-    // 按对话模式格式组织内容
-    contentEntries.forEach(([key, value]) => {
-      // 格式化键名，将驼峰命名转换为空格分隔的词组，并将首字母大写
-      const formattedKey = key
-        .replace(/([A-Z])/g, " $1")
-        .replace(/^./, (str) => str.toUpperCase());
-        
-      prompt += `${formattedKey}：${value}\n`;
-    });
-    
-    // 移除最后一个换行符
-    prompt = prompt.trim();
-  } else if (template.content.custom) {
-    // 如果没有其他内容但有custom字段，则使用custom
-    prompt = template.content.custom;
-    console.log("使用自定义模板内容:", template.content.custom);
-  } else {
-    console.warn(`模板内容为空`);
-    prompt = "";
-  }
-
-  // 调试日志：替换变量前的提示词
-  console.log("替换变量前的提示词:", prompt);
-
-  // 替换变量
-  Object.entries(variables).forEach(([key, value]) => {
-    prompt = prompt.replace(new RegExp(`{{${key}}}`, "g"), value);
-  });
-
-  // 调试日志：最终生成的提示词
-  console.log("最终生成的提示词:", prompt);
-  return prompt;
-};
-
-// 运行测试
-const runTest = async () => {
-  if (!selectedTemplate.value) {
-    ElMessage.warning("请先选择一个模板");
-    return;
-  }
-
-  // 验证是否选择了API密钥
-  if (!selectedApiKey.value) {
-    ElMessage.warning("请选择一个API密钥");
-    return;
-  }
-
-  // 验证所有变量都已填写
-  const allVariablesFilled = selectedTemplate.value.variables.every(
-    (variable) => !!variableInputs.value[variable.name],
-  );
-
-  if (!allVariablesFilled) {
-    ElMessage.warning("请填写所有必需的变量");
-    return;
-  }
-
-  isRunning.value = true;
-  testResult.value = "";
-  isLoadingHistory.value = true;
-
   try {
-    const prompt = generatePrompt(selectedTemplate.value, variableInputs.value);
+    let content = template.value.content;
     
-    // 调试日志：API调用前的状态
-    console.log("运行测试状态:", {
-      selectedTemplate: selectedTemplate.value,
-      variableInputs: variableInputs.value,
-      selectedApiKey: selectedApiKey.value,
-      prompt: prompt
-    });
-
-    if (!import.meta.env.VITE_DIFY_API_BASE_URL) {
-      throw new Error("Dify API基础URL未配置，请检查环境变量");
+    // 替换变量
+    for (const variable of template.value.variables) {
+      const value = formState[variable.key] || '';
+      const regex = new RegExp(`\\{\\{\\s*${variable.key}\\s*\\}\\}`, 'g');
+      content = content.replace(regex, value);
     }
-
-    // 确保 prompt 不为空
-    if (!prompt.trim()) {
-      throw new Error("生成的提示词为空，请检查模板内容和变量填写");
-    }
-
-    console.log("发送到Dify API的数据:", {
-      query: prompt.trim(),
-      inputs: variableInputs.value,
-      response_mode: "blocking",
-      user: "template_test_user",
-    });
-
-    const response = await sendMessage(
-      {
-        query: prompt.trim(), // 确保去除首尾空格
-        inputs: variableInputs.value,
-        response_mode: "blocking",
-        user: "template_test_user",
-      },
-      selectedApiKey.value.key,
-    );
-
-    console.log("Dify API响应:", response);
-
-    if (!response || typeof response !== "object") {
-      throw new Error("API响应格式不正确：未收到响应数据");
-    }
-
-    if (response.error) {
-      throw new Error(`API返回错误：${response.error}`);
-    }
-
-    const answer = response.answer;
-    if (typeof answer !== "string") {
-      throw new Error("API响应格式不正确：answer字段格式错误");
-    }
-
-    testResult.value = answer;
-
-    console.log("准备保存测试记录，数据:", {
-      template: selectedTemplate.value.id,
-      model: response.metadata?.model || "Dify API",
-      input_data: variableInputs.value,
-      dify_response: response,
-    });
-
-    try {
-      // 确保所有必要的数据都存在
-      if (!selectedTemplate.value?.id) {
-        throw new Error("模板ID不存在");
-      }
-
-      if (!response.answer) {
-        throw new Error("API响应中缺少answer字段");
-      }
-
-      // 简化并验证 dify_response 对象
-      const simplifiedResponse = {
-        answer: response.answer,
-        metadata: {
-          model: response.metadata?.model || "Dify API",
-          ...response.metadata
-        },
-        usage: response.usage || {},
-      };
-      
-      // 准备并验证发送到后端的数据
-      // 确保将 Proxy 对象转换为普通对象并且处理可能的空值
-      const processedInputData = {};
-      
-      // 检查变量输入是否有效
-      if (variableInputs.value && typeof variableInputs.value === 'object') {
-        // 遍历模板中定义的所有变量
-        selectedTemplate.value.variables.forEach(variable => {
-          const varName = variable.name;
-          const varValue = variableInputs.value[varName];
-          
-          // 只添加有值的变量
-          if (varValue !== undefined && varValue !== null && varValue !== '') {
-            processedInputData[varName] = varValue;
-          }
-        });
-      }
-      
-      console.log("处理后的输入数据:", processedInputData);
-      
-      const testData = {
-        template: selectedTemplate.value.id,
-        model: response.metadata?.model || "Dify API",
-        input_data: processedInputData,
-        dify_response: simplifiedResponse,
-      };
-
-      // 详细的数据验证
-      if (!testData.template) {
-        throw new Error("模板ID不能为空");
-      }
-      if (!testData.model) {
-        throw new Error("模型名称不能为空");
-      }
-      // 检查 input_data 是否为空
-      const inputDataKeys = Object.keys(testData.input_data);
-      if (inputDataKeys.length === 0) {
-        // 如果没有有效的输入数据，但模板需要变量，则提供默认值
-        if (selectedTemplate.value.variables.length > 0) {
-          // 创建一个默认的输入数据对象
-          const defaultInputData = {};
-          selectedTemplate.value.variables.forEach(variable => {
-            defaultInputData[variable.name] = variable.default_value || `测试值_${variable.name}`;
-          });
-          testData.input_data = defaultInputData;
-          console.log("使用默认输入数据:", defaultInputData);
-        } else {
-          // 如果模板没有变量但仍需要输入数据，创建一个空对象但添加一个标记字段
-          testData.input_data = { "_no_variables_required": true };
-        }
-      }
-      
-      // 最终检查 - 确保有输入数据
-      if (Object.keys(testData.input_data).length === 0) {
-        throw new Error("输入数据不能为空，请至少填写一个变量值");
-      }
-      if (!testData.dify_response || !testData.dify_response.answer) {
-        throw new Error("API响应数据不完整");
-      }
-
-      console.log("准备发送到后端的数据:", JSON.stringify(testData, null, 2));
-
-    const saveResponse = await saveTemplateTest(testData);
-    console.log("保存测试记录响应:", saveResponse);
-    ElMessage.success("测试运行成功，记录已保存");
-  } catch (saveError: any) {
-    console.error("保存测试记录失败:", saveError);
-    if (saveError.response) {
-      console.error("错误状态码:", saveError.response.status);
-      console.error("错误响应数据:", saveError.response.data);
-    }
-    let errorMessage = "测试结果已显示，但保存记录失败";
-    if (saveError.message) {
-      errorMessage = `保存失败：${saveError.message}`;
-    } else if (saveError.response?.data?.error) {
-      errorMessage = `保存失败：${saveError.response.data.error}`;
-    }
-    ElMessage.warning(errorMessage);
-  }
-
-    await fetchTestHistory();
-  } catch (error: any) {
-    let errorMessage = error.message || "未知错误";
-
-    if (error.response) {
-      const responseData = error.response.data;
-      errorMessage = responseData?.error
-        ? `API错误：${responseData.error}`
-        : `API错误：${error.response.status} - ${error.response.statusText || "未知错误"}`;
-      console.error("API错误详情:", error.response);
-    }
-
-    console.error("测试运行失败:", error);
-    ElMessage.error("测试运行失败：" + errorMessage);
-    testResult.value = `## 错误信息\n\n测试运行失败: ${errorMessage}\n\n请检查以下可能的问题:\n\n- Dify API密钥是否正确\n- API服务器是否可访问\n- 网络连接是否正常`;
-  } finally {
-    isRunning.value = false;
-    isLoadingHistory.value = false;
+    
+    generatedPrompt.value = content;
+    
+    // 模拟API调用延迟
+    setTimeout(() => {
+      generating.value = false;
+    }, 500);
+  } catch (error) {
+    message.error('生成提示词失败');
+    generating.value = false;
   }
 };
 
-// 获取测试历史
-const fetchTestHistory = async () => {
-  if (!selectedTemplate.value) return;
+// 重置表单
+const resetForm = () => {
+  initFormState();
+  generatedPrompt.value = '';
+};
 
-  isLoadingHistory.value = true;
-  try {
-    const response = await getTemplateTests({
-      template: selectedTemplate.value.id,
+// 复制到剪贴板
+const copyToClipboard = () => {
+  if (!generatedPrompt.value) return;
+  
+  navigator.clipboard.writeText(generatedPrompt.value)
+    .then(() => {
+      message.success('已复制到剪贴板');
+    })
+    .catch(err => {
+      message.error('复制失败');
     });
-    testHistory.value = response.results || [];
-  } catch (error: any) {
-    console.error("获取测试历史失败:", error);
-    ElMessage.error("获取测试历史失败：" + (error.message || "未知错误"));
-  } finally {
-    isLoadingHistory.value = false;
-  }
 };
 
-// 显示历史记录详情
-const showHistoryDetail = (record: ITemplateTest) => {
-  selectedHistoryRecord.value = record;
-  historyDetailVisible.value = true;
-};
-
-// 监听模板列表变化
-watch(
-  templates,
-  (newTemplates) => {
-    const templateId = route.params.id;
-    if (templateId && newTemplates.length > 0) {
-      const template = newTemplates.find((t) => t.id === Number(templateId));
-      if (template) {
-        selectedTemplateId.value = template.id;
-        handleTemplateChange(template.id);
-      }
-    }
-  },
-  { immediate: true },
-);
-
-// 页面加载时获取数据
-onMounted(() => {
-  fetchTemplates();
+// 监听框架变化
+watch(selectedFramework, () => {
+  loadTemplates();
 });
 
-// 在组件卸载前清理状态
-const cleanup = () => {
-  selectedTemplate.value = null;
-  selectedTemplateId.value = null;
-  testResult.value = "";
-  variableInputs.value = {};
-  testHistory.value = [];
-  templates.value = [];
-  selectedHistoryRecord.value = null;
-  historyDetailVisible.value = false;
-  selectedApiKey.value = null;
-};
-
-// 在组件卸载时进行清理
-onUnmounted(cleanup);
+// 组件挂载时执行
+onMounted(() => {
+  loadTemplates();
+  
+  if (selectedTemplateId.value) {
+    loadTemplate(selectedTemplateId.value);
+  }
+});
 </script>
 
-<style lang="scss" scoped>
-.template-test {
+<style scoped lang="scss">
+.template-test-container {
   padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
-  .page-header {
+.template-test-header {
+  margin-bottom: 24px;
+  
+  h1 {
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+  
+  .template-select {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+  }
+}
+
+.template-test-content {
+  display: flex;
+  gap: 24px;
+  height: calc(100% - 100px);
+  
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    height: auto;
+  }
+}
+
+.template-form {
+  flex: 1;
+  background: var(--bg-component);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  
+  .template-preview {
+    .template-info {
+      margin-bottom: 24px;
+      
+      h2 {
+        margin-bottom: 8px;
+        color: var(--text-primary);
+      }
+      
+      .description {
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+      }
+      
+      .tags {
+        margin-top: 8px;
+      }
+    }
+  }
+  
+  .form-field {
+    margin-bottom: 16px;
+  }
+  
+  .action-buttons {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+  }
+  
+  .empty-state, .loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+  }
+}
+
+.result-panel {
+  flex: 1;
+  background: var(--bg-component);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  
+  .result-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
-
-    h2 {
-      color: var(--primary-color);
-      font-size: 24px;
-      font-family: "Orbitron", sans-serif;
+    margin-bottom: 16px;
+    
+    h3 {
       margin: 0;
+      color: var(--text-primary);
     }
   }
-
-  .main-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 24px;
-    margin-top: 24px;
-    margin-bottom: 24px;
-
-    .preview-panel {
-      height: 100%;
-      min-width: 0;
-      overflow: auto;
-      max-height: 60vh;
+  
+  .result-content {
+    flex: 1;
+    background: var(--bg-code);
+    border-radius: 6px;
+    padding: 16px;
+    overflow-y: auto;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &.has-content {
+      justify-content: flex-start;
+      align-items: flex-start;
     }
-
-    .settings-panel {
-      height: 100%;
-      min-width: 0;
-      overflow: visible; /* 修改为visible，避免双重滚动条 */
-      max-height: none; /* 移除最大高度限制 */
+    
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text-code);
+      font-family: 'Fira Code', monospace, 'Courier New', Courier;
+      width: 100%;
     }
   }
+}
 
-  .result-container {
-    margin-bottom: 24px;
-    width: 100%;
-    /* 移除max-height和overflow属性，让子组件控制滚动 */
+// 动画效果
+.template-test-container {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.template-form, .result-panel {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
+}
 
-  .history-container {
-    margin-top: 24px;
-    width: 100%;
+.action-buttons button {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+  }
+  
+  &:focus:not(:active)::after {
+    animation: ripple 0.6s ease-out;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
   }
 }
 </style>

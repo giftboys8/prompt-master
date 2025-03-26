@@ -47,7 +47,6 @@ export function useTemplateCache(options: UseTemplateCacheOptions = {}) {
       });
     } catch (err) {
       error.value = err as Error;
-      console.error("Failed to load templates:", err);
     } finally {
       loading.value = false;
     }
