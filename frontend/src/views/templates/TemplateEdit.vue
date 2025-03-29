@@ -60,10 +60,10 @@
                 v-for="module in form.framework.modules"
                 :key="module.id"
                 :label="module.name"
-                :prop="'content.' + module.name.toLowerCase()"
+                :prop="'content.' + module.name"
               >
                 <el-input
-                  v-model="form.content[module.name.toLowerCase()]"
+                  v-model="form.content[module.name]"
                   type="textarea"
                   :rows="2"
                   :placeholder="module.description"
@@ -120,11 +120,11 @@
               <el-col :span="8">
                 <el-form-item
                   :label="'默认值'"
-                  :prop="'variables.' + index + '.default_value'"
-                  :rules="variableRules.default_value"
+                  :prop="'variables.' + index + '.default'"
+                  :rules="variableRules.default"
                 >
                   <el-input
-                    v-model="variable.default_value"
+                    v-model="variable.default"
                     placeholder="请输入默认值"
                   />
                 </el-form-item>
@@ -199,9 +199,9 @@ const form = ref<{
   };
   variables: Array<{
     name: string;
-    default_value: string;
+    default: string;
     description: string;
-  }>;
+  }>
 } | null>(null);
 
 // 表单验证规则
@@ -220,7 +220,7 @@ const getContentRules = (framework: any) => {
 
   if (framework?.modules?.length) {
     framework.modules.forEach((module: any) => {
-      const fieldName = `content.${module.name.toLowerCase()}`;
+      const fieldName = `content.${module.name}`;
       rules[fieldName] = [
         {
           required: true,
@@ -252,7 +252,7 @@ const variableRules = {
       trigger: "blur",
     },
   ],
-  default_value: [{ required: true, message: "请输入默认值", trigger: "blur" }],
+  default: [{ required: true, message: "请输入默认值", trigger: "blur" }],
   description: [{ required: true, message: "请输入描述", trigger: "blur" }],
 };
 
@@ -266,7 +266,7 @@ const resetContent = () => {
   // 如果有框架模块，为每个模块创建对应的内容字段
   if (form.value.framework?.modules?.length) {
     form.value.framework.modules.forEach((module) => {
-      const key = module.name.toLowerCase();
+      const key = module.name;
       newContent[key] = "";
     });
   } else {
@@ -297,7 +297,7 @@ const stopWatch = watch(
       // 根据新的框架模块设置content字段
       if (newModules.length > 0) {
         newModules.forEach((module) => {
-          const key = module.name.toLowerCase();
+          const key = module.name;
           // 尝试保留原有值
           form.value.content[key] = oldContent[key] || "";
         });
@@ -343,7 +343,7 @@ const handleFrameworkChange = async (framework: any) => {
         // 根据框架模块设置content字段
         if (framework.modules?.length) {
           framework.modules.forEach((module) => {
-            const key = module.name.toLowerCase();
+            const key = module.name;
             // 尝试保留原有值
             newContent[key] = oldContent[key] || "";
           });
@@ -376,7 +376,7 @@ const addVariable = () => {
   if (form.value) {
     form.value.variables.push({
       name: "",
-      default_value: "",
+      default: "",
       description: "",
     });
   }
@@ -400,7 +400,11 @@ const loadTemplate = async (id: string) => {
       framework: null, // 先设置为null，后面再更新
       description: data.description,
       content: {}, // 先设置为空对象，后面再填充
-      variables: data.variables || [],
+      variables: (data.variables || []).map(v => ({
+        name: v.name,
+        default: v.default,
+        description: v.description
+      })),
     };
 
     // 处理框架信息
@@ -436,17 +440,17 @@ const loadTemplate = async (id: string) => {
 
     // 处理内容字段
     if (framework?.modules?.length) {
-      // 如果有框架模块，创建对应的内容字段
-      const newContent = {};
-      framework.modules.forEach((module) => {
-        const key = module.name.toLowerCase();
-        newContent[key] = data.content?.[key] || "";
+      // 如果有框架模块，确保只包含框架定义的字段
+      const contentObj = {};
+      framework.modules.forEach((module: any) => {
+        const key = module.name;
+        contentObj[key] = data.content[key] || "";
       });
-      form.value.content = newContent;
+      form.value.content = contentObj;
     } else {
-      // 如果没有框架模块或是自定义框架，使用custom字段
+      // 如果没有框架模块，使用自定义内容
       form.value.content = {
-        custom: data.content?.custom || "",
+        custom: data.content.custom || "",
       };
     }
   } catch (error: any) {
@@ -485,7 +489,7 @@ const handleSubmit = async () => {
           // 如果有框架模块，确保只包含框架定义的字段
           const contentObj = {};
           formData.framework.modules.forEach((module: any) => {
-            const key = module.name.toLowerCase();
+            const key = module.name;
             contentObj[key] = formData.content[key] || "";
           });
           submissionData.content = contentObj;
