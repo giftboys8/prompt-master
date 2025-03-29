@@ -12,7 +12,7 @@
         <el-table-column prop="name" label="名称" />
         <el-table-column prop="framework" label="框架类型" width="100">
           <template #default="{ row }">
-            <el-tag>{{ row.framework?.type || '自定义' }}</el-tag>
+            <el-tag>{{ row.framework?.type || "自定义" }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column
@@ -56,7 +56,10 @@
       <template v-if="currentVersion">
         <h3>基本信息</h3>
         <p><strong>模板名称：</strong>{{ currentVersion.name }}</p>
-        <p><strong>框架类型：</strong>{{ currentVersion.framework?.type || '自定义' }}</p>
+        <p>
+          <strong>框架类型：</strong
+          >{{ currentVersion.framework?.type || "自定义" }}
+        </p>
         <p><strong>描述：</strong>{{ currentVersion.description }}</p>
 
         <h3>提示词内容</h3>
@@ -109,9 +112,7 @@
       destroy-on-close
     >
       <p>
-        确定要恢复到版本 v{{
-          versionToRestore?.version_number
-        }}
+        确定要恢复到版本 v{{ versionToRestore?.version_number }}
         吗？此操作将创建一个新版本。
       </p>
       <template #footer>
@@ -119,8 +120,8 @@
           <el-button @click="restoreDialogVisible = false">取消</el-button>
           <el-button
             type="primary"
-            @click="confirmRestore"
             :loading="restoring"
+            @click="confirmRestore"
           >
             确定
           </el-button>

@@ -8,6 +8,7 @@ import {
   importTemplates,
   reorderTemplates,
 } from "@/api/templates";
+import { useTemplateCache } from "@/hooks/useTemplateCache";
 import type { Template } from "@/types";
 
 export function useTemplateList() {
@@ -20,6 +21,8 @@ export function useTemplateList() {
   // 使用ref而不是computed，这样它是可变的
   const sortedTemplates = ref<Template[]>([]);
 
+  const { loadTemplates, addRecentTemplate } = useTemplateCache();
+
   // 加载数据
   const loadData = async (
     params: {
@@ -30,20 +33,29 @@ export function useTemplateList() {
   ) => {
     loading.value = true;
     try {
-      const res = await getTemplateList({
-        page: currentPage.value,
-        page_size: pageSize.value,
-        ...params,
-      });
-
-      if (res && Array.isArray(res.results)) {
-        templates.value = res.results;
-        total.value = res.count;
-        sortedTemplates.value = [...res.results].sort(
+      const cachedTemplates = await loadTemplates();
+      if (cachedTemplates) {
+        templates.value = cachedTemplates;
+        total.value = cachedTemplates.length;
+        sortedTemplates.value = [...cachedTemplates].sort(
           (a, b) => (a.order || 0) - (b.order || 0),
         );
       } else {
-        ElMessage.warning("返回的数据格式不符合预期");
+        const res = await getTemplateList({
+          page: currentPage.value,
+          page_size: pageSize.value,
+          ...params,
+        });
+
+        if (res && Array.isArray(res.results)) {
+          templates.value = res.results;
+          total.value = res.count;
+          sortedTemplates.value = [...res.results].sort(
+            (a, b) => (a.order || 0) - (b.order || 0),
+          );
+        } else {
+          ElMessage.warning("返回的数据格式不符合预期");
+        }
       }
     } catch (error: any) {
       if (error.response?.status === 401) {

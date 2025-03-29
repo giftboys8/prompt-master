@@ -1,4 +1,8 @@
-import { createRouter, createWebHistory, RouteLocationNormalized } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  RouteLocationNormalized,
+} from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { routes } from "./routes";
 import NProgress from "nprogress";
@@ -17,20 +21,20 @@ const router = createRouter({
 });
 
 // 配置 NProgress
-NProgress.configure({ 
+NProgress.configure({
   showSpinner: false,
-  minimum: 0.3
+  minimum: 0.3,
 });
 
 // 权限检查函数
 function checkPermissions(to: RouteLocationNormalized): boolean {
   const userStore = useUserStore();
-  const requiredPermissions = to.meta.permissions as string[] || [];
-  
+  const requiredPermissions = (to.meta.permissions as string[]) || [];
+
   if (requiredPermissions.length === 0) return true;
-  
-  return requiredPermissions.every(permission => 
-    userStore.permissions?.includes(permission)
+
+  return requiredPermissions.every((permission) =>
+    userStore.permissions?.includes(permission),
   );
 }
 
@@ -40,7 +44,9 @@ router.beforeEach(async (to, from, next) => {
   NProgress.start();
 
   const userStore = useUserStore();
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth !== false);
+  const requiresAuth = to.matched.some(
+    (record) => record.meta.requiresAuth !== false,
+  );
 
   // 设置页面标题
   document.title = to.meta.title
@@ -88,7 +94,7 @@ router.afterEach(() => {
 
 // 路由错误处理
 router.onError((error) => {
-  console.error('路由错误:', error);
+  console.error("路由错误:", error);
   NProgress.done();
 });
 

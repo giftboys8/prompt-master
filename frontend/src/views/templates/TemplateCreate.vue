@@ -24,18 +24,33 @@
         </el-form-item>
 
         <el-form-item label="框架" prop="framework">
-    <FrameworkSelect
-      v-model="form.framework"
-      @change="handleFrameworkChange"
-      :showModules="true"
-    />
-  </el-form-item>
+          <FrameworkSelect
+            v-model="form.framework"
+            :show-modules="true"
+            @change="handleFrameworkChange"
+          />
+        </el-form-item>
+
+        <el-form-item label="框架类型" prop="framework_type">
+          <el-select v-model="form.framework_type" placeholder="请选择框架类型">
+            <el-option label="自定义" value="CUSTOM"></el-option>
+            <!-- 添加其他框架类型选项 -->
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="可见性" prop="visibility">
+          <el-select v-model="form.visibility" placeholder="请选择可见性">
+            <el-option label="私有" value="PRIVATE"></el-option>
+            <el-option label="公开" value="PUBLIC"></el-option>
+            <el-option label="共享" value="SHARED"></el-option>
+          </el-select>
+        </el-form-item>
 
         <el-form-item label="描述" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
-            rows="3"
+            :rows="3"
             placeholder="请输入模版描述"
           />
         </el-form-item>
@@ -51,11 +66,17 @@
 
         <div v-loading="loading" element-loading-text="加载框架内容...">
           <!-- 动态生成框架模块表单 -->
-          <template v-if="currentFramework && currentFramework.modules && currentFramework.modules.length > 0">
-            <el-form-item 
-              v-for="module in currentFramework.modules" 
+          <template
+            v-if="
+              currentFramework &&
+              currentFramework.modules &&
+              currentFramework.modules.length > 0
+            "
+          >
+            <el-form-item
+              v-for="module in currentFramework.modules"
               :key="module.id"
-              :label="module.name" 
+              :label="module.name"
               :prop="`content.${module.name.toLowerCase()}`"
             >
               <div class="module-header">
@@ -82,7 +103,7 @@
               <el-input
                 v-model="form.content.custom"
                 type="textarea"
-                rows="6"
+                :rows="6"
                 placeholder="请输入自定义的提示词内容"
               />
             </el-form-item>
@@ -155,7 +176,7 @@
       <!-- 提交按钮 -->
       <div class="form-actions">
         <el-button @click="$router.back()">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="loading">
+        <el-button type="primary" :loading="loading" @click="handleSubmit">
           保存
         </el-button>
       </div>
@@ -181,6 +202,8 @@ const currentFramework = ref<Framework | null>(null);
 const form = reactive({
   name: "",
   framework: null,
+  framework_type: "",
+  visibility: "PRIVATE" as "PRIVATE" | "PUBLIC" | "SHARED",
   description: "",
   content: {} as Record<string, string>,
   variables: [] as Array<{
@@ -194,10 +217,10 @@ const form = reactive({
 const resetContent = () => {
   // 创建新的content对象
   const newContent = {};
-  
+
   // 如果有框架模块，为每个模块创建对应的内容字段
   if (form.framework?.modules?.length) {
-    form.framework.modules.forEach(module => {
+    form.framework.modules.forEach((module) => {
       const key = module.name.toLowerCase();
       newContent[key] = "";
     });
@@ -205,88 +228,92 @@ const resetContent = () => {
     // 如果没有框架模块，则设置自定义内容字段
     newContent.custom = "";
   }
-  
+
   // 替换整个content对象
   form.content = newContent;
 };
 
 // 处理框架选择变化
 const handleFrameworkChange = async (frameworkId: number | null) => {
-  loading.value = true;
-  try {
-    // 重置表单内容
-    resetContent();
-    
-    if (frameworkId === null) {
-      // 清空框架
-      form.framework = null;
-      currentFramework.value = null;
-      form.content = {
-        custom: ""
-      };
-    } else {
-      // 确保 frameworkId 是数字类型
-      const idToUse = typeof frameworkId === 'object' ? 
-        (frameworkId as any)?.id : // 如果是对象，尝试获取其 id 属性
-        Number(frameworkId); // 否则尝试转换为数字
-      
-      if (!idToUse || isNaN(idToUse)) {
-        throw new Error("无效的框架 ID");
+  console.log("Framework changed to:", frameworkId);
+
+  // 清空之前的内容
+  form.content = {};
+
+  if (frameworkId) {
+    loading.value = true;
+    try {
+      // 获取框架详情
+      const response = await getFramework(frameworkId);
+      currentFramework.value = response;
+      console.log("获取到的框架详情:", response);
+
+      // 设置框架类型
+      form.framework_type = response.name;
+
+      // 初始化各模块的内容
+      if (response.modules && response.modules.length > 0) {
+        response.modules.forEach((module) => {
+          const moduleKey = module.name.toLowerCase();
+          console.log(`初始化模块 ${moduleKey} 的内容`);
+          form.content[moduleKey] = "";
+        });
+      } else {
+        // 如果没有模块，设置默认的自定义内容字段
+        console.log("框架没有模块，设置自定义内容字段");
+        form.content = {
+          custom: "",
+        };
       }
-      
-      // 获取新框架信息
-      const framework = await getFramework(idToUse);
-      
-      if (framework) {
-        form.framework = framework;
-        currentFramework.value = framework;
-        
-        // 根据框架模块设置content字段
-        if (framework.modules?.length) {
-          const newContent = {};
-          framework.modules.forEach(module => {
-            const key = module.name.toLowerCase();
-            newContent[key] = "";
-          });
-          form.content = newContent;
-        } else {
-          form.content = {
-            custom: ""
-          };
-        }
-      }
+
+      // 更新验证规则
+      Object.assign(rules, getContentRules(response));
+    } catch (error) {
+      console.error("获取框架详情失败:", error);
+      ElMessage.error("获取框架详情失败，请稍后重试");
+    } finally {
+      loading.value = false;
     }
-    
+  } else {
+    // 清空框架相关数据
+    currentFramework.value = null;
+    form.framework_type = "CUSTOM";
+    form.content = {
+      custom: "",
+    };
+    console.log("清空框架相关数据");
     // 更新验证规则
-    Object.assign(rules, getContentRules(form.framework));
-  } catch (error: any) {
-    ElMessage.error(error.message || "获取框架详情失败");
-  } finally {
-    loading.value = false;
+    Object.assign(rules, getContentRules(null));
   }
 };
 
 // 获取模块的占位文本，提供更详细的指导
 const getModulePlaceholder = (module: any) => {
   const basePlaceholder = module.description || `请输入${module.name}内容`;
-  
+
   // 根据模块名称提供更具体的指导
   const moduleNameLower = module.name.toLowerCase();
-  
+
   // 为常见模块类型提供更详细的指导
-  if (moduleNameLower.includes('角色') || moduleNameLower.includes('role')) {
+  if (moduleNameLower.includes("角色") || moduleNameLower.includes("role")) {
     return `${basePlaceholder}\n\n示例：\n你是一个专业的客服代表，负责解答用户关于我们产品的问题。\n你应该使用友好、专业的语气，提供准确的信息。`;
-  } 
-  else if (moduleNameLower.includes('任务') || moduleNameLower.includes('task')) {
+  } else if (
+    moduleNameLower.includes("任务") ||
+    moduleNameLower.includes("task")
+  ) {
     return `${basePlaceholder}\n\n示例：\n根据用户提供的问题，提供清晰、准确的解答。\n如果问题超出你的知识范围，请礼貌地告知用户并建议其他解决方案。`;
-  }
-  else if (moduleNameLower.includes('背景') || moduleNameLower.includes('background')) {
+  } else if (
+    moduleNameLower.includes("背景") ||
+    moduleNameLower.includes("background")
+  ) {
     return `${basePlaceholder}\n\n示例：\n我们的产品是一款智能家居控制系统，支持语音控制、远程操作和自动化场景设置。\n用户可能会询问设备连接问题、功能使用方法或故障排除等内容。`;
-  }
-  else if (moduleNameLower.includes('格式') || moduleNameLower.includes('format')) {
+  } else if (
+    moduleNameLower.includes("格式") ||
+    moduleNameLower.includes("format")
+  ) {
     return `${basePlaceholder}\n\n示例：\n回答应包含以下部分：\n1. 简短的问题总结\n2. 详细的解答步骤\n3. 可能的后续问题建议`;
   }
-  
+
   return basePlaceholder;
 };
 
@@ -296,18 +323,20 @@ const rules = reactive<FormRules>({
     { required: true, message: "请输入模版名称", trigger: "blur" },
     { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
   ],
-  framework: [
-    { required: true, message: "请选择框架", trigger: "change" },
+  framework: [{ required: true, message: "请选择框架", trigger: "change" }],
+  framework_type: [
+    { required: true, message: "请选择框架类型", trigger: "change" },
   ],
+  visibility: [{ required: true, message: "请选择可见性", trigger: "change" }],
   description: [{ required: true, message: "请输入模版描述", trigger: "blur" }],
 });
 
 // 动态设置必填字段
 const getContentRules = (framework?: Framework | null) => {
   const contentRules: Record<string, any> = {};
-  
+
   if (framework && framework.modules) {
-    framework.modules.forEach(module => {
+    framework.modules.forEach((module) => {
       const fieldName = `content.${module.name.toLowerCase()}`;
       contentRules[fieldName] = [
         { required: true, message: `请输入${module.name}`, trigger: "blur" },
@@ -318,7 +347,7 @@ const getContentRules = (framework?: Framework | null) => {
       { required: true, message: "请输入自定义内容", trigger: "blur" },
     ];
   }
-  
+
   return contentRules;
 };
 
@@ -339,7 +368,7 @@ watch(
     if (currentFramework.value) {
       Object.assign(rules, getContentRules(currentFramework.value));
     }
-  }
+  },
 );
 
 // 变量验证规则
@@ -380,20 +409,39 @@ const handleSubmit = async () => {
       try {
         // 准备提交数据
         const submissionData = {
-          name: form.name,
-          framework: form.framework?.id || null,  // 提取框架ID，与编辑页面保持一致
-          description: form.description,
-          content: { ...form.content }, // 复制内容对象
-          variables: form.variables
+          name: form.name.trim(),
+          framework:
+            typeof form.framework === "object"
+              ? form.framework.id
+              : form.framework,
+          framework_type: form.framework_type,
+          visibility: form.visibility,
+          description: form.description.trim(),
+          content: {},
+          variables: form.variables.map((v) => ({
+            name: v.name.trim(),
+            default_value: v.default_value.trim(),
+            description: v.description.trim(),
+          })),
         };
-        
-        // 如果没有选择框架或没有模块，确保有custom字段
-        if (!form.framework?.id && 
-            (!currentFramework.value || !currentFramework.value.modules || 
-             currentFramework.value.modules.length === 0)) {
+
+        // 处理content字段
+        if (currentFramework.value?.modules?.length > 0) {
+          // 如果有框架模块，使用模块内容
+          currentFramework.value.modules.forEach((module) => {
+            const key = module.name.toLowerCase();
+            submissionData.content[key] = form.content[key] || "";
+          });
+        } else {
+          // 如果没有框架模块，使用自定义内容
           submissionData.content = {
-            custom: form.content.custom || ""
+            custom: form.content.custom || "",
           };
+        }
+
+        // 确保所有必需字段都存在
+        if (!submissionData.framework) {
+          submissionData.framework = null;
         }
 
         const result = await createTemplate(submissionData);

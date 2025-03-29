@@ -47,7 +47,10 @@
       </el-form-item>
 
       <el-form-item label="版本号" prop="version">
-        <el-input v-model="form.version" placeholder="请输入版本号，如：v1.0.0" />
+        <el-input
+          v-model="form.version"
+          placeholder="请输入版本号，如：v1.0.0"
+        />
       </el-form-item>
 
       <el-form-item label="状态" prop="status">
@@ -118,36 +121,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { Plus } from '@element-plus/icons-vue';
-import type { FormInstance, FormRules } from 'element-plus';
-import type { Template } from '@/types';
-import { createScene } from '@/api/scenes';
-import request from '@/api/request';
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { Plus } from "@element-plus/icons-vue";
+import type { FormInstance, FormRules } from "element-plus";
+import type { Template } from "@/types";
+import { createScene } from "@/api/scenes";
+import request from "@/api/request";
 
 const router = useRouter();
 const formRef = ref<FormInstance>();
 
 // 表单数据
 const form = reactive({
-  name: '',
-  category: '',
-  description: '',
+  name: "",
+  category: "",
+  description: "",
   target_roles: [] as string[],
   status: true,
-  version: '',
+  version: "",
   tasks: [] as any[],
 });
 
 // 角色选项
 const roleOptions = [
-  '产品经理',
-  '开发工程师',
-  '设计师',
-  '测试工程师',
-  '运维工程师',
+  "产品经理",
+  "开发工程师",
+  "设计师",
+  "测试工程师",
+  "运维工程师",
 ];
 
 // 模板选项
@@ -157,16 +160,16 @@ const templateOptions = ref<Template[]>([]);
 const fetchTemplateOptions = async () => {
   try {
     const response = await request({
-      url: '/templates/templates/',
-      method: 'get',
+      url: "/templates/templates/",
+      method: "get",
       params: {
-        page_size: 1000 // 设置一个较大的值以获取所有模板
-      }
+        page_size: 1000, // 设置一个较大的值以获取所有模板
+      },
     });
     templateOptions.value = response.results || [];
   } catch (error) {
-    console.error('获取模板列表失败:', error);
-    ElMessage.error('获取模板列表失败');
+    console.error("获取模板列表失败:", error);
+    ElMessage.error("获取模板列表失败");
   }
 };
 
@@ -175,33 +178,33 @@ fetchTemplateOptions();
 
 // 表单验证规则
 const rules = reactive<FormRules>({
-  name: [{ required: true, message: '请输入场景名称', trigger: 'blur' }],
-  category: [{ required: true, message: '请输入场景分类', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入场景描述', trigger: 'blur' }],
+  name: [{ required: true, message: "请输入场景名称", trigger: "blur" }],
+  category: [{ required: true, message: "请输入场景分类", trigger: "blur" }],
+  description: [{ required: true, message: "请输入场景描述", trigger: "blur" }],
   target_roles: [
-    { required: true, message: '请选择目标角色', trigger: 'change' },
+    { required: true, message: "请选择目标角色", trigger: "change" },
     {
-      type: 'array',
+      type: "array",
       min: 1,
-      message: '至少选择一个目标角色',
-      trigger: 'change',
+      message: "至少选择一个目标角色",
+      trigger: "change",
     },
   ],
-  version: [{ required: true, message: '请输入版本号', trigger: 'blur' }],
+  version: [{ required: true, message: "请输入版本号", trigger: "blur" }],
 });
 
 // 任务表单验证规则
 const taskRules = {
-  name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入任务描述', trigger: 'blur' }],
-  template: [{ required: true, message: '请选择关联模板', trigger: 'change' }],
+  name: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
+  description: [{ required: true, message: "请输入任务描述", trigger: "blur" }],
+  template: [{ required: true, message: "请选择关联模板", trigger: "change" }],
 };
 
 // 添加任务
 const addTask = () => {
   form.tasks.push({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     template: null,
   });
 };
@@ -220,60 +223,72 @@ const handleSubmit = async () => {
       try {
         // 创建表单数据的副本，避免修改原始表单
         const formData = JSON.parse(JSON.stringify(form));
-        
+
         // 确保target_roles是一个简单的字符串数组
         if (Array.isArray(formData.target_roles)) {
           formData.target_roles = formData.target_roles
-            .filter(role => role !== null && role !== undefined && role !== '')
-            .map(role => {
+            .filter(
+              (role) => role !== null && role !== undefined && role !== "",
+            )
+            .map((role) => {
               // 处理各种可能的格式，确保返回简单字符串
-              if (typeof role === 'string') {
+              if (typeof role === "string") {
                 // 处理字符串形式的数组表示
-                if (role.startsWith('[') && role.endsWith(']')) {
+                if (role.startsWith("[") && role.endsWith("]")) {
                   try {
                     const parsed = JSON.parse(role);
                     if (Array.isArray(parsed)) {
-                      return typeof parsed[0] === 'string' ? parsed[0] : String(parsed[0]);
+                      return typeof parsed[0] === "string"
+                        ? parsed[0]
+                        : String(parsed[0]);
                     }
-                    return role.replace(/^\[|\]$/g, '').replace(/^['"]|['"]$/g, '');
+                    return role
+                      .replace(/^\[|\]$/g, "")
+                      .replace(/^['"]|['"]$/g, "");
                   } catch (e) {
-                    return role.replace(/^\[|\]$/g, '').replace(/^['"]|['"]$/g, '');
+                    return role
+                      .replace(/^\[|\]$/g, "")
+                      .replace(/^['"]|['"]$/g, "");
                   }
                 }
                 return role.trim();
               }
               if (Array.isArray(role)) {
-                return typeof role[0] === 'string' ? role[0] : String(role[0] || '');
+                return typeof role[0] === "string"
+                  ? role[0]
+                  : String(role[0] || "");
               }
               return String(role).trim();
             });
         }
-        
+
         // 确保任务数据中只包含必要的字段
         if (Array.isArray(formData.tasks)) {
-          formData.tasks = formData.tasks.map(task => ({
+          formData.tasks = formData.tasks.map((task) => ({
             name: task.name,
             description: task.description,
-            template: task.template
+            template: task.template,
           }));
         }
-        
+
         await createScene(formData);
-        ElMessage.success('场景创建成功');
-        router.push('/scenes');
+        ElMessage.success("场景创建成功");
+        router.push("/scenes");
       } catch (error) {
-        console.error('创建场景失败:', error);
-        ElMessage.error('创建场景失败: ' + (error as any).message || '未知错误');
+        console.error("创建场景失败:", error);
+        ElMessage.error(
+          "创建场景失败: " + (error as any).message || "未知错误",
+        );
       }
     } else {
-      console.error('表单验证失败:', fields);
+      console.error("表单验证失败:", fields);
     }
   });
 };
 
 // 取消创建
 const handleCancel = () => {
-  router.push('/scenes');
+  router.push("/scenes");
 };
 </script>
 

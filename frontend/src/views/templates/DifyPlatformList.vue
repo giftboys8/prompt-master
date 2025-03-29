@@ -46,16 +46,16 @@
                     <el-icon><SwitchButton /></el-icon>
                     {{ platform.is_active ? "禁用" : "启用" }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="viewApplications(platform)" divided>
+                  <el-dropdown-item divided @click="viewApplications(platform)">
                     <el-icon><View /></el-icon>查看应用
                   </el-dropdown-item>
                   <el-dropdown-item @click="addApplication(platform)">
                     <el-icon><Plus /></el-icon>添加应用
                   </el-dropdown-item>
                   <el-dropdown-item
-                    @click="confirmDelete(platform)"
                     divided
                     type="danger"
+                    @click="confirmDelete(platform)"
                   >
                     <el-icon><Delete /></el-icon>删除
                   </el-dropdown-item>
@@ -282,7 +282,7 @@
       <el-empty v-else description="暂无应用数据" />
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="addApplication(currentPlatform)" type="primary">
+          <el-button type="primary" @click="addApplication(currentPlatform)">
             添加应用
           </el-button>
           <el-button @click="applicationsListDialogVisible = false"

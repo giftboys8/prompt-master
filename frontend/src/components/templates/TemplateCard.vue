@@ -9,7 +9,11 @@
         <div class="template-info">
           <h3 class="mb-2">{{ template.name }}</h3>
           <div class="mb-2">
-            <el-tag>{{ template.framework_type === 'CUSTOM' ? '自定义' : template.framework_type }}</el-tag>
+            <el-tag>{{
+              template.framework_type === "CUSTOM"
+                ? "自定义"
+                : template.framework_type
+            }}</el-tag>
           </div>
           <p class="description mb-2">{{ template.description }}</p>
           <p class="time mb-2">
@@ -37,8 +41,8 @@
               v-if="user?.id === template.created_by"
               type="primary"
               text
-              @click="$emit('share', template)"
               title="打开分享对话框"
+              @click="$emit('share', template)"
             >
               <el-icon><Share /></el-icon>
               <span class="button-text">分享</span>
@@ -58,10 +62,10 @@ import { Timer, CopyDocument, Share } from "@element-plus/icons-vue";
 import type { Template } from "@/types";
 import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 
 const formatDate = (dateString: string) => {
-  return dayjs(dateString).format('YYYY-MM-DD HH:mm:ss');
+  return dayjs(dateString).format("YYYY-MM-DD HH:mm:ss");
 };
 
 const { user } = storeToRefs(useUserStore());

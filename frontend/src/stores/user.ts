@@ -14,27 +14,37 @@ export const useUserStore = defineStore("user", () => {
     try {
       const data = await getUserInfo();
       user.value = data;
-      
+
       // 设置默认权限 - 根据用户角色设置权限
       // 这里假设所有用户至少有基本查看权限
       const defaultPermissions = [
-        'template:view', 
-        'framework:view', 
-        'scene:view', 
-        'content:view'
+        "template:view",
+        "framework:view",
+        "scene:view",
+        "content:view",
       ];
-      
+
       // 如果是管理员，添加更多权限
       if (data.is_staff) {
         defaultPermissions.push(
-          'template:create', 'template:edit', 'template:delete',
-          'framework:create', 'framework:edit', 'framework:delete',
-          'scene:create', 'scene:edit', 'scene:delete',
-          'content:create', 'content:edit', 'content:delete',
-          'apikey:view', 'apikey:create', 'apikey:delete'
+          "template:create",
+          "template:edit",
+          "template:delete",
+          "framework:create",
+          "framework:edit",
+          "framework:delete",
+          "scene:create",
+          "scene:edit",
+          "scene:delete",
+          "content:create",
+          "content:edit",
+          "content:delete",
+          "apikey:view",
+          "apikey:create",
+          "apikey:delete",
         );
       }
-      
+
       // 如果API返回了权限，使用API返回的权限
       if (data.permissions) {
         permissions.value = data.permissions;
@@ -42,7 +52,7 @@ export const useUserStore = defineStore("user", () => {
         // 否则使用默认权限
         permissions.value = defaultPermissions;
       }
-      
+
       return true;
     } catch (error: any) {
       console.error("获取用户信息失败:", error);

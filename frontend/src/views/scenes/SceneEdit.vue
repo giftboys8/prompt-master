@@ -5,8 +5,8 @@
     </div>
 
     <el-form
-      v-loading="loading"
       ref="formRef"
+      v-loading="loading"
       :model="form"
       :rules="rules"
       label-width="120px"
@@ -48,7 +48,10 @@
       </el-form-item>
 
       <el-form-item label="版本号" prop="version">
-        <el-input v-model="form.version" placeholder="请输入版本号，如：v1.0.0" />
+        <el-input
+          v-model="form.version"
+          placeholder="请输入版本号，如：v1.0.0"
+        />
       </el-form-item>
 
       <el-form-item label="状态" prop="status">
@@ -144,12 +147,12 @@ const form = reactive({
   tasks: [] as any[],
 });
 
-    // 确保target_roles中的值都是字符串，并处理嵌套数组
+// 确保target_roles中的值都是字符串，并处理嵌套数组
 const ensureStringArray = (arr: any[]): string[] => {
-  return arr.map(item => {
-    if (typeof item === 'string') {
+  return arr.map((item) => {
+    if (typeof item === "string") {
       // 如果是字符串形式的数组，尝试解析
-      if (item.startsWith('[') && item.endsWith(']')) {
+      if (item.startsWith("[") && item.endsWith("]")) {
         try {
           const parsed = JSON.parse(item);
           return Array.isArray(parsed) ? parsed[0] : item.slice(1, -1);
@@ -160,7 +163,7 @@ const ensureStringArray = (arr: any[]): string[] => {
       return item;
     }
     if (Array.isArray(item)) {
-      return item[0] || '';
+      return item[0] || "";
     }
     return String(item);
   });
@@ -186,16 +189,18 @@ const fetchSceneDetail = async () => {
       url: `/scenes/${sceneId}/`,
       method: "get",
     });
-    
+
     // 填充基本信息
     form.name = response.name;
     form.category = response.category;
     form.description = response.description;
-    
+
     // 确保target_roles是字符串数组
-    if (typeof response.target_roles === 'string') {
+    if (typeof response.target_roles === "string") {
       try {
-        form.target_roles = ensureStringArray(JSON.parse(response.target_roles));
+        form.target_roles = ensureStringArray(
+          JSON.parse(response.target_roles),
+        );
       } catch (e) {
         form.target_roles = [String(response.target_roles)];
       }
@@ -204,13 +209,12 @@ const fetchSceneDetail = async () => {
     } else {
       form.target_roles = [];
     }
-    
+
     form.status = response.status;
     form.version = response.version;
-    
+
     // 填充任务
     form.tasks = response.tasks || [];
-    
   } catch (error) {
     console.error("获取场景详情失败:", error);
     ElMessage.error("获取场景详情失败");
@@ -226,8 +230,8 @@ const fetchTemplates = async () => {
       url: "/templates/templates/",
       method: "get",
       params: {
-        page_size: 1000 // 设置一个较大的值以获取所有模板
-      }
+        page_size: 1000, // 设置一个较大的值以获取所有模板
+      },
     });
     templateOptions.value = response.results || [];
   } catch (error) {
@@ -288,37 +292,39 @@ const handleSubmit = async () => {
       try {
         // 创建表单数据的副本，避免修改原始表单
         const formData = JSON.parse(JSON.stringify(form));
-        
+
         // 确保target_roles是一个简单的字符串数组
         if (Array.isArray(formData.target_roles)) {
           formData.target_roles = formData.target_roles
-            .filter(role => role !== null && role !== undefined && role !== '')
-            .map(role => {
+            .filter(
+              (role) => role !== null && role !== undefined && role !== "",
+            )
+            .map((role) => {
               // 如果是字符串，直接使用
-              if (typeof role === 'string') {
+              if (typeof role === "string") {
                 return role.trim();
               }
               // 如果是数组，取第一个元素并转换为字符串
               if (Array.isArray(role)) {
-                return String(role[0] || '').trim();
+                return String(role[0] || "").trim();
               }
               // 其他类型转换为字符串
               return String(role).trim();
             })
-            .filter(role => role !== ''); // 过滤掉空字符串
+            .filter((role) => role !== ""); // 过滤掉空字符串
         }
-        
+
         // 确保任务数据中只包含必要的字段
         if (Array.isArray(formData.tasks)) {
-          formData.tasks = formData.tasks.map(task => ({
+          formData.tasks = formData.tasks.map((task) => ({
             id: task.id,
             name: task.name,
             description: task.description,
-            template: task.template
+            template: task.template,
             // 移除只读字段如template_name和template_description
           }));
         }
-        
+
         await request({
           url: `/scenes/${sceneId}/`,
           method: "put",

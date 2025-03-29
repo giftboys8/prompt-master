@@ -13,10 +13,27 @@ export const getTemplate = (id: number) => {
   return request<Template>({
     url: `/templates/templates/${id}/`,
     method: "get",
-  }).then((response) => {
-    console.log("获取单个模板响应:", response);
-    return response;
-  });
+  })
+    .then((response) => {
+      console.log("获取单个模板响应:", response);
+
+      // 确保返回有效的响应数据
+      if (!response) {
+        throw new Error("API返回空响应");
+      }
+
+      // 如果响应是包含data属性的对象，则返回data
+      if (response && typeof response === "object" && "data" in response) {
+        return response.data;
+      }
+
+      // 否则直接返回响应
+      return response;
+    })
+    .catch((error) => {
+      console.error("获取模板失败:", error);
+      throw error;
+    });
 };
 
 export const updateTemplate = (id: number, data: Partial<Template>) => {
@@ -97,16 +114,14 @@ export const getTemplateList = (params?: any) => {
       page: params?.page || 1,
       page_size: params?.page_size || 10,
     },
-  })
-    .then((response) => {
-      console.log("API response:", response);
-      return response;
-    })
-    .catch((error) => {
-      console.error("API error:", error);
-      throw error;
-    });
+  }).catch((error) => {
+    console.error("API error:", error);
+    throw error;
+  });
 };
+
+// 为兼容性添加 getTemplates 别名
+export const getTemplates = getTemplateList;
 
 export const reorderTemplates = (
   orderData: { id: number; order: number }[],
@@ -132,38 +147,20 @@ export const getTemplateTests = (params?: any) => {
       page: params?.page || 1,
       page_size: params?.page_size || 10,
     },
-  })
-    .then((response) => {
-      console.log("获取测试历史响应:", response);
-      return response;
-    })
-    .catch((error) => {
-      console.error("获取测试历史错误:", error);
-      throw error;
-    });
+  }).then((response) => {
+    console.log("获取测试历史响应:", response);
+    return response;
+  }).catch((error) => {
+    console.error("API error:", error);
+    throw error;
+  });
 };
 
-// 保存模板测试记录
-export const saveTemplateTest = (data: {
-  template: number;
-  model: string;
-  input_data: Record<string, any>;
-  dify_response: any;
-}) => {
-  console.log("saveTemplateTest 函数被调用，参数:", JSON.stringify(data, null, 2));
-  return request({
-    url: "/templates/tests/run_test/",
+// 运行模板测试
+export const runTemplateTest = (data: any) => {
+  return request<TemplateTest>({
+    url: "/templates/tests/",
     method: "post",
     data,
-  }).then(response => {
-    console.log("saveTemplateTest 成功响应:", response);
-    return response;
-  }).catch(error => {
-    console.error("saveTemplateTest 错误:", error);
-    if (error.response) {
-      console.error("错误状态码:", error.response.status);
-      console.error("错误响应数据:", error.response.data);
-    }
-    throw error;
   });
 };

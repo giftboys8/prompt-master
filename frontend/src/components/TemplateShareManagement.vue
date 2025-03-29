@@ -89,8 +89,8 @@
             <el-form-item>
               <el-button
                 type="primary"
-                @click="handleAddShare"
                 :disabled="!shareForm.userId"
+                @click="handleAddShare"
               >
                 添加共享
               </el-button>

@@ -32,8 +32,8 @@
         item-key="id"
         :animation="150"
         ghost-class="ghost"
-        @end="handleDragEnd"
         class="template-grid"
+        @end="handleDragEnd"
       >
         <template #item="{ element: template }">
           <div class="template-item-wrapper">
@@ -100,8 +100,8 @@
           <el-button @click="deleteDialogVisible = false">取消</el-button>
           <el-button
             type="danger"
-            @click="confirmDelete"
             :loading="deleteLoading"
+            @click="confirmDelete"
           >
             确定
           </el-button>

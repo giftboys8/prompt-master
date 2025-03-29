@@ -33,7 +33,7 @@ export function useTemplateCache(options: UseTemplateCacheOptions = {}) {
         if (cachedTemplates) {
           templates.value = cachedTemplates;
           loading.value = false;
-          return;
+          return cachedTemplates;
         }
       }
 
@@ -45,21 +45,30 @@ export function useTemplateCache(options: UseTemplateCacheOptions = {}) {
       cacheManager.set(CacheKey.TEMPLATES, templates.value, {
         expire: cacheExpire,
       });
+
+      return templates.value;
     } catch (err) {
       error.value = err as Error;
+      return null;
     } finally {
       loading.value = false;
     }
   };
 
   // 添加最近访问的模板
-  const addRecentTemplate = (template: Template) => {
+  const addRecentTemplate = (template: Template | null | undefined) => {
+    // 安全检查：如果模板为空或没有ID，则不处理
+    if (!template || template.id === undefined || template.id === null) {
+      console.warn("尝试添加无效模板到缓存");
+      return;
+    }
+
     // 从缓存获取现有的最近模板
     const recent =
       cacheManager.get<Template[]>(CacheKey.RECENT_TEMPLATES) || [];
 
     // 移除重复项
-    const filtered = recent.filter((t) => t.id !== template.id);
+    const filtered = recent.filter((t) => t && t.id !== template.id);
 
     // 添加到开头
     filtered.unshift(template);

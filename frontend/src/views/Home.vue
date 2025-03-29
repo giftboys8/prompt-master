@@ -8,7 +8,11 @@
         专业的提示词工程管理平台，让AI对话更智能、更高效
       </p>
       <div class="action-buttons">
-        <el-button type="primary" size="large" @click="$router.push('/templates')">
+        <el-button
+          type="primary"
+          size="large"
+          @click="$router.push('/templates')"
+        >
           开始使用
         </el-button>
         <el-button size="large" @click="$router.push('/docs')">
@@ -29,7 +33,9 @@
             </div>
           </template>
           <div class="card-content">
-            <p>提供专业的提示词模板管理功能，支持多种框架，让AI对话更加规范和高效。</p>
+            <p>
+              提供专业的提示词模板管理功能，支持多种框架，让AI对话更加规范和高效。
+            </p>
           </div>
         </el-card>
 
@@ -41,7 +47,9 @@
             </div>
           </template>
           <div class="card-content">
-            <p>灵活的场景配置系统，针对不同应用场景快速调用合适的提示词模板。</p>
+            <p>
+              灵活的场景配置系统，针对不同应用场景快速调用合适的提示词模板。
+            </p>
           </div>
         </el-card>
 
@@ -53,7 +61,9 @@
             </div>
           </template>
           <div class="card-content">
-            <p>完整的数据分析功能，帮助您了解提示词使用情况，持续优化对话效果。</p>
+            <p>
+              完整的数据分析功能，帮助您了解提示词使用情况，持续优化对话效果。
+            </p>
           </div>
         </el-card>
       </div>
@@ -109,14 +119,21 @@
     <div class="cases-section">
       <h2>经典案例</h2>
       <div class="case-list">
-        <el-card v-for="i in 3" :key="i" class="case-card ai-card" shadow="hover">
+        <el-card
+          v-for="i in 3"
+          :key="i"
+          class="case-card ai-card"
+          shadow="hover"
+        >
           <template #header>
             <div class="card-header">
               <h3>案例 {{ i }}</h3>
             </div>
           </template>
           <div class="case-content">
-            <p>这里是案例描述内容，展示如何使用提示词管理系统优化AI对话效果。</p>
+            <p>
+              这里是案例描述内容，展示如何使用提示词管理系统优化AI对话效果。
+            </p>
           </div>
         </el-card>
       </div>
@@ -125,11 +142,19 @@
 </template>
 
 <script setup lang="ts">
-import { Monitor, Connection, DataAnalysis, Document, Share, Timer, Refresh } from '@element-plus/icons-vue';
+import {
+  Monitor,
+  Connection,
+  DataAnalysis,
+  Document,
+  Share,
+  Timer,
+  Refresh,
+} from "@element-plus/icons-vue";
 </script>
 
 <style scoped lang="scss">
-@use '../styles/variables' as *;
+@use "../styles/variables" as *;
 
 .home-container {
   padding: 2rem;

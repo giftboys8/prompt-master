@@ -83,7 +83,10 @@ export function createDifyApplication(data: Partial<DifyApplication>) {
   });
 }
 
-export function updateDifyApplication(id: number, data: Partial<DifyApplication>) {
+export function updateDifyApplication(
+  id: number,
+  data: Partial<DifyApplication>,
+) {
   return request<DifyApplication>({
     url: `/dify/applications/${id}/`,
     method: "patch",
@@ -147,12 +150,20 @@ export interface DifyMessageResponse {
   created_at: number;
 }
 
-export function sendMessage(data: DifyMessageRequest, customApiKey?: string) {
+export function sendMessage(
+  data: DifyMessageRequest,
+  customApiKey?: string,
+  onMessage?: (chunk: string) => void,
+) {
   // 打印环境变量，便于调试
   console.log("Dify API Base URL:", import.meta.env.VITE_DIFY_API_BASE_URL);
 
-  // 优先使用传入的自定义API密钥，如果没有则使用环境变量中的密钥
-  const apiKey = customApiKey || import.meta.env.VITE_DIFY_API_KEY;
+  // 获取API密钥，优先使用data中的api_key
+  const apiKey =
+    data.api_key || customApiKey || import.meta.env.VITE_DIFY_API_KEY;
+  // 从data中移除api_key，因为它需要在header中发送
+  delete data.api_key;
+
   if (!apiKey) {
     console.error(
       "Dify API Key is not provided and not set in environment variables",
@@ -162,7 +173,7 @@ export function sendMessage(data: DifyMessageRequest, customApiKey?: string) {
     );
   }
 
-  console.log("Using API Key:", customApiKey ? "自定义密钥" : "环境变量密钥");
+  console.log("Using API Key:", "密钥已配置");
 
   const baseURL = import.meta.env.VITE_DIFY_API_BASE_URL;
   if (!baseURL) {
@@ -173,18 +184,83 @@ export function sendMessage(data: DifyMessageRequest, customApiKey?: string) {
   console.log("Sending request to Dify API:", `${baseURL}/chat-messages`);
   console.log("Request data:", JSON.stringify(data, null, 2));
 
+  // 设置响应模式为流式
+  data.response_mode = "streaming";
+
   // 创建一个独立的axios实例用于Dify API调用
-  return request({
-    url: "/chat-messages",
-    method: "post",
-    data,
-    baseURL,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    // 不使用默认的request拦截器（它可能会添加JWT token）
-    useDefaultInterceptors: false,
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${baseURL}/chat-messages`, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", `Bearer ${apiKey}`);
+    xhr.responseType = "text";
+
+    let streamResponse = "";
+    let buffer = "";
+    xhr.onprogress = function () {
+      const chunk = xhr.response.substr(xhr.seenBytes || 0);
+      xhr.seenBytes = xhr.responseText.length;
+
+      // 将新的chunk添加到buffer中
+      buffer += chunk;
+
+      try {
+        // 处理SSE格式的数据
+        const lines = buffer.split("\n");
+        let newBuffer = "";
+
+        lines.forEach((line) => {
+          if (line.trim()) {
+            if (line.startsWith("data: ")) {
+              const jsonStr = line.substring(6); // 移除 "data: " 前缀
+              try {
+                const data = JSON.parse(jsonStr);
+                if (data.event === "message" && data.answer) {
+                  streamResponse += data.answer;
+                  if (onMessage) {
+                    onMessage(data);
+                  }
+                }
+              } catch (parseError) {
+                console.warn("Error parsing SSE data:", parseError);
+              }
+            } else {
+              // 如果这行不是完整的data行，保存到新的buffer中
+              newBuffer += line + "\n";
+            }
+          }
+        });
+
+        // 更新buffer，保留未完成的行
+        buffer = newBuffer;
+      } catch (e) {
+        console.warn("Error processing stream chunk:", e);
+      }
+    };
+
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        // 直接返回累积的响应
+        const finalResponse = {
+          answer: streamResponse,
+          metadata: {
+            usage: {
+              total_tokens: streamResponse.length, // 简单估算
+              completion_tokens: streamResponse.length,
+            },
+          },
+        };
+        resolve(finalResponse);
+      } else {
+        reject(new Error(`HTTP error! status: ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = function () {
+      reject(new Error("Network error occurred"));
+    };
+
+    xhr.send(JSON.stringify(data));
   })
     .then((response) => {
       console.log("Dify API Response:", response);

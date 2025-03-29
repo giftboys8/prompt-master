@@ -28,8 +28,8 @@
           <el-form-item label="框架" prop="framework">
             <FrameworkSelect
               v-model="form.framework"
+              :show-modules="true"
               @change="handleFrameworkChange"
-              :showModules="true"
             />
           </el-form-item>
 
@@ -51,7 +51,10 @@
             </div>
           </template>
 
-          <div v-loading="loadingFrameworks" element-loading-text="加载框架内容...">
+          <div
+            v-loading="loadingFrameworks"
+            element-loading-text="加载框架内容..."
+          >
             <template v-if="form.framework?.modules?.length">
               <el-form-item
                 v-for="module in form.framework.modules"
@@ -150,7 +153,7 @@
         <!-- 提交按钮 -->
         <div class="form-actions">
           <el-button @click="$router.back()">取消</el-button>
-          <el-button type="primary" @click="handleSubmit" :loading="submitting">
+          <el-button type="primary" :loading="submitting" @click="handleSubmit">
             保存
           </el-button>
         </div>
@@ -207,37 +210,35 @@ const rules = reactive<FormRules>({
     { required: true, message: "请输入模版名称", trigger: "blur" },
     { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
   ],
-  framework: [
-    { required: true, message: "请选择框架", trigger: "change" },
-  ],
+  framework: [{ required: true, message: "请选择框架", trigger: "change" }],
   description: [{ required: true, message: "请输入模版描述", trigger: "blur" }],
 });
 
 // 动态设置必填字段
 const getContentRules = (framework: any) => {
   const rules: Record<string, any> = {};
-  
+
   if (framework?.modules?.length) {
     framework.modules.forEach((module: any) => {
       const fieldName = `content.${module.name.toLowerCase()}`;
       rules[fieldName] = [
-        { 
-          required: true, 
-          message: `请输入${module.name}`, 
-          trigger: "blur" 
-        }
+        {
+          required: true,
+          message: `请输入${module.name}`,
+          trigger: "blur",
+        },
       ];
     });
   } else {
     rules["content.custom"] = [
-      { 
-        required: true, 
-        message: "请输入自定义内容", 
-        trigger: "blur" 
-      }
+      {
+        required: true,
+        message: "请输入自定义内容",
+        trigger: "blur",
+      },
     ];
   }
-  
+
   return rules;
 };
 
@@ -258,13 +259,13 @@ const variableRules = {
 // 重置内容
 const resetContent = () => {
   if (!form.value) return;
-  
+
   // 创建新的content对象而不是修改原对象
   const newContent = {};
-  
+
   // 如果有框架模块，为每个模块创建对应的内容字段
   if (form.value.framework?.modules?.length) {
-    form.value.framework.modules.forEach(module => {
+    form.value.framework.modules.forEach((module) => {
       const key = module.name.toLowerCase();
       newContent[key] = "";
     });
@@ -272,10 +273,9 @@ const resetContent = () => {
     // 如果没有框架模块，则设置自定义内容字段
     newContent.custom = "";
   }
-  
+
   // 替换整个content对象，确保响应式更新
   form.value.content = newContent;
-  
 };
 
 // 监听框架变化
@@ -283,68 +283,66 @@ const stopWatch = watch(
   () => form.value?.framework,
   (newFramework, oldFramework) => {
     if (!form.value) return;
-    
+
     // 检查框架模块是否发生变化
     const newModules = newFramework?.modules || [];
     const oldModules = oldFramework?.modules || [];
     if (JSON.stringify(newModules) !== JSON.stringify(oldModules)) {
       // 保存旧的content值
       const oldContent = { ...form.value.content };
-      
+
       // 重置content对象
       form.value.content = {};
-      
+
       // 根据新的框架模块设置content字段
       if (newModules.length > 0) {
-        newModules.forEach(module => {
+        newModules.forEach((module) => {
           const key = module.name.toLowerCase();
           // 尝试保留原有值
-          form.value.content[key] = oldContent[key] || '';
+          form.value.content[key] = oldContent[key] || "";
         });
       } else {
         // 如果没有模块，设置custom字段
-        form.value.content.custom = oldContent.custom || '';
+        form.value.content.custom = oldContent.custom || "";
       }
-      
+
       // 更新验证规则
       Object.assign(rules, getContentRules(newFramework));
-      
     }
   },
-  { deep: true }  // 深度监听框架对象的变化
+  { deep: true }, // 深度监听框架对象的变化
 );
 
 // 处理框架选择变化
 const handleFrameworkChange = async (framework: any) => {
   if (!form.value) return;
-  
+
   loadingFrameworks.value = true;
-  
+
   try {
     if (framework === null) {
       // 清空框架
       form.value.framework = null;
-      
+
       // 设置为自定义内容
       form.value.content = {
-        custom: form.value.content.custom || ""
+        custom: form.value.content.custom || "",
       };
-      
     } else {
       // 框架对象已经由FrameworkSelect组件传递过来，无需再次获取
       if (framework) {
         // 先保存当前content的引用
         const oldContent = { ...form.value.content };
-        
+
         // 更新框架
         form.value.framework = framework;
-        
+
         // 创建新的content对象
         const newContent = {};
-        
+
         // 根据框架模块设置content字段
         if (framework.modules?.length) {
-          framework.modules.forEach(module => {
+          framework.modules.forEach((module) => {
             const key = module.name.toLowerCase();
             // 尝试保留原有值
             newContent[key] = oldContent[key] || "";
@@ -353,13 +351,12 @@ const handleFrameworkChange = async (framework: any) => {
           // 如果没有模块，设置custom字段
           newContent.custom = oldContent.custom || "";
         }
-        
+
         // 替换整个content对象
         form.value.content = newContent;
-        
       }
     }
-    
+
     // 更新验证规则
     Object.assign(rules, getContentRules(form.value.framework));
   } catch (error: any) {
@@ -402,7 +399,7 @@ const loadTemplate = async (id: string) => {
       name: data.name,
       framework: null, // 先设置为null，后面再更新
       description: data.description,
-      content: {},  // 先设置为空对象，后面再填充
+      content: {}, // 先设置为空对象，后面再填充
       variables: data.variables || [],
     };
 
@@ -411,23 +408,25 @@ const loadTemplate = async (id: string) => {
     if (data.framework) {
       try {
         // 如果framework是数字（ID），则获取完整框架信息
-        if (typeof data.framework === 'number') {
+        if (typeof data.framework === "number") {
           framework = await getFramework(data.framework);
         } else {
           // 如果framework已经是完整对象，直接使用
           framework = data.framework;
         }
       } catch (error) {
-        ElMessage.warning('获取框架详情失败，将使用基础框架信息');
+        ElMessage.warning("获取框架详情失败，将使用基础框架信息");
       }
-    } else if (data.framework_type && data.framework_type !== 'CUSTOM') {
+    } else if (data.framework_type && data.framework_type !== "CUSTOM") {
       // 处理只有framework_type的情况
-      const matchingFramework = frameworks.value.find(f => f.name === data.framework_type);
+      const matchingFramework = frameworks.value.find(
+        (f) => f.name === data.framework_type,
+      );
       if (matchingFramework) {
         try {
           framework = await getFramework(matchingFramework.id);
         } catch (error) {
-          ElMessage.warning('获取匹配框架详情失败');
+          ElMessage.warning("获取匹配框架详情失败");
         }
       }
     }
@@ -439,18 +438,17 @@ const loadTemplate = async (id: string) => {
     if (framework?.modules?.length) {
       // 如果有框架模块，创建对应的内容字段
       const newContent = {};
-      framework.modules.forEach(module => {
+      framework.modules.forEach((module) => {
         const key = module.name.toLowerCase();
-        newContent[key] = data.content?.[key] || '';
+        newContent[key] = data.content?.[key] || "";
       });
       form.value.content = newContent;
     } else {
       // 如果没有框架模块或是自定义框架，使用custom字段
       form.value.content = {
-        custom: data.content?.custom || ''
+        custom: data.content?.custom || "",
       };
     }
-
   } catch (error: any) {
     ElMessage.error(error.message || "加载失败");
     router.back();
@@ -469,7 +467,7 @@ const handleSubmit = async () => {
       try {
         // 深拷贝当前表单内容，避免直接修改表单数据
         const formData = JSON.parse(JSON.stringify(form.value));
-        
+
         // 准备提交数据
         const submissionData = {
           name: formData.name,
@@ -477,9 +475,10 @@ const handleSubmit = async () => {
           framework: formData.framework?.id || null,
           content: {},
           variables: formData.variables,
-          framework_type: formData.framework ? formData.framework.name : 'CUSTOM'
+          framework_type: formData.framework
+            ? formData.framework.name
+            : "CUSTOM",
         };
-        
 
         // 处理content数据
         if (formData.framework?.modules?.length) {
@@ -487,23 +486,22 @@ const handleSubmit = async () => {
           const contentObj = {};
           formData.framework.modules.forEach((module: any) => {
             const key = module.name.toLowerCase();
-            contentObj[key] = formData.content[key] || '';
+            contentObj[key] = formData.content[key] || "";
           });
           submissionData.content = contentObj;
         } else {
           // 如果没有框架模块，使用自定义内容
           submissionData.content = {
-            custom: formData.content.custom || '',
+            custom: formData.content.custom || "",
           };
         }
 
-        
         // 发送更新请求
         const result = await updateTemplate(
           Number(route.params.id),
           submissionData,
         );
-        
+
         if (result && result.id) {
           ElMessage.success("保存成功");
           router.push("/templates");

@@ -40,7 +40,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <div class="pagination-container">
       <el-pagination
         v-model:current-page="currentPage"
@@ -59,7 +59,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import {
   getFrameworks,
   deleteFramework,
@@ -75,8 +75,8 @@ const total = ref(0);
 
 // 格式化日期
 const formatDate = (dateString) => {
-  if (!dateString) return '未知';
-  return dayjs(dateString).format('YYYY-MM-DD HH:mm:ss');
+  if (!dateString) return "未知";
+  return dayjs(dateString).format("YYYY-MM-DD HH:mm:ss");
 };
 
 // 获取框架列表
