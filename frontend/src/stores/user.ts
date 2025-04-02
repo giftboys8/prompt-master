@@ -46,12 +46,18 @@ export const useUserStore = defineStore("user", () => {
       }
 
       // 如果API返回了权限，使用API返回的权限
-      if (data.permissions) {
+      if (data.permissions && data.permissions.length > 0) {
         permissions.value = data.permissions;
       } else {
         // 否则使用默认权限
         permissions.value = defaultPermissions;
       }
+
+      // 打印权限信息，方便调试
+      console.log('用户信息已加载:', {
+        isStaff: data.is_staff,
+        permissions: permissions.value
+      });
 
       return true;
     } catch (error: any) {
@@ -63,6 +69,13 @@ export const useUserStore = defineStore("user", () => {
       } else {
         // 其他错误不影响用户体验，只记录日志
         console.error("获取用户信息失败，但不影响继续使用:", error);
+        // 设置基本权限，确保用户可以访问基本功能
+        permissions.value = [
+          "template:view",
+          "framework:view",
+          "scene:view",
+          "content:view",
+        ];
       }
       return false;
     }
@@ -121,9 +134,11 @@ export const useUserStore = defineStore("user", () => {
     return !!token.value;
   };
 
-  // 初始化：如果有 token 就获取用户信息
+  // 初始化：如果有 token 就立即获取用户信息
   if (token.value) {
-    fetchUserInfo();
+    fetchUserInfo().catch(error => {
+      console.error('初始化获取用户信息失败:', error);
+    });
   }
 
   return {

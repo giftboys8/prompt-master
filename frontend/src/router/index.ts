@@ -31,10 +31,20 @@ function checkPermissions(to: RouteLocationNormalized): boolean {
   const userStore = useUserStore();
   const requiredPermissions = (to.meta.permissions as string[]) || [];
 
+  // 如果路由不需要权限，直接返回true
   if (requiredPermissions.length === 0) return true;
 
+  // 如果用户是管理员，直接返回true
+  if (userStore.user?.is_staff) return true;
+
+  // 确保权限数组存在
+  if (!userStore.permissions || userStore.permissions.length === 0) {
+    console.warn('用户权限未加载，尝试重新获取用户信息');
+    return false;
+  }
+
   return requiredPermissions.every((permission) =>
-    userStore.permissions?.includes(permission),
+    userStore.permissions.includes(permission),
   );
 }
 
@@ -75,9 +85,29 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
 
+    // 如果用户信息未加载，先加载用户信息
+    if (!userStore.user) {
+      try {
+        await userStore.fetchUserInfo();
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+      }
+    }
+
     // 检查权限
     if (!checkPermissions(to)) {
-      next({ name: "403" }); // 假设我们有一个403页面
+      // 如果权限未加载，尝试重新获取用户信息
+      try {
+        await userStore.fetchUserInfo();
+        // 重新检查权限
+        if (checkPermissions(to)) {
+          next();
+          return;
+        }
+      } catch (error) {
+        console.error('重新获取用户信息失败:', error);
+      }
+      next({ name: "403" });
       NProgress.done();
       return;
     }
