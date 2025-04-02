@@ -17,7 +17,7 @@
           <el-radio-button
             v-for="mode in previewModes"
             :key="mode.value"
-            :label="mode.value"
+            :value="mode.value"
           >
             <el-icon>
               <component :is="mode.icon" />
@@ -29,14 +29,25 @@
       <div class="preview-section">
         <h4>基本信息</h4>
         <p><strong>模板名称：</strong>{{ template.name }}</p>
-        <p><strong>框架类型：</strong>{{ template.framework_type === 'CUSTOM' ? '自定义' : template.framework_type }}</p>
+        <p>
+          <strong>框架类型：</strong
+          >{{
+            template.framework_type === "CUSTOM"
+              ? "自定义"
+              : template.framework_type
+          }}
+        </p>
         <p><strong>描述：</strong>{{ template.description }}</p>
       </div>
 
       <!-- 基础预览模式 -->
       <div v-if="currentPreviewMode === 'basic'" class="preview-section">
         <h4>提示词内容</h4>
-        <div v-for="(value, key) in template.content" :key="key" class="content-item">
+        <div
+          v-for="(value, key) in template.content"
+          :key="key"
+          class="content-item"
+        >
           <h5>{{ formatContentKey(key) }}</h5>
           <p>{{ value }}</p>
         </div>
@@ -53,7 +64,9 @@
             <div class="message-content">
               <p>我是您的AI助手，我将按照以下方式为您服务：</p>
               <template v-for="(value, key) in template.content" :key="key">
-                <p><strong>{{ formatContentKey(key) }}：</strong>{{ value }}</p>
+                <p>
+                  <strong>{{ formatContentKey(key) }}：</strong>{{ value }}
+                </p>
               </template>
             </div>
           </div>
@@ -76,7 +89,9 @@
       <div class="preview-section">
         <h4>提示词内容</h4>
         <template v-for="(value, key) in template.content" :key="key">
-          <p><strong>{{ formatContentKey(key) }}：</strong>{{ value }}</p>
+          <p>
+            <strong>{{ formatContentKey(key) }}：</strong>{{ value }}
+          </p>
         </template>
       </div>
     </div>

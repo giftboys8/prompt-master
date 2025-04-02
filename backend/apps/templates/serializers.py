@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Template, TemplateVersion, TemplateTest, SharedTemplate
+from frameworks.serializers import FrameworkSerializer
 
 User = get_user_model()
 
@@ -20,10 +21,11 @@ class TemplateSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
     shared_with = SharedTemplateSerializer(source='shares', many=True, read_only=True)
     can_edit = serializers.SerializerMethodField()
+    framework_detail = FrameworkSerializer(source='framework', read_only=True)
     class Meta:
         model = Template
         fields = [
-            'id', 'name', 'framework', 'framework_type', 'description',
+            'id', 'name', 'framework', 'framework_detail', 'framework_type', 'description',
             'content', 'variables', 'order', 'target_role', 'created_at', 
             'updated_at', 'created_by', 'is_owner', 'can_edit', 'shared_with',
             'visibility'

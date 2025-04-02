@@ -1,519 +1,464 @@
 <template>
-  <div class="template-test">
-    <div class="page-header">
-      <h2>模板测试</h2>
-      <el-button
-        @click="router.push({ name: 'template-list' })"
-        type="primary"
-        plain
+  <div class="template-test-container">
+    <a-row :gutter="16">
+      <!-- 左侧：提示词模板内容和测试按钮 -->
+      <a-col :span="12">
+        <a-card title="提示词模板内容" :bordered="false">
+          <template v-if="template">
+            <h2>{{ template.name }}</h2>
+            <p>{{ template.description }}</p>
+            <a-card class="template-content-preview" size="small" title="模板内容">
+              <div class="template-content-wrapper">
+                <div v-if="isJsonContent" class="prompt-fields-container">
+                  <div v-for="(value, key) in parsedTemplateContent" :key="key" class="prompt-field">
+                    <span class="prompt-label">{{ key }}:</span>
+                    <span class="prompt-content" v-html="formatContent(value)"></span>
+                  </div>
+                </div>
+                <pre v-else class="template-content">{{ template.content }}</pre>
+              </div>
+            </a-card>
+            <a-form :model="formState" @finish="handleTest">
+              <div
+                v-for="(field, index) in template.variables"
+                :key="index"
+                class="form-field"
+              >
+                <a-form-item
+                  :label="`${field.name}${field.description ? ` (${field.description})` : ''}`"
+                  :name="field.name"
+                  :rules="[{ required: true, message: '请输入' + field.name }]"
+                >
+                  <a-input
+                    v-model:value="formState[field.name]"
+                    :placeholder="`请输入${field.name}${field.description ? ` (${field.description})` : ''}`"
+                  />
+                </a-form-item>
+              </div>
+              <a-form-item 
+                label="API平台"
+                name="selectedApiKey"
+                :rules="[{ required: true, message: '请选择API平台' }]"
+              >
+                <a-select
+                  v-model:value="selectedApiKey"
+                  style="width: 100%"
+                  placeholder="选择API密钥"
+                  @change="handleApiKeyChange"
+                >
+                  <a-select-option
+                    v-for="key in apiKeys"
+                    :key="key.id"
+                    :value="key.key"
+                  >
+                    {{ key.platform_name }} - {{ key.scene_name }}
+                  </a-select-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item>
+                <a-button type="primary" html-type="submit" :loading="testing"
+                  >测试模板</a-button
+                >
+              </a-form-item>
+            </a-form>
+          </template>
+          <div v-else-if="templateLoading" class="loading-state">
+            <a-spin size="large" />
+          </div>
+          <div v-else>
+            <a-empty description="请选择一个模板进行测试" />
+          </div>
+        </a-card>
+      </a-col>
+
+      <!-- 右侧：测试结果 -->
+      <a-col :span="12">
+        <a-card title="处理后的内容" :bordered="false">
+          <template v-if="testResult">
+            <div v-if="processedContent" class="test-result-content">
+              <div class="processed-content" v-html="processedContent"></div>
+            </div>
+          </template>
+          <div v-else class="no-result">
+            <a-empty description="暂无测试结果" />
+          </div>
+        </a-card>
+      </a-col>
+    </a-row>
+
+    <!-- 底部：历史记录 -->
+    <a-card title="历史记录" :bordered="false" style="margin-top: 16px">
+      <a-table
+        :data-source="testHistory"
+        :columns="historyColumns"
+        :pagination="{ pageSize: 5 }"
       >
-        <el-icon><Back /></el-icon>
-        返回列表
-      </el-button>
-    </div>
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'action'">
+            <a @click="viewHistoryDetail(record)">查看详情</a>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
 
-    <!-- 选择模板部分 -->
-    <template-selector
-      v-model="selectedTemplateId"
-      :templates="templates"
-      @change="handleTemplateChange"
-    />
-
-    <!-- 主要内容区域：两栏布局 -->
-    <div class="main-content">
-      <!-- 左侧：模板预览 -->
-      <template-preview
-        :template="selectedTemplate"
-        mode="inline"
-        class="preview-panel"
-      />
-
-      <!-- 右侧：变量设置 -->
-      <div class="settings-panel">
-        <template-variable-form
-          v-if="selectedTemplate"
-          :template="selectedTemplate"
-          v-model:variables="variableInputs"
-          v-model:apiKey="selectedApiKey"
-          :is-running="isRunning"
-          @run-test="runTest"
-        />
-      </div>
-    </div>
-
-    <!-- 测试结果 -->
-    <div class="result-container">
-      <template-test-result v-if="testResult" :result="testResult" />
-    </div>
-
-    <!-- 历史记录 -->
-    <div class="history-container">
-      <template-test-history
-        :history="testHistory"
-        :is-loading="isLoadingHistory"
-        @view-detail="showHistoryDetail"
-      />
-    </div>
-
-    <!-- 历史记录详情对话框 -->
-    <template-history-detail
-      v-model:visible="historyDetailVisible"
-      :record="selectedHistoryRecord"
-    />
+    <!-- 历史记录详情弹窗 -->
+    <a-modal
+      v-model:open="historyDetailVisible"
+      title="测试历史详情"
+      @ok="historyDetailVisible = false"
+    >
+      <pre v-if="selectedHistoryDetail">{{
+        JSON.stringify(selectedHistoryDetail, null, 2)
+      }}</pre>
+    </a-modal>
   </div>
 </template>
 
-<script setup lang="ts">
-import { Back } from "@element-plus/icons-vue";
-import { ref, computed, onMounted, watch, onUnmounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { ElMessage } from "element-plus";
-import {
-  getTemplateList,
-  getTemplateTests,
-  saveTemplateTest,
-} from "@/api/templates";
+<script lang="ts" setup>
+import { ref, onMounted, reactive, computed } from "vue";
+import { useRoute } from "vue-router";
+import { message } from "ant-design-vue";
+import { getTemplate, runTemplateTest } from "@/api/templates";
+import { getApiKeys } from "@/api/apikeys";
 import { sendMessage } from "@/api/dify";
-import type { Template, TemplateTest as ITemplateTest } from "@/types";
+import request from "@/api/request";
+import { getTemplateTests } from "@/api/templates";
+import type { Template, TemplateTest } from "@/types";
 
-// 导入拆分的组件
-import TemplateSelector from "@/components/TemplateSelector.vue";
-import TemplatePreview from "@/components/TemplatePreview.vue";
-import TemplateVariableForm from "@/components/TemplateVariableForm.vue";
-import TemplateTestResult from "@/components/TemplateTestResult.vue";
-import TemplateTestHistory from "@/components/TemplateTestHistory.vue";
-import TemplateHistoryDetail from "@/components/TemplateHistoryDetail.vue";
-
-const router = useRouter();
 const route = useRoute();
-
-// 接收路由参数
-defineProps<{
-  id?: string | number;
-}>();
-
-// 状态管理
-const templates = ref<Template[]>([]);
-const selectedTemplate = ref<Template | null>(null);
-const selectedTemplateId = ref<number | null>(null);
-const variableInputs = ref<Record<string, string>>({});
-const selectedApiKey = ref<any>(null);
-const testResult = ref("");
-const isRunning = ref(false);
-const testHistory = ref<ITemplateTest[]>([]);
-const isLoadingHistory = ref(false);
-const historyDetailVisible = ref(false);
-const selectedHistoryRecord = ref<ITemplateTest | null>(null);
-
-// 处理模板选择变化
-const handleTemplateChange = async (templateId: number) => {
-  selectedTemplateId.value = templateId;
-  const template = templates.value.find((t) => t.id === templateId) || null;
-  selectedTemplate.value = template;
-
-  // 重置变量输入和测试结果
-  variableInputs.value = {};
-  testResult.value = "";
-
-  // 如果模板有变量，初始化变量输入对象
-  if (selectedTemplate.value) {
-    selectedTemplate.value.variables.forEach((variable) => {
-      variableInputs.value[variable.name] = "";
-    });
-  }
-
-  // 获取测试历史
-  await fetchTestHistory();
+const template = ref<Template | null>(null);
+const templateLoading = ref(false);
+const formState = reactive<Record<string, any>>({});
+const apiKeys = ref<any[]>([]);
+const selectedApiKey = ref<string>("");
+const testing = ref(false);
+const testResult = ref<any | null>(null);
+const testHistory = ref<TemplateTest[]>([]);
+const formatContent = (content: string) => {
+  return content.replace(/\n/g, '<br>');
 };
 
-// 获取模板列表
-const fetchTemplates = async () => {
+const parsedTemplateContent = computed(() => {
   try {
-    const response = await getTemplateList();
-    if (response && response.results) {
-      templates.value = response.results;
-    }
-  } catch (error: any) {
-    ElMessage.error("获取模板列表失败：" + (error.message || "未知错误"));
+    return JSON.parse(template.value?.content || '{}');
+  } catch (e) {
+    return null;
   }
-};
-
-// 生成提示词
-const generatePrompt = (
-  template: Template,
-  variables: Record<string, string>,
-) => {
-  let prompt = "";
-  
-  // 调试日志：输出模板信息
-  console.log("模板信息:", {
-    framework_type: template.framework_type,
-    content: template.content,
-    variables: variables
-  });
-
-  // 直接获取模板内容的所有字段，组合成对话模式格式
-  const contentEntries = Object.entries(template.content).filter(([key, value]) => 
-    value && key !== 'custom' // 过滤掉空值和custom字段
-  );
-  
-  if (contentEntries.length > 0) {
-    // 按对话模式格式组织内容
-    contentEntries.forEach(([key, value]) => {
-      // 格式化键名，将驼峰命名转换为空格分隔的词组，并将首字母大写
-      const formattedKey = key
-        .replace(/([A-Z])/g, " $1")
-        .replace(/^./, (str) => str.toUpperCase());
-        
-      prompt += `${formattedKey}：${value}\n`;
-    });
-    
-    // 移除最后一个换行符
-    prompt = prompt.trim();
-  } else if (template.content.custom) {
-    // 如果没有其他内容但有custom字段，则使用custom
-    prompt = template.content.custom;
-    console.log("使用自定义模板内容:", template.content.custom);
-  } else {
-    console.warn(`模板内容为空`);
-    prompt = "";
-  }
-
-  // 调试日志：替换变量前的提示词
-  console.log("替换变量前的提示词:", prompt);
-
-  // 替换变量
-  Object.entries(variables).forEach(([key, value]) => {
-    prompt = prompt.replace(new RegExp(`{{${key}}}`, "g"), value);
-  });
-
-  // 调试日志：最终生成的提示词
-  console.log("最终生成的提示词:", prompt);
-  return prompt;
-};
-
-// 运行测试
-const runTest = async () => {
-  if (!selectedTemplate.value) {
-    ElMessage.warning("请先选择一个模板");
-    return;
-  }
-
-  // 验证是否选择了API密钥
-  if (!selectedApiKey.value) {
-    ElMessage.warning("请选择一个API密钥");
-    return;
-  }
-
-  // 验证所有变量都已填写
-  const allVariablesFilled = selectedTemplate.value.variables.every(
-    (variable) => !!variableInputs.value[variable.name],
-  );
-
-  if (!allVariablesFilled) {
-    ElMessage.warning("请填写所有必需的变量");
-    return;
-  }
-
-  isRunning.value = true;
-  testResult.value = "";
-  isLoadingHistory.value = true;
-
-  try {
-    const prompt = generatePrompt(selectedTemplate.value, variableInputs.value);
-    
-    // 调试日志：API调用前的状态
-    console.log("运行测试状态:", {
-      selectedTemplate: selectedTemplate.value,
-      variableInputs: variableInputs.value,
-      selectedApiKey: selectedApiKey.value,
-      prompt: prompt
-    });
-
-    if (!import.meta.env.VITE_DIFY_API_BASE_URL) {
-      throw new Error("Dify API基础URL未配置，请检查环境变量");
-    }
-
-    // 确保 prompt 不为空
-    if (!prompt.trim()) {
-      throw new Error("生成的提示词为空，请检查模板内容和变量填写");
-    }
-
-    console.log("发送到Dify API的数据:", {
-      query: prompt.trim(),
-      inputs: variableInputs.value,
-      response_mode: "blocking",
-      user: "template_test_user",
-    });
-
-    const response = await sendMessage(
-      {
-        query: prompt.trim(), // 确保去除首尾空格
-        inputs: variableInputs.value,
-        response_mode: "blocking",
-        user: "template_test_user",
-      },
-      selectedApiKey.value.key,
-    );
-
-    console.log("Dify API响应:", response);
-
-    if (!response || typeof response !== "object") {
-      throw new Error("API响应格式不正确：未收到响应数据");
-    }
-
-    if (response.error) {
-      throw new Error(`API返回错误：${response.error}`);
-    }
-
-    const answer = response.answer;
-    if (typeof answer !== "string") {
-      throw new Error("API响应格式不正确：answer字段格式错误");
-    }
-
-    testResult.value = answer;
-
-    console.log("准备保存测试记录，数据:", {
-      template: selectedTemplate.value.id,
-      model: response.metadata?.model || "Dify API",
-      input_data: variableInputs.value,
-      dify_response: response,
-    });
-
-    try {
-      // 确保所有必要的数据都存在
-      if (!selectedTemplate.value?.id) {
-        throw new Error("模板ID不存在");
-      }
-
-      if (!response.answer) {
-        throw new Error("API响应中缺少answer字段");
-      }
-
-      // 简化并验证 dify_response 对象
-      const simplifiedResponse = {
-        answer: response.answer,
-        metadata: {
-          model: response.metadata?.model || "Dify API",
-          ...response.metadata
-        },
-        usage: response.usage || {},
-      };
-      
-      // 准备并验证发送到后端的数据
-      // 确保将 Proxy 对象转换为普通对象并且处理可能的空值
-      const processedInputData = {};
-      
-      // 检查变量输入是否有效
-      if (variableInputs.value && typeof variableInputs.value === 'object') {
-        // 遍历模板中定义的所有变量
-        selectedTemplate.value.variables.forEach(variable => {
-          const varName = variable.name;
-          const varValue = variableInputs.value[varName];
-          
-          // 只添加有值的变量
-          if (varValue !== undefined && varValue !== null && varValue !== '') {
-            processedInputData[varName] = varValue;
-          }
-        });
-      }
-      
-      console.log("处理后的输入数据:", processedInputData);
-      
-      const testData = {
-        template: selectedTemplate.value.id,
-        model: response.metadata?.model || "Dify API",
-        input_data: processedInputData,
-        dify_response: simplifiedResponse,
-      };
-
-      // 详细的数据验证
-      if (!testData.template) {
-        throw new Error("模板ID不能为空");
-      }
-      if (!testData.model) {
-        throw new Error("模型名称不能为空");
-      }
-      // 检查 input_data 是否为空
-      const inputDataKeys = Object.keys(testData.input_data);
-      if (inputDataKeys.length === 0) {
-        // 如果没有有效的输入数据，但模板需要变量，则提供默认值
-        if (selectedTemplate.value.variables.length > 0) {
-          // 创建一个默认的输入数据对象
-          const defaultInputData = {};
-          selectedTemplate.value.variables.forEach(variable => {
-            defaultInputData[variable.name] = variable.default_value || `测试值_${variable.name}`;
-          });
-          testData.input_data = defaultInputData;
-          console.log("使用默认输入数据:", defaultInputData);
-        } else {
-          // 如果模板没有变量但仍需要输入数据，创建一个空对象但添加一个标记字段
-          testData.input_data = { "_no_variables_required": true };
-        }
-      }
-      
-      // 最终检查 - 确保有输入数据
-      if (Object.keys(testData.input_data).length === 0) {
-        throw new Error("输入数据不能为空，请至少填写一个变量值");
-      }
-      if (!testData.dify_response || !testData.dify_response.answer) {
-        throw new Error("API响应数据不完整");
-      }
-
-      console.log("准备发送到后端的数据:", JSON.stringify(testData, null, 2));
-
-    const saveResponse = await saveTemplateTest(testData);
-    console.log("保存测试记录响应:", saveResponse);
-    ElMessage.success("测试运行成功，记录已保存");
-  } catch (saveError: any) {
-    console.error("保存测试记录失败:", saveError);
-    if (saveError.response) {
-      console.error("错误状态码:", saveError.response.status);
-      console.error("错误响应数据:", saveError.response.data);
-    }
-    let errorMessage = "测试结果已显示，但保存记录失败";
-    if (saveError.message) {
-      errorMessage = `保存失败：${saveError.message}`;
-    } else if (saveError.response?.data?.error) {
-      errorMessage = `保存失败：${saveError.response.data.error}`;
-    }
-    ElMessage.warning(errorMessage);
-  }
-
-    await fetchTestHistory();
-  } catch (error: any) {
-    let errorMessage = error.message || "未知错误";
-
-    if (error.response) {
-      const responseData = error.response.data;
-      errorMessage = responseData?.error
-        ? `API错误：${responseData.error}`
-        : `API错误：${error.response.status} - ${error.response.statusText || "未知错误"}`;
-      console.error("API错误详情:", error.response);
-    }
-
-    console.error("测试运行失败:", error);
-    ElMessage.error("测试运行失败：" + errorMessage);
-    testResult.value = `## 错误信息\n\n测试运行失败: ${errorMessage}\n\n请检查以下可能的问题:\n\n- Dify API密钥是否正确\n- API服务器是否可访问\n- 网络连接是否正常`;
-  } finally {
-    isRunning.value = false;
-    isLoadingHistory.value = false;
-  }
-};
-
-// 获取测试历史
-const fetchTestHistory = async () => {
-  if (!selectedTemplate.value) return;
-
-  isLoadingHistory.value = true;
-  try {
-    const response = await getTemplateTests({
-      template: selectedTemplate.value.id,
-    });
-    testHistory.value = response.results || [];
-  } catch (error: any) {
-    console.error("获取测试历史失败:", error);
-    ElMessage.error("获取测试历史失败：" + (error.message || "未知错误"));
-  } finally {
-    isLoadingHistory.value = false;
-  }
-};
-
-// 显示历史记录详情
-const showHistoryDetail = (record: ITemplateTest) => {
-  selectedHistoryRecord.value = record;
-  historyDetailVisible.value = true;
-};
-
-// 监听模板列表变化
-watch(
-  templates,
-  (newTemplates) => {
-    const templateId = route.params.id;
-    if (templateId && newTemplates.length > 0) {
-      const template = newTemplates.find((t) => t.id === Number(templateId));
-      if (template) {
-        selectedTemplateId.value = template.id;
-        handleTemplateChange(template.id);
-      }
-    }
-  },
-  { immediate: true },
-);
-
-// 页面加载时获取数据
-onMounted(() => {
-  fetchTemplates();
 });
 
-// 在组件卸载前清理状态
-const cleanup = () => {
-  selectedTemplate.value = null;
-  selectedTemplateId.value = null;
-  testResult.value = "";
-  variableInputs.value = {};
-  testHistory.value = [];
-  templates.value = [];
-  selectedHistoryRecord.value = null;
-  historyDetailVisible.value = false;
-  selectedApiKey.value = null;
+const isJsonContent = computed(() => {
+  return parsedTemplateContent.value !== null;
+});
+
+const processedContent = computed(() => {
+  if (testResult.value && testResult.value.answer) {
+    try {
+      const content = JSON.parse(testResult.value.answer);
+      return Object.entries(content).map(([key, value]) => `
+        <div class="prompt-field">
+          <span class="prompt-label">${key}:</span>
+          <span class="prompt-content">${formatContent(String(value))}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      // 如果不是JSON格式，按原样显示
+      return testResult.value.answer.replace(/\n/g, '<br>');
+    }
+  }
+  return '';
+});
+
+// 历史记录详情相关
+const historyColumns = [
+  { title: '测试时间', dataIndex: 'created_at', key: 'created_at' },
+  { title: '模型', dataIndex: 'model', key: 'model' },
+  { title: '操作', dataIndex: 'action', key: 'action' },
+];
+const historyDetailVisible = ref(false);
+const selectedHistoryDetail = ref(null);
+
+onMounted(async () => {
+  const templateId = route.params.id ? Number(route.params.id) : null;
+  if (templateId && !isNaN(templateId)) {
+    await loadTemplate(templateId);
+  }
+  await loadApiKeys();
+  await loadTestHistory();
+});
+
+const loadTemplate = async (id: number) => {
+  templateLoading.value = true;
+  try {
+    template.value = await getTemplate(id);
+    initFormState();
+  } catch (error) {
+    console.error("加载模板失败:", error);
+    message.error("加载模板失败");
+  } finally {
+    templateLoading.value = false;
+  }
 };
 
-// 在组件卸载时进行清理
-onUnmounted(cleanup);
+const initFormState = () => {
+  if (!template.value) return;
+  template.value.variables.forEach((variable) => {
+    formState[variable.name] = "";
+  });
+};
+
+const loadApiKeys = async () => {
+  try {
+    const response = await getApiKeys();
+    console.log("API密钥响应:", response);
+    apiKeys.value = response.results || [];
+    if (!apiKeys.value.length) {
+      console.warn("API密钥列表为空");
+    }
+  } catch (error) {
+    console.error("加载API密钥失败:", error);
+    message.error("加载API密钥失败");
+  }
+};
+
+const loadTestHistory = async () => {
+  try {
+    const response = await getTemplateTests({
+      template_id: template.value?.id,
+    });
+    console.log("测试历史响应:", response);
+    testHistory.value = response.results || [];
+    if (!testHistory.value.length) {
+      console.warn("测试历史列表为空");
+    }
+  } catch (error) {
+    console.error("加载测试历史失败:", error);
+    message.error("加载测试历史失败");
+  }
+};
+
+// 定义测试模板的函数
+const testTemplate = async (templateId: number, data: any) => {
+  testing.value = true;
+  let difyResponse;
+
+  try {
+    const variableValues = { ...formState };
+
+    // 处理模板内容
+    const templateContent = template.value?.content || "";
+    // 确保query是字符串而不是对象
+    const query = typeof templateContent === 'string' ? templateContent : JSON.stringify(templateContent);
+
+    difyResponse = await sendMessage({
+      api_key: selectedApiKey.value,
+      user_id: "template-tester",
+      inputs: variableValues,
+      query: query,
+      response_mode: "blocking",
+      conversation_id: "",
+      user: "template-tester",
+    });
+
+    console.log("收到测试响应:", difyResponse);
+
+    // 处理响应数据
+    const finalResponse =
+      typeof difyResponse === "string"
+        ? JSON.parse(difyResponse)
+        : difyResponse;
+
+    console.log("收到最终响应:", finalResponse);
+
+    // 设置测试结果
+    testResult.value = {
+      ...finalResponse,
+      answer: finalResponse.answer || "",
+      raw_final_response: finalResponse,
+      metadata: finalResponse.metadata || {},
+    };
+
+    console.log("设置最终测试结果:", testResult.value);
+
+    // 构造测试记录数据
+    const testData = {
+      template: template.value?.id,
+      model: finalResponse.metadata?.usage?.model || "Dify API",
+      input_data: formState,
+      dify_response: finalResponse,
+      output_content: finalResponse.answer || JSON.stringify(finalResponse),
+    };
+
+    // 如果有使用统计信息，添加到测试数据中
+    if (finalResponse.metadata?.usage) {
+      testData.dify_response.metadata = {
+        usage: finalResponse.metadata.usage,
+      };
+    }
+
+      // 保存测试记录到后端
+      try {
+        const saveResponse = await runTemplateTest(testData);
+      console.log("保存测试记录响应:", saveResponse);
+      message.success("测试记录已保存");
+    } catch (saveError) {
+      console.error("保存测试记录失败:", saveError);
+      message.error("保存测试记录失败");
+    }
+
+    message.success("测试成功");
+    await loadTestHistory(); // 刷新测试历史
+  } catch (error) {
+    console.error("测试失败:", error);
+    let errorMessage = "未知错误";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === "object" && error !== null) {
+      errorMessage = JSON.stringify(error);
+    }
+    message.error(`测试失败: ${errorMessage}`);
+    testResult.value = {
+      error: true,
+      answer: `测试失败: ${errorMessage}`,
+      metadata: {
+        error_details: error,
+      },
+    };
+  } finally {
+    testing.value = false;
+    return testResult.value;
+  }
+};
+
+const handleApiKeyChange = (value: string) => {
+  if (value) {
+    formState.selectedApiKey = value;
+  }
+};
+
+const handleTest = async () => {
+  if (!template.value) {
+    message.error("请选择模板");
+    return;
+  }
+  
+  if (!selectedApiKey.value) {
+    message.error("请选择API平台");
+    return;
+  }
+
+  testing.value = true;
+  testResult.value = null; // 清空之前的测试结果
+
+  try {
+    const response = await testTemplate(template.value.id, {
+      inputs: formState,
+    });
+
+    if (response) {
+      testResult.value = response;
+    }
+  } catch (error) {
+    console.error("测试模板时出错:", error);
+    testResult.value = {
+      error: true,
+      answer:
+        "测试模板时出错: " +
+        (error instanceof Error ? error.message : String(error)),
+      metadata: {
+        error_details: error,
+      },
+    };
+  }
+};
+
+const viewHistoryDetail = (record: TemplateTest) => {
+  selectedHistoryDetail.value = record;
+  historyDetailVisible.value = true;
+};
 </script>
 
-<style lang="scss" scoped>
-.template-test {
+<style scoped>
+.template-test-container {
   padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+}
+.form-field {
+  margin-bottom: 16px;
+}
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+.test-result-content {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-light);
+  border-radius: 8px;
+}
+.processed-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+.no-result {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+.template-content-preview {
+  margin: 16px 0;
+}
 
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+.template-content-wrapper {
+  position: relative;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
 
-    h2 {
-      color: var(--primary-color);
-      font-size: 24px;
-      font-family: "Orbitron", sans-serif;
-      margin: 0;
-    }
+.template-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+  margin: 0;
+  padding: 16px;
+  font-family: 'Roboto Mono', Monaco, 'Courier New', Courier, monospace;
+  font-size: 14px;
+  max-height: 300px;
+  overflow-y: auto;
+  color: #1a1a1a;
+  background: transparent;
+}
+
+.template-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.template-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.template-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .template-content-wrapper {
+    background-color: #2d2d2d;
+    border-color: #3d3d3d;
   }
-
-  .main-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 24px;
-    margin-top: 24px;
-    margin-bottom: 24px;
-
-    .preview-panel {
-      height: 100%;
-      min-width: 0;
-      overflow: auto;
-      max-height: 60vh;
-    }
-
-    .settings-panel {
-      height: 100%;
-      min-width: 0;
-      overflow: visible; /* 修改为visible，避免双重滚动条 */
-      max-height: none; /* 移除最大高度限制 */
-    }
+  
+  .template-content {
+    color: #e1e1e1;
   }
-
-  .result-container {
-    margin-bottom: 24px;
-    width: 100%;
-    /* 移除max-height和overflow属性，让子组件控制滚动 */
-  }
-
-  .history-container {
-    margin-top: 24px;
-    width: 100%;
+  
+  .template-content::-webkit-scrollbar-thumb {
+    background: #666;
   }
 }
 </style>

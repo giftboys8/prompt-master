@@ -13,12 +13,14 @@ export interface User {
   email: string;
   is_staff: boolean;
   date_joined: string;
+  permissions?: string[]; // 用户权限列表
 }
 
 // 提示词模版类型
 export interface Template {
   id: number;
   name: string;
+  framework_type: string;
   framework: {
     id: number;
     name: string;
@@ -29,6 +31,7 @@ export interface Template {
       description: string;
     }>;
   } | null;
+  visibility: "PRIVATE" | "PUBLIC" | "SHARED";
   description: string;
   content: {
     role?: string;
@@ -42,9 +45,15 @@ export interface Template {
     custom?: string;
   };
   variables: Array<{
+    key: string;
     name: string;
-    default_value: string;
-    description: string;
+    type: string;
+    default_value?: string;
+    description?: string;
+    options?: Array<{
+      label: string;
+      value: string;
+    }>;
   }>;
   order: number;
   target_role: string;
@@ -84,9 +93,15 @@ export interface TemplateVersion {
     custom?: string;
   };
   variables: Array<{
+    key: string;
     name: string;
-    default_value: string;
-    description: string;
+    type: string;
+    default_value?: string;
+    description?: string;
+    options?: Array<{
+      label: string;
+      value: string;
+    }>;
   }>;
   is_current: boolean;
   created_at: string;
@@ -94,15 +109,33 @@ export interface TemplateVersion {
   created_by_username: string;
 }
 
+// 场景任务类型
+export interface SceneTask {
+  id?: number;
+  name: string;
+  description: string;
+  applicable_roles: string[];
+  template: number;
+  template_name?: string;
+  template_description?: string;
+  created_at?: string;
+}
+
 // 业务场景类型
 export interface Scene {
   id: number;
   name: string;
+  category: string;
   description: string;
-  templates: number[];
+  target_roles: string[];
+  status: boolean;
+  version: string;
+  tasks: SceneTask[];
   created_at: string;
   updated_at: string;
   created_by: number;
+  created_by_username?: string;
+  tasks_count?: number;
 }
 
 // 生成内容类型

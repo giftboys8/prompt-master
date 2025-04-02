@@ -1,7 +1,6 @@
-import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import * as sass from 'sass'
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -9,13 +8,13 @@ export default defineConfig({
     vue({
       script: {
         sourceMap: true,
-      }
-    })
+      },
+    }),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
   },
   server: {
     port: 5173,
@@ -28,40 +27,37 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: 'terser',
+    minify: "terser",
     terserOptions: {
-      sourceMap: true
+      sourceMap: true,
     },
     rollupOptions: {
       output: {
         sourcemap: true,
         manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'element-plus': ['element-plus']
-        }
-      }
-    }
+          "vue-vendor": ["vue", "vue-router", "pinia"],
+          "element-plus": ["element-plus"],
+        },
+      },
+    },
   },
   css: {
     devSourcemap: true,
     preprocessorOptions: {
       scss: {
-        implementation: sass,
         sassOptions: {
-          outputStyle: 'expanded',
-          sourceMap: true
-        }
-      }
-    }
+          outputStyle: "expanded",
+          sourceMap: true,
+        },
+      },
+    },
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'element-plus'],
+    include: ["vue", "vue-router", "pinia", "element-plus"],
     exclude: [],
-    entries: [
-      './src/**/*.vue',
-    ],
+    entries: ["./src/**/*.vue"],
     esbuildOptions: {
-      sourcemap: true
-    }
-  }
-})
+      sourcemap: true,
+    },
+  },
+});

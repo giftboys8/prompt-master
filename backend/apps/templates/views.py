@@ -424,30 +424,61 @@ class TemplateVersionViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 class TemplateTestViewSet(viewsets.ModelViewSet):
+    queryset = TemplateTest.objects.all()
     serializer_class = TemplateTestSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['template', 'model']
-    ordering_fields = ['created_at']
-
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['template']
+    search_fields = ['model']
+    
     def get_queryset(self):
-        queryset = TemplateTest.objects.all()
-        
-        # 获取template参数进行过滤
-        template_id = self.request.query_params.get('template', None)
-        if template_id:
-            queryset = queryset.filter(template_id=template_id)
-            
-        # 确保用户只能看到自己的测试记录和分享给自己的模板的测试记录
-        queryset = queryset.filter(
-            Q(created_by=self.request.user) |
-            Q(template__shares__shared_with=self.request.user)
-        ).distinct()
-        
-        return queryset.order_by('-created_at')  # 按创建时间倒序排列
+        return TemplateTest.objects.filter(
+            template__created_by=self.request.user
+        ).order_by('-created_at')
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+    def create(self, request, *args, **kwargs):
+        try:
+            # 从请求数据中获取必要字段
+            template_id = request.data.get('template')
+            model = request.data.get('model')
+            input_data = request.data.get('input_data')
+            output_content = request.data.get('output_content')
+            dify_response = request.data.get('dify_response')
+
+            # 打印请求数据以便调试
+            print(f"接收到测试记录保存请求: template_id={template_id}, model={model}")
+            print(f"input_data: {input_data}")
+            print(f"output_content: {output_content}")
+
+            # 获取模板对象
+            try:
+                template = Template.objects.get(id=template_id)
+            except Template.DoesNotExist:
+                return Response(
+                    {'error': f'Template with id {template_id} does not exist'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # 创建测试记录
+            test = TemplateTest.objects.create(
+                template=template,
+                model=model,
+                input_data=input_data,
+                output_content=output_content,
+                dify_response=dify_response,
+                created_by=request.user
+            )
+
+            # 序列化并返回响应
+            serializer = self.get_serializer(test)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            print(f"创建测试记录时发生错误: {str(e)}")
+            return Response(
+                {'error': f'Failed to create test record: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['post'])
     def run_test(self, request):
@@ -456,10 +487,15 @@ class TemplateTestViewSet(viewsets.ModelViewSet):
         input_data = request.data.get('input_data')
         dry_run = request.data.get('dryRun', False)
         dify_response = request.data.get('dify_response')
+        output_content = request.data.get('output_content')
 
         print(f"接收到测试记录保存请求: template_id={template_id}, model={model}")
         print(f"input_data: {input_data}")
         print(f"dify_response 类型: {type(dify_response)}")
+        print(f"output_content: {output_content}")
+
+        # 打印完整的请求数据
+        print(f"完整的请求数据: {request.data}")
 
         if not all([template_id, model, input_data]):
             return Response({'error': '缺少必要的参数'}, status=status.HTTP_400_BAD_REQUEST)
@@ -505,18 +541,22 @@ class TemplateTestViewSet(viewsets.ModelViewSet):
                 'framework_type': template.framework_type
             }, ensure_ascii=False, indent=2)
 
-        test = TemplateTest.objects.create(
-            template=template,
-            model=model,
-            input_data=input_data,
-            output_content=output_content,
-            prompt=prompt,
-            dify_response=dify_response,
-            created_by=request.user
-        )
+        try:
+            test = TemplateTest.objects.create(
+                template=template,
+                model=model,
+                input_data=input_data,
+                output_content=output_content,
+                prompt=prompt,
+                dify_response=dify_response,
+                created_by=request.user
+            )
 
-        serializer = self.get_serializer(test)
-        return Response(serializer.data)
+            serializer = self.get_serializer(test)
+            return Response(serializer.data)
+        except Exception as e:
+            print(f"创建测试记录时发生错误: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _generate_prompt(self, template, input_data):
         """根据模板和输入数据生成提示词"""

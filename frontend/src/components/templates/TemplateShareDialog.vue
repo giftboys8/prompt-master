@@ -31,9 +31,9 @@
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button
           type="primary"
-          @click="handleShare"
           :loading="shareLoading"
           class="confirm-share-button"
+          @click="handleShare"
         >
           分享
         </el-button>

@@ -1,445 +1,486 @@
 <template>
   <div class="home-container">
-    <!-- 欢迎区域 -->
-    <div class="welcome-section">
-      <h1 class="title">Welcome to PromptMaster</h1>
-      <p class="subtitle">智能提示词管理系统</p>
-      <p class="description">
-        专业的提示词工程管理平台，让AI对话更智能、更高效
-      </p>
+    <!-- 英雄区域 -->
+    <div class="hero-section ai-card">
+      <div class="hero-content">
+        <h1 class="title">PromptMaster</h1>
+        <p class="subtitle">企业级提示词工程管理平台</p>
+        <p class="description">
+          专注提升AI对话质量，为企业提供专业的提示词工程解决方案。
+          通过标准化管理、智能优化和数据分析，
+          帮助您的团队构建高质量的AI对话体系。
+        </p>
+        <div class="action-buttons">
+          <el-button type="primary" size="large" @click="$router.push('/templates')">
+            立即开始
+          </el-button>
+          <el-button size="large" @click="$router.push('/docs')">
+            技术文档
+          </el-button>
+        </div>
+        <div class="stats">
+          <div class="stat-item">
+            <h3>500+</h3>
+            <p>模板数量</p>
+          </div>
+          <div class="stat-item">
+            <h3>50+</h3>
+            <p>企业用户</p>
+          </div>
+          <div class="stat-item">
+            <h3>99.9%</h3>
+            <p>服务可用性</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 系统介绍 -->
-    <div class="intro-section">
-      <h2>系统介绍</h2>
-      <div class="intro-cards">
-        <el-card class="intro-card">
+    <!-- 核心优势 -->
+    <div class="advantages-section">
+      <h2>为什么选择 PromptMaster？</h2>
+      <div class="advantage-cards">
+        <el-card class="advantage-card ai-card">
           <template #header>
             <div class="card-header">
               <el-icon><Monitor /></el-icon>
-              <span>智能管理</span>
+              <span>专业的提示词工程管理</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500">
-            提供专业的提示词模板管理功能，支持多种框架，让AI对话更加规范和高效。
-          </p>
+          <div class="card-content">
+            <ul>
+              <li>支持RTGO、SPAR等主流提示词框架</li>
+              <li>完整的版本控制和历史追踪</li>
+              <li>灵活的模板复用和继承机制</li>
+              <li>严格的质量控制和审核流程</li>
+            </ul>
+          </div>
         </el-card>
 
-        <el-card class="intro-card">
+        <el-card class="advantage-card ai-card">
           <template #header>
             <div class="card-header">
               <el-icon><Connection /></el-icon>
-              <span>场景联动</span>
+              <span>智能场景配置系统</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500">
-            灵活的场景配置系统，针对不同应用场景快速调用合适的提示词模板。
-          </p>
+          <div class="card-content">
+            <ul>
+              <li>场景化模板组织和管理</li>
+              <li>智能场景识别和匹配</li>
+              <li>动态参数配置和验证</li>
+              <li>场景效果实时监控</li>
+            </ul>
+          </div>
         </el-card>
 
-        <el-card class="intro-card">
+        <el-card class="advantage-card ai-card">
           <template #header>
             <div class="card-header">
               <el-icon><DataAnalysis /></el-icon>
-              <span>数据分析</span>
+              <span>全方位数据分析</span>
             </div>
           </template>
-          <p style="color: #666666; font-size: 16px; font-weight: 500">
-            完整的数据分析功能，帮助您了解提示词使用情况，持续优化对话效果。
-          </p>
+          <div class="card-content">
+            <ul>
+              <li>提示词性能评估指标</li>
+              <li>使用情况统计和分析</li>
+              <li>效果对比和优化建议</li>
+              <li>自定义报表和导出</li>
+            </ul>
+          </div>
         </el-card>
       </div>
     </div>
 
-    <!-- 亮点功能 -->
+    <!-- 功能特性 -->
     <div class="features-section">
-      <h2>亮点功能</h2>
+      <h2>强大的功能特性</h2>
       <div class="feature-list">
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Document /></el-icon>
           </div>
           <div class="feature-content">
             <h3>多框架支持</h3>
-            <p>支持RTGO、SPAR等多种提示词框架，满足不同场景需求</p>
+            <p>原生支持RTGO、SPAR等主流提示词框架，可扩展自定义框架，轻松应对不同场景需求</p>
           </div>
         </div>
 
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Share /></el-icon>
           </div>
           <div class="feature-content">
-            <h3>一键导入导出</h3>
-            <p>支持模板批量导入导出，轻松实现团队共享和备份</p>
+            <h3>团队协作</h3>
+            <p>支持团队成员协同编辑、审核和管理，内置完整的权限控制，确保工作流程顺畅</p>
           </div>
         </div>
 
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Timer /></el-icon>
           </div>
           <div class="feature-content">
             <h3>版本管理</h3>
-            <p>完整的版本历史记录，随时回溯和恢复历史版本</p>
+            <p>自动记录所有更改，支持版本比较和回滚，让每一次修改都可追溯</p>
           </div>
         </div>
 
-        <div class="feature-item">
+        <div class="feature-item ai-card">
           <div class="feature-icon">
             <el-icon><Refresh /></el-icon>
           </div>
           <div class="feature-content">
-            <h3>实时测试</h3>
-            <p>提供实时测试功能，快速验证提示词效果</p>
+            <h3>实时验证</h3>
+            <p>提供在线测试环境，支持多种模型接入，快速验证提示词效果</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 经典案例 -->
+    <!-- 应用案例 -->
     <div class="cases-section">
-      <h2>经典案例</h2>
-      <el-row :gutter="24">
-        <el-col :xs="24" :sm="12" :md="8">
-          <el-card class="case-card" shadow="hover">
-            <template #header>
-              <div class="case-header">
-                <h3>智能客服对话</h3>
-                <el-tag size="small" type="success">RTGO框架</el-tag>
-              </div>
-            </template>
-            <div class="case-content">
-              <p>通过RTGO框架构建的客服对话模板，提供专业、亲切的服务体验</p>
-              <ul>
-                <li>准确理解用户意图</li>
-                <li>个性化回答定制</li>
-                <li>情感化表达优化</li>
-              </ul>
+      <h2>客户案例</h2>
+      <div class="case-list">
+        <el-card class="case-card ai-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <h3>智能客服升级</h3>
+              <span class="case-tag">金融行业</span>
             </div>
-          </el-card>
-        </el-col>
+          </template>
+          <div class="case-content">
+            <p class="case-description">
+              某大型银行通过PromptMaster管理超过200个客服场景的提示词模板，
+              将客服回复准确率提升40%，用户满意度提升35%。
+            </p>
+            <ul class="case-points">
+              <li>场景化模板管理</li>
+              <li>多轮对话优化</li>
+              <li>准确率持续提升</li>
+            </ul>
+          </div>
+        </el-card>
 
-        <el-col :xs="24" :sm="12" :md="8">
-          <el-card class="case-card" shadow="hover">
-            <template #header>
-              <div class="case-header">
-                <h3>营销文案生成</h3>
-                <el-tag size="small" type="warning">SPAR框架</el-tag>
-              </div>
-            </template>
-            <div class="case-content">
-              <p>基于SPAR框架的营销文案模板，生成吸引力强的推广内容</p>
-              <ul>
-                <li>场景化文案构建</li>
-                <li>目标受众分析</li>
-                <li>转化率优化</li>
-              </ul>
+        <el-card class="case-card ai-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <h3>内容创作助手</h3>
+              <span class="case-tag">媒体行业</span>
             </div>
-          </el-card>
-        </el-col>
+          </template>
+          <div class="case-content">
+            <p class="case-description">
+              某新媒体平台使用PromptMaster管理内容创作提示词，
+              将内容生产效率提升60%，创作质量显著提高。
+            </p>
+            <ul class="case-points">
+              <li>创作模板库</li>
+              <li>质量评估体系</li>
+              <li>团队协作管理</li>
+            </ul>
+          </div>
+        </el-card>
 
-        <el-col :xs="24" :sm="12" :md="8">
-          <el-card class="case-card" shadow="hover">
-            <template #header>
-              <div class="case-header">
-                <h3>技术文档撰写</h3>
-                <el-tag size="small" type="info">自定义框架</el-tag>
-              </div>
-            </template>
-            <div class="case-content">
-              <p>自定义框架支持的技术文档模板，提供专业规范的文档输出</p>
-              <ul>
-                <li>结构化内容组织</li>
-                <li>专业术语规范</li>
-                <li>示例代码生成</li>
-              </ul>
+        <el-card class="case-card ai-card" shadow="hover">
+          <template #header>
+            <div class="card-header">
+              <h3>研发效能提升</h3>
+              <span class="case-tag">科技行业</span>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </template>
+          <div class="case-content">
+            <p class="case-description">
+              某互联网公司将PromptMaster应用于代码生成和优化场景，
+              研发效率提升30%，代码质量显著改善。
+            </p>
+            <ul class="case-points">
+              <li>代码生成模板</li>
+              <li>最佳实践沉淀</li>
+              <li>效果评估分析</li>
+            </ul>
+          </div>
+        </el-card>
+      </div>
     </div>
 
-    <!-- 快速入口 -->
-    <div class="quick-start">
-      <h2>立即开始</h2>
-      <div class="action-buttons">
-        <el-button
-          type="primary"
-          size="large"
-          @click="router.push('/templates')"
-        >
-          <el-icon><Document /></el-icon>浏览模板
-        </el-button>
-        <el-button
-          type="success"
-          size="large"
-          @click="router.push('/templates/create')"
-        >
-          <el-icon><Plus /></el-icon>创建模板
-        </el-button>
-      </div>
+    <!-- 开始使用 -->
+    <div class="cta-section ai-card">
+      <h2>开始使用 PromptMaster</h2>
+      <p>立即体验专业的提示词工程管理平台，提升您的AI应用效果</p>
+      <el-button type="primary" size="large" @click="$router.push({ name: 'Register' })">
+        免费注册
+      </el-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import {
-  Document,
-  Plus,
   Monitor,
   Connection,
   DataAnalysis,
+  Document,
   Share,
   Timer,
   Refresh,
 } from "@element-plus/icons-vue";
-
-const router = useRouter();
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "../styles/variables" as *;
+
 .home-container {
-  padding: 32px;
-  max-width: 1200px;
+  padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-/* 欢迎区域 */
-.welcome-section {
-  text-align: center;
-  margin-bottom: 64px;
-  animation: fadeInUp 0.8s ease;
-}
-
-.title {
-  font-size: 48px;
-  margin-bottom: 16px;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(96, 165, 250, 0.3);
-}
-
-.subtitle {
-  font-size: 24px;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
-}
-
-.description {
-  font-size: 16px;
-  color: var(--text-secondary);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* 通用标题样式 */
-h2 {
-  font-size: 32px;
-  margin-bottom: 32px;
-  text-align: center;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* 系统介绍 */
-.intro-section {
-  margin-bottom: 64px;
-}
-
-.intro-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-.intro-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  transition: all 0.3s ease;
-}
-
-.intro-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: 8px 0;
-}
-
-.card-header .el-icon {
-  font-size: 24px;
-  color: var(--primary-color);
-}
-
-/* 亮点功能 */
-.features-section {
-  margin-bottom: 64px;
-  padding: 48px 0;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
+.hero-section {
+  padding: 4rem 2rem;
+  margin-bottom: 4rem;
   border-radius: 16px;
-  border: 1px solid var(--glass-border);
+  background: linear-gradient(135deg, var(--primary-color-light) 0%, var(--primary-color) 100%);
+  color: white;
+  text-align: center;
+  @include glass-morphism;
+
+  .title {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #fff, #e0e0e0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+  }
+
+  .description {
+    font-size: 1.2rem;
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    line-height: 1.8;
+    opacity: 0.8;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    margin-top: 2rem;
+
+    .stat-item {
+      h3 {
+        font-size: 2.5rem;
+        margin: 0;
+        font-weight: bold;
+      }
+
+      p {
+        margin: 0;
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+.advantages-section,
+.features-section,
+.cases-section {
+  margin-bottom: 4rem;
+
+  h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 2.5rem;
+    color: var(--text-primary);
+  }
+}
+
+.advantage-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+
+  .advantage-card {
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1.3rem;
+      color: var(--primary-color);
+    }
+
+    .card-content {
+      ul {
+        padding-left: 1.2rem;
+        margin: 0;
+
+        li {
+          color: var(--text-secondary);
+          margin-bottom: 0.8rem;
+          line-height: 1.6;
+        }
+      }
+    }
+  }
 }
 
 .feature-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 32px;
-  padding: 0 32px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+
+  .feature-item {
+    padding: 2rem;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+    @include glass-morphism;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-content {
+      h3 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+      }
+
+      p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+    }
+  }
 }
 
-.feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
+.case-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+
+  .case-card {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: var(--text-primary);
+      }
+
+      .case-tag {
+        background: var(--primary-color-light);
+        color: var(--primary-color);
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+    }
+
+    .case-content {
+      .case-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
+
+      .case-points {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        li {
+          background: var(--background-secondary);
+          color: var(--text-secondary);
+          padding: 0.4rem 0.8rem;
+          border-radius: 4px;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
 }
 
-.feature-icon {
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-}
-
-.feature-icon .el-icon {
-  font-size: 24px;
-  color: var(--primary-color);
-}
-
-.feature-content h3 {
-  font-size: 18px;
-  margin-bottom: 8px;
-  color: var(--text-primary);
-}
-
-.feature-content p {
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* 经典案例 */
-.cases-section {
-  margin-bottom: 64px;
-}
-
-.case-card {
-  height: 100%;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  transition: all 0.3s ease;
-  margin-bottom: 24px;
-}
-
-.case-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
-}
-
-.case-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.case-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: var(--text-primary);
-}
-
-.case-content {
-  color: var(--text-secondary);
-}
-
-.case-content ul {
-  list-style: none;
-  padding: 0;
-  margin: 16px 0 0;
-}
-
-.case-content li {
-  margin: 8px 0;
-  padding-left: 20px;
-  position: relative;
-}
-
-.case-content li::before {
-  content: "•";
-  color: var(--primary-color);
-  position: absolute;
-  left: 0;
-}
-
-/* 快速入口 */
-.quick-start {
+.cta-section {
   text-align: center;
-  margin-bottom: 32px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-}
-
-.action-buttons .el-button {
-  min-width: 160px;
-}
-
-/* 动画 */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .home-container {
-    padding: 16px;
-  }
-
-  .title {
-    font-size: 36px;
-  }
-
-  .subtitle {
-    font-size: 20px;
-  }
+  padding: 4rem 2rem;
+  border-radius: 16px;
+  @include glass-morphism;
 
   h2 {
-    font-size: 28px;
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
   }
 
-  .feature-list {
-    grid-template-columns: 1fr;
+  p {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+}
+
+// 响应式调整
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 3rem 1rem;
+
+    .title {
+      font-size: 2.5rem;
+    }
+
+    .subtitle {
+      font-size: 1.4rem;
+    }
+
+    .description {
+      font-size: 1rem;
+    }
+
+    .stats {
+      flex-direction: column;
+      gap: 2rem;
+    }
   }
 
   .action-buttons {
     flex-direction: column;
   }
 
-  .action-buttons .el-button {
-    width: 100%;
+  .advantage-cards,
+  .feature-list,
+  .case-list {
+    grid-template-columns: 1fr;
+  }
+
+  h2 {
+    font-size: 1.8rem !important;
   }
 }
 </style>

@@ -26,15 +26,15 @@ export const getFrameworks = (page = 1, pageSize = 10) => {
     params: {
       with_modules: true, // 添加参数以获取模块信息
       page,
-      page_size: pageSize
-    }
-  }).then(response => {
+      page_size: pageSize,
+    },
+  }).then((response) => {
     console.log("API getFrameworks raw response:", response);
     return {
       results: response.results || [],
       count: response.count || 0,
       next: response.next,
-      previous: response.previous
+      previous: response.previous,
     };
   });
 };

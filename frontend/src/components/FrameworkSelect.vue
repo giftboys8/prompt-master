@@ -17,9 +17,18 @@
       >
         <div class="framework-option">
           <span>{{ framework.name }}</span>
-          <small v-if="showDescription" class="description">{{ framework.description }}</small>
-          <div v-if="showModules && framework.modules?.length" class="modules-list">
-            <span class="module-tag" v-for="module in framework.modules" :key="module.id">
+          <small v-if="showDescription" class="description">{{
+            framework.description
+          }}</small>
+          <div
+            v-if="showModules && framework.modules?.length"
+            class="modules-list"
+          >
+            <span
+              v-for="module in framework.modules"
+              :key="module.id"
+              class="module-tag"
+            >
               {{ module.name }}
             </span>
           </div>
@@ -30,93 +39,103 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { getFrameworks } from '@/api/frameworks'
-import type { Framework } from '@/api/frameworks'
+import { ref, onMounted, watch } from "vue";
+import { getFrameworks } from "@/api/frameworks";
+import type { Framework } from "@/api/frameworks";
 
 const props = defineProps({
   modelValue: {
     type: [Number, Object, null],
-    default: null
+    default: null,
   },
   placeholder: {
     type: String,
-    default: '请选择框架'
+    default: "请选择框架",
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
   showDescription: {
     type: Boolean,
-    default: false
+    default: false,
   },
   showModules: {
     type: Boolean,
-    default: true
-  }
-})
+    default: true,
+  },
+});
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(["update:modelValue", "change"]);
 
-const frameworks = ref<Framework[]>([])
+const frameworks = ref<Framework[]>([]);
 // 如果modelValue是对象，则使用其id值；否则直接使用modelValue
-const selectedFramework = ref(typeof props.modelValue === 'object' && props.modelValue ? props.modelValue.id : props.modelValue)
-const loading = ref(false)
+const selectedFramework = ref(
+  typeof props.modelValue === "object" && props.modelValue
+    ? props.modelValue.id
+    : props.modelValue,
+);
+const loading = ref(false);
 
 const fetchFrameworks = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await getFrameworks()
-    console.log('Frameworks API Response:', response)
-    frameworks.value = response.results || response.data || []
-    console.log('Frameworks after assignment:', frameworks.value)
+    const response = await getFrameworks();
+    console.log("Frameworks API Response:", response);
+    frameworks.value = response.results || response.data || [];
+    console.log("Frameworks after assignment:", frameworks.value);
   } catch (error) {
-    console.error('获取框架列表失败:', error)
+    console.error("获取框架列表失败:", error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleChange = (value: number | null) => {
-  emit('update:modelValue', value)
-  console.log('FrameworkSelect - Selected value:', value)
-  
+  emit("update:modelValue", value);
+  console.log("FrameworkSelect - Selected value:", value);
+
   if (value === null) {
-    console.log('FrameworkSelect - Emitting null')
-    emit('change', null)
+    console.log("FrameworkSelect - Emitting null");
+    emit("change", null);
   } else {
-    const selectedItem = frameworks.value.find(item => item.id === value)
-    console.log('FrameworkSelect - Selected framework:', selectedItem)
-    
+    const selectedItem = frameworks.value.find((item) => item.id === value);
+    console.log("FrameworkSelect - Selected framework:", selectedItem);
+
     // 检查模块信息
     if (selectedItem) {
-      console.log('FrameworkSelect - Framework modules:', selectedItem.modules)
+      console.log("FrameworkSelect - Framework modules:", selectedItem.modules);
     }
-    
-    emit('change', value)  // 只传递框架 ID
+
+    emit("change", value); // 只传递框架 ID
   }
-}
+};
 
 // 监听外部传入的值变化
 watch(
   () => props.modelValue,
   (newVal) => {
     // 如果是对象，则取其id值；否则直接使用newVal
-    selectedFramework.value = typeof newVal === 'object' && newVal ? newVal.id : newVal
-    console.log('FrameworkSelect - modelValue changed:', newVal, 'selectedFramework set to:', selectedFramework.value)
-  }
-)
+    selectedFramework.value =
+      typeof newVal === "object" && newVal ? newVal.id : newVal;
+    console.log(
+      "FrameworkSelect - modelValue changed:",
+      newVal,
+      "selectedFramework set to:",
+      selectedFramework.value,
+    );
+  },
+);
 
 onMounted(() => {
-  fetchFrameworks()
-})
+  fetchFrameworks();
+});
 </script>
 
 <style scoped lang="scss">
 .framework-select {
   width: 100%;
-  
+
   :deep(.el-select) {
     width: 100%;
   }
@@ -126,37 +145,24 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  
+
   .description {
     color: #999;
     font-size: 12px;
   }
 
-  .modules-list {ist {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
-
-  .module-tag {
-    background-color: #f0f2f5;
-    color: #666;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-}
+  .modules-list {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
     margin-top: 4px;
-    
+
     .module-tag {
-      font-size: 12px;
-      padding: 2px 8px;
-      background-color: #f0f0f0;
-      border-radius: 4px;
+      background-color: #f0f2f5;
       color: #666;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
     }
   }
 }

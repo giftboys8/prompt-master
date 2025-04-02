@@ -1,7 +1,7 @@
 <template>
   <div class="test-result">
     <h3>测试结果</h3>
-    <div v-html="formattedResult" class="test-result-content"></div>
+    <div class="test-result-content" v-html="formattedResult"></div>
   </div>
 </template>
 
@@ -22,7 +22,8 @@ const props = defineProps<{
 // 格式化测试结果
 const formattedResult = computed(() => {
   // 确保结果是字符串
-  const result = typeof props.result === 'string' ? props.result : String(props.result);
+  const result =
+    typeof props.result === "string" ? props.result : String(props.result);
   return md.render(result);
 });
 </script>
@@ -95,7 +96,8 @@ const formattedResult = computed(() => {
       display: block;
     }
 
-    :deep(th), :deep(td) {
+    :deep(th),
+    :deep(td) {
       border: 1px solid var(--border-color);
       padding: 8px;
       text-align: left;

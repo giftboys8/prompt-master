@@ -4,7 +4,13 @@
       <h1>创建框架</h1>
     </div>
 
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" class="framework-form">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="100px"
+      class="framework-form"
+    >
       <el-form-item label="框架名称" prop="name">
         <el-input v-model="form.name" />
       </el-form-item>
@@ -16,25 +22,35 @@
 
       <div class="module-section">
         <div class="module-list">
-          <div v-for="(module, index) in modules" :key="index" class="module-item">
+          <div
+            v-for="(module, index) in modules"
+            :key="index"
+            class="module-item"
+          >
             <el-card class="module-card">
               <el-form :model="module" :rules="moduleRules">
                 <el-row :gutter="20">
                   <el-col :span="8">
                     <el-form-item label="模块名称" prop="name">
-                      <el-input v-model="module.name" placeholder="请输入模块名称" />
+                      <el-input
+                        v-model="module.name"
+                        placeholder="请输入模块名称"
+                      />
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
                     <el-form-item label="模块描述" prop="description">
-                      <el-input v-model="module.description" placeholder="请输入模块描述" />
+                      <el-input
+                        v-model="module.description"
+                        placeholder="请输入模块描述"
+                      />
                     </el-form-item>
                   </el-col>
                   <el-col :span="2">
                     <el-form-item label="排序" prop="order">
-                      <el-input-number 
-                        v-model="module.order" 
-                        :min="0" 
+                      <el-input-number
+                        v-model="module.order"
+                        :min="0"
                         :max="999"
                         controls-position="right"
                         size="small"
@@ -42,9 +58,9 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="2" class="action-buttons">
-                    <el-button 
-                      type="danger" 
-                      size="small" 
+                    <el-button
+                      type="danger"
+                      size="small"
                       circle
                       @click="handleDeleteModule(index)"
                     >
@@ -77,7 +93,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { Delete, Plus } from '@element-plus/icons-vue';
+import { Delete, Plus } from "@element-plus/icons-vue";
 import type { FormInstance, FormRules } from "element-plus";
 import {
   createFramework,
@@ -136,7 +152,7 @@ const handleSubmit = async () => {
 
   // 验证所有模块是否都填写了必填字段
   const hasEmptyModules = modules.value.some(
-    module => !module.name || !module.description
+    (module) => !module.name || !module.description,
   );
 
   if (hasEmptyModules) {

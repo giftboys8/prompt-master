@@ -77,7 +77,9 @@
               <div class="template-info">
                 <h3>{{ template.name }}</h3>
                 <div class="template-tags">
-                  <el-tag class="mr-2">{{ template.framework?.type || '自定义' }}</el-tag>
+                  <el-tag class="mr-2">{{
+                    template.framework?.type || "自定义"
+                  }}</el-tag>
                   <el-tag type="warning" class="mr-2">共享</el-tag>
                   <el-tag :type="template.can_edit ? 'success' : 'info'">{{
                     template.can_edit ? "可编辑" : "只读"
@@ -204,7 +206,6 @@ const fetchSharedTemplates = async () => {
     const response = await getSharedWithMe();
     sharedTemplates.value = response.results;
   } catch (error) {
-    console.error("获取共享模板失败:", error);
     ElMessage.error("获取共享模板失败");
   } finally {
     loading.value = false;

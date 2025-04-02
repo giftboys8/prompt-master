@@ -4,10 +4,10 @@
       <el-select
         :model-value="modelValue"
         placeholder="请选择模板"
-        @update:modelValue="$emit('update:modelValue', $event)"
-        @change="$emit('change', $event)"
         filterable
         class="template-select"
+        @update:model-value="$emit('update:modelValue', $event)"
+        @change="$emit('change', $event)"
       >
         <el-option
           v-for="template in templates"

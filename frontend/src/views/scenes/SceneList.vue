@@ -57,17 +57,20 @@
         :page-sizes="[10, 20, 50, 100]"
         :total="total"
         layout="total, sizes, prev, pager, next"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, watch } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessageBox, ElMessage } from "element-plus";
 import { Search, Plus } from "@element-plus/icons-vue";
 import type { Scene } from "@/types";
+import { getScenes, deleteScene } from "@/api/scenes";
+
+const router = useRouter();
 
 // 状态
 const loading = ref(false);
@@ -77,32 +80,71 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const searchQuery = ref("");
 
+// 加载场景列表
+const loadScenes = async () => {
+  loading.value = true;
+  try {
+    const response = await getScenes({
+      page: currentPage.value,
+      page_size: pageSize.value,
+      search: searchQuery.value,
+    });
+    scenes.value = response.results;
+    total.value = response.count;
+  } catch (error) {
+    console.error("获取场景列表失败:", error);
+    ElMessage.error("获取场景列表失败");
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 初始化加载
+onMounted(() => {
+  loadScenes();
+});
+
 // 方法
 const handleSearch = () => {
-  // TODO: 实现搜索功能
+  currentPage.value = 1;
+  loadScenes();
 };
 
 const handleAdd = () => {
-  // TODO: 实现新增功能
+  router.push("/scenes/create");
 };
 
 const handleEdit = (row: Scene) => {
-  // TODO: 实现编辑功能
+  router.push(`/scenes/${row.id}/edit`);
 };
 
-const handleDelete = (row: Scene) => {
-  // TODO: 实现删除功能
+const handleDelete = async (row: Scene) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除场景 "${row.name}" 吗？此操作不可恢复。`,
+      "删除确认",
+      {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      },
+    );
+
+    await deleteScene(row.id);
+    ElMessage.success("删除场景成功");
+    loadScenes();
+  } catch (error: any) {
+    if (error !== "cancel") {
+      console.error("删除场景失败:", error);
+      ElMessage.error("删除场景失败");
+    }
+  }
 };
 
-const handleSizeChange = (val: number) => {
-  pageSize.value = val;
-  // TODO: 重新加载数据
-};
-
-const handleCurrentChange = (val: number) => {
-  currentPage.value = val;
-  // TODO: 重新加载数据
-};
+// 监听分页变化
+watch([currentPage, pageSize], () => {
+  loadScenes();
+});
 </script>
 
 <style scoped>

@@ -38,7 +38,7 @@
       </div>
 
       <div class="detail-section">
-        <h4>输出内容</h4>
+        <h4>处理后的输出内容</h4>
         <div
           class="detail-content markdown-content"
           v-html="
@@ -48,6 +48,34 @@
             )
           "
         />
+      </div>
+
+      <div class="detail-section">
+        <h4>原始响应数据</h4>
+        <el-collapse>
+          <!-- 流式响应数据 -->
+          <el-collapse-item v-if="rawStreamData" title="流式响应数据">
+            <div class="detail-content code-block">
+              <pre>{{ JSON.stringify(rawStreamData, null, 2) }}</pre>
+            </div>
+          </el-collapse-item>
+
+          <!-- 最终响应数据 -->
+          <el-collapse-item v-if="rawFinalResponse" title="最终响应数据">
+            <div class="detail-content code-block">
+              <pre>{{ JSON.stringify(rawFinalResponse, null, 2) }}</pre>
+            </div>
+          </el-collapse-item>
+
+          <!-- 完整输出内容 -->
+          <el-collapse-item title="完整输出内容">
+            <div class="detail-content code-block">
+              <pre>{{
+                JSON.stringify(parseTestResult(record.output_content), null, 2)
+              }}</pre>
+            </div>
+          </el-collapse-item>
+        </el-collapse>
       </div>
     </template>
   </el-dialog>
@@ -94,6 +122,18 @@ const parseTestResult = (content: string) => {
     return null;
   }
 };
+
+// 获取流式响应数据
+const rawStreamData = computed(() => {
+  const result = parseTestResult(props.record?.output_content || "");
+  return result?.raw_stream_data || null;
+});
+
+// 获取最终响应数据
+const rawFinalResponse = computed(() => {
+  const result = parseTestResult(props.record?.output_content || "");
+  return result?.raw_final_response || null;
+});
 
 // 格式化Markdown
 const formatMarkdown = (content: string) => {
@@ -174,7 +214,8 @@ const formatMarkdown = (content: string) => {
           display: block;
         }
 
-        :deep(th), :deep(td) {
+        :deep(th),
+        :deep(td) {
           border: 1px solid var(--border-color);
           padding: 8px;
           text-align: left;

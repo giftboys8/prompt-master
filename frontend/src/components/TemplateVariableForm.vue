@@ -1,8 +1,8 @@
 <template>
   <el-form
-    @submit.prevent="$emit('run-test')"
     label-position="top"
     class="variable-form"
+    @submit.prevent="$emit('run-test')"
   >
     <div class="api-key-section">
       <h3>API密钥选择</h3>
@@ -52,10 +52,10 @@
         <div class="variable-input">
           <el-input
             :model-value="variables[variable.name]"
-            @update:modelValue="handleVariableInput(variable.name, $event)"
             :placeholder="'请输入' + variable.name"
+            @update:model-value="handleVariableInput(variable.name, $event)"
           >
-            <template #append v-if="variable.default_value">
+            <template v-if="variable.default_value" #append>
               <el-button
                 @click="useDefaultValue(variable.name, variable.default_value)"
               >

@@ -1,12 +1,12 @@
 <template>
-  <div class="share-list" v-if="shares.length > 0">
+  <div v-if="shares.length > 0" class="share-list">
     <h4>已分享给：</h4>
     <el-table :data="shares" style="width: 100%">
       <el-table-column prop="shared_with.username" label="用户" />
       <el-table-column
+        v-if="showTemplateName"
         prop="template_name"
         label="模板名称"
-        v-if="showTemplateName"
       />
       <el-table-column prop="can_edit" label="权限">
         <template #default="{ row }">
