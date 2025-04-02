@@ -1,5 +1,36 @@
 import { RouteRecordRaw } from "vue-router";
 
+// 错误页面路由
+export const errorRoutes: RouteRecordRaw[] = [
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: () => import("@/views/errors/404.vue"),
+    meta: {
+      title: "页面未找到",
+      requiresAuth: false,
+    },
+  },
+  {
+    path: "/error",
+    name: "error",
+    component: () => import("@/views/errors/Error.vue"),
+    meta: {
+      title: "错误",
+      requiresAuth: false,
+    },
+  },
+  {
+    path: "/403",
+    name: "403",
+    component: () => import("@/views/Forbidden.vue"),
+    meta: {
+      title: "权限不足",
+      requiresAuth: false,
+    },
+  },
+];
+
 // 认证相关路由
 export const authRoutes: RouteRecordRaw[] = [
   {
@@ -190,27 +221,8 @@ export const mainRoutes: RouteRecordRaw = {
   ],
 };
 
-// 错误页面路由
-export const errorRoutes: RouteRecordRaw[] = [
-  {
-    path: "/403",
-    name: "403",
-    component: () => import("@/views/Forbidden.vue"),
-    meta: {
-      title: "权限不足",
-      requiresAuth: false,
-    },
-  },
-  {
-    path: "/:pathMatch(.*)*",
-    name: "not-found",
-    component: () => import("@/views/NotFound.vue"),
-    meta: {
-      title: "页面未找到",
-      requiresAuth: false,
-    },
-  },
-];
+// 额外的路由配置（已合并到errorRoutes中）
+// 注意：原来的NotFound路由已被合并
 
 // 导出所有路由
 export const routes: RouteRecordRaw[] = [

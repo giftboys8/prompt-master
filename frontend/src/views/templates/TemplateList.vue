@@ -173,6 +173,7 @@ const handleSearchParams = (params: {
   query: string;
   role: string;
   framework: string;
+  forceRefresh?: boolean;
 }) => {
   searchParams.value = {
     search: params.query,
@@ -180,7 +181,7 @@ const handleSearchParams = (params: {
     framework: params.framework,
   };
   currentPage.value = 1;
-  loadData(searchParams.value);
+  loadData(searchParams.value, params.forceRefresh);
 };
 
 // 处理拖拽结束

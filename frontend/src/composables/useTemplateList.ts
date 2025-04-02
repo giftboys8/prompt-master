@@ -31,21 +31,18 @@ export function useTemplateList() {
       target_role?: string;
       framework?: any;
     } = {},
+    forceRefresh = false
   ) => {
     loading.value = true;
     try {
-      const cachedTemplates = await loadTemplates();
-      if (cachedTemplates) {
-        templates.value = cachedTemplates;
-        total.value = cachedTemplates.length;
-        sortedTemplates.value = [...cachedTemplates].sort(
-          (a, b) => (a.order || 0) - (b.order || 0),
-        );
-      } else {
+      // 强制刷新或有搜索参数时，直接从服务器获取数据
+      if (forceRefresh) {
         const res = await getTemplateList({
           page: currentPage.value,
           page_size: pageSize.value,
           ...params,
+          search: params.search?.trim(),
+          target_role: params.target_role?.trim(),
         });
 
         if (res && Array.isArray(res.results)) {
@@ -54,8 +51,43 @@ export function useTemplateList() {
           sortedTemplates.value = [...res.results].sort(
             (a, b) => (a.order || 0) - (b.order || 0),
           );
+          // 更新缓存
+          cacheManager.set(CacheKey.TEMPLATES, res.results, {
+            expire: 5 * 60 * 1000, // 5分钟过期
+          });
         } else {
           ElMessage.warning("返回的数据格式不符合预期");
+        }
+      } else {
+        // 尝试使用缓存
+        const cachedTemplates = cacheManager.get<Template[]>(CacheKey.TEMPLATES);
+        if (cachedTemplates) {
+          templates.value = cachedTemplates;
+          total.value = cachedTemplates.length;
+          sortedTemplates.value = [...cachedTemplates].sort(
+            (a, b) => (a.order || 0) - (b.order || 0),
+          );
+        } else {
+          // 缓存不存在，从服务器获取
+          const res = await getTemplateList({
+            page: currentPage.value,
+            page_size: pageSize.value,
+            ...params,
+          });
+
+          if (res && Array.isArray(res.results)) {
+            templates.value = res.results;
+            total.value = res.count;
+            sortedTemplates.value = [...res.results].sort(
+              (a, b) => (a.order || 0) - (b.order || 0),
+            );
+            // 更新缓存
+            cacheManager.set(CacheKey.TEMPLATES, res.results, {
+              expire: 5 * 60 * 1000, // 5分钟过期
+            });
+          } else {
+            ElMessage.warning("返回的数据格式不符合预期");
+          }
         }
       }
     } catch (error: any) {
@@ -153,6 +185,8 @@ export function useTemplateList() {
       }
 
       ElMessage.success("删除成功");
+      // 删除后强制刷新数据
+      await loadData({}, true);
       return true;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -169,6 +203,8 @@ export function useTemplateList() {
         }
         
         ElMessage.warning("模板已被删除");
+        // 删除后强制刷新数据
+        await loadData({}, true);
         return true;
       }
       ElMessage.error(error.response?.data?.message || "删除失败");

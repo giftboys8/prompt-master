@@ -4,13 +4,13 @@ import {
   RouteLocationNormalized,
 } from "vue-router";
 import { useUserStore } from "@/stores/user";
-import { routes } from "./routes";
+import { routes, errorRoutes } from "./routes";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
+  routes: [...routes, ...errorRoutes],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition;

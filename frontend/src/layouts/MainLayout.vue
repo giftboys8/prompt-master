@@ -109,7 +109,13 @@
 
     <el-main>
       <router-view v-slot="{ Component }">
-        <component :is="Component" />
+        <transition name="fade" mode="out-in">
+          <keep-alive>
+            <ErrorBoundary>
+              <component :is="Component" :key="route.fullPath" />
+            </ErrorBoundary>
+          </keep-alive>
+        </transition>
       </router-view>
     </el-main>
 

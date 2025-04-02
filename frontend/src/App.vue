@@ -1,23 +1,32 @@
 <template>
   <div id="app" class="app-container">
-    <router-view></router-view>
+    <ErrorBoundary>
+      <router-view></router-view>
+    </ErrorBoundary>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, onUnmounted } from "vue";
+import ErrorBoundary from "@/components/ErrorBoundary.vue";
+
+let app: HTMLElement | null = null;
+const handleMouseMove = (e: MouseEvent) => {
+  const x = e.clientX / window.innerWidth;
+  const y = e.clientY / window.innerHeight;
+  app?.style.setProperty("--mouse-x", `${x}`);
+  app?.style.setProperty("--mouse-y", `${y}`);
+};
 
 onMounted(() => {
   // 添加动态背景动画
-  const app = document.querySelector(".app-container");
-  if (app) {
-    app.addEventListener("mousemove", (e) => {
-      const x = e.clientX / window.innerWidth;
-      const y = e.clientY / window.innerHeight;
-      app.style.setProperty("--mouse-x", `${x}`);
-      app.style.setProperty("--mouse-y", `${y}`);
-    });
-  }
+  app = document.querySelector(".app-container");
+  app?.addEventListener("mousemove", handleMouseMove);
+});
+
+onUnmounted(() => {
+  // 移除事件监听器，防止内存泄漏
+  app?.removeEventListener("mousemove", handleMouseMove);
 });
 </script>
 

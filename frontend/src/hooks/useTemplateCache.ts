@@ -20,13 +20,14 @@ export function useTemplateCache(options: UseTemplateCacheOptions = {}) {
   const error = ref<Error | null>(null);
 
   // 从缓存或API加载模板列表
-  const loadTemplates = async (forceRefresh = false) => {
+  const loadTemplates = async (forceRefresh = false, params = {}) => {
     loading.value = true;
     error.value = null;
 
     try {
-      // 如果不是强制刷新，先尝试从缓存获取
-      if (!forceRefresh) {
+      // 如果不是强制刷新且没有搜索参数，先尝试从缓存获取
+      const hasSearchParams = Object.keys(params).length > 0;
+      if (!forceRefresh && !hasSearchParams) {
         const cachedTemplates = cacheManager.get<Template[]>(
           CacheKey.TEMPLATES,
         );
@@ -38,7 +39,7 @@ export function useTemplateCache(options: UseTemplateCacheOptions = {}) {
       }
 
       // 从API获取数据
-      const response = await getTemplateList();
+      const response = await getTemplateList(params);
       templates.value = response.results;
 
       // 更新缓存
