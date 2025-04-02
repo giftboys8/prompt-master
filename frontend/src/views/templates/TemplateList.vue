@@ -86,7 +86,6 @@
       :template="currentTemplate"
       @shared="handleShared"
     />
-    />
 
     <!-- 删除确认对话框 -->
     <el-dialog
