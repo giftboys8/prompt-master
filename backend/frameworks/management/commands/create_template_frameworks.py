@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from frameworks.models import Framework, FrameworkModule
 
 class Command(BaseCommand):
-    help = '创建模板框架：SMART、CRISPR、PEAR、ALIGN、TASTE、COSTAR'
+    help = '创建模板框架：SMART、CRISPR、PEAR、ALIGN、TASTE、COSTAR、DREAM'
 
     def handle(self, *args, **options):
         frameworks = [
@@ -71,6 +71,17 @@ class Command(BaseCommand):
                     {'name': 'Task', 'description': '任务 - 分解具体任务', 'order': 4},
                     {'name': 'Action', 'description': '行动 - 规划执行步骤', 'order': 5},
                     {'name': 'Result', 'description': '结果 - 定义成功标准', 'order': 6}
+                ]
+            },
+            {
+                'name': 'DREAM框架',
+                'description': 'Define（目标定义）、Reason（根因分析）、Explore（方案探索）、Adapt（调整实施）、Monitor（验证监控）框架，用于技术协作和系统性问题解决。',
+                'modules': [
+                    {'name': 'Define', 'description': '目标定义 - 明确系统边界和问题范围', 'order': 1},
+                    {'name': 'Reason', 'description': '根因分析 - 定位问题本质和核心原因', 'order': 2},
+                    {'name': 'Explore', 'description': '方案探索 - 生成并评估多个候选解决方案', 'order': 3},
+                    {'name': 'Adapt', 'description': '调整实施 - 制定并实施代码级解决方案', 'order': 4},
+                    {'name': 'Monitor', 'description': '验证监控 - 进行闭环测试和持续监控', 'order': 5}
                 ]
             }
         ]
