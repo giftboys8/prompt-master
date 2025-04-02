@@ -84,7 +84,8 @@
     <template-share-dialog
       v-model="shareDialogVisible"
       :template="currentTemplate"
-      @shared="loadData"
+      @shared="handleShared"
+    />
     />
 
     <!-- 删除确认对话框 -->
@@ -221,7 +222,10 @@ const handleTest = (template: Template) => {
 
 // 克隆模板
 const handleClone = async (template: Template) => {
-  await cloneTemplateItem(template.id);
+  const success = await cloneTemplateItem(template.id);
+  if (success) {
+    await loadData(searchParams.value);
+  }
 };
 
 // 分享模板
@@ -235,6 +239,11 @@ const handleShare = (template: Template) => {
   ElMessage.info(
     '请在弹出的对话框中选择用户和权限，然后点击"分享"按钮完成分享操作',
   );
+};
+
+// 处理分享完成事件
+const handleShared = async () => {
+  await loadData(searchParams.value);
 };
 
 // 打开版本历史
@@ -269,8 +278,11 @@ const confirmDelete = async () => {
 
   deleteLoading.value = true;
   try {
-    await removeTemplate(templateToDelete.value.id);
-    deleteDialogVisible.value = false;
+    const success = await removeTemplate(templateToDelete.value.id);
+    if (success) {
+      deleteDialogVisible.value = false;
+      // 不需要重新加载数据，因为removeTemplate已经更新了本地状态
+    }
   } finally {
     deleteLoading.value = false;
   }
@@ -302,6 +314,16 @@ watch(deleteDialogVisible, (val) => {
 });
 
 // 初始化
+// 监听路由变化，当从编辑页面返回时刷新列表
+watch(
+  () => router.currentRoute.value.path,
+  (newPath) => {
+    if (newPath === '/templates') {
+      loadData(searchParams.value);
+    }
+  }
+);
+
 onMounted(() => {
   loadData();
 });

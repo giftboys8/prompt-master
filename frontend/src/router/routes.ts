@@ -180,7 +180,7 @@ export const mainRoutes: RouteRecordRaw = {
       component: () => import("@/views/Home.vue"),
       meta: {
         title: "首页",
-        requiresAuth: true,
+        requiresAuth: false,
       },
     },
     ...templateRoutes,

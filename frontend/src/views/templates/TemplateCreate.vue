@@ -193,8 +193,10 @@ import type { FormInstance, FormRules } from "element-plus";
 import { createTemplate } from "@/api/templates";
 import { getFramework, type Framework } from "@/api/frameworks";
 import FrameworkSelect from "@/components/FrameworkSelect.vue";
+import { useTemplateCache } from "@/hooks/useTemplateCache";
 
 const router = useRouter();
+const { loadTemplates } = useTemplateCache();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
 const currentFramework = ref<Framework | null>(null);
@@ -447,6 +449,8 @@ const handleSubmit = async () => {
         const result = await createTemplate(submissionData);
         if (result && result.id) {
           ElMessage.success("保存成功");
+          // 强制刷新模板列表缓存
+          await loadTemplates(true);
           router.push("/templates");
         } else {
           throw new Error("创建模板失败");

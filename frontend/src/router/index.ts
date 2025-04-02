@@ -45,7 +45,7 @@ router.beforeEach(async (to, from, next) => {
 
   const userStore = useUserStore();
   const requiresAuth = to.matched.some(
-    (record) => record.meta.requiresAuth !== false,
+    (record) => record.meta.requiresAuth === true,
   );
 
   // 设置页面标题

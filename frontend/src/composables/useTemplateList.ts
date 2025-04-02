@@ -9,6 +9,7 @@ import {
   reorderTemplates,
 } from "@/api/templates";
 import { useTemplateCache } from "@/hooks/useTemplateCache";
+import { cacheManager, CacheKey } from "@/utils/cache";
 import type { Template } from "@/types";
 
 export function useTemplateList() {
@@ -118,15 +119,12 @@ export function useTemplateList() {
   // 克隆模板
   const cloneTemplateItem = async (id: number) => {
     try {
-      const result = await cloneTemplate(id);
-      if (result && result.id) {
-        ElMessage.success("克隆成功");
-        await loadData();
-      }
+      await cloneTemplate(id);
+      ElMessage.success("克隆成功");
+      return true;
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.error || error.message || "克隆失败";
-      ElMessage.error(errorMessage);
+      ElMessage.error(error.response?.data?.message || "克隆失败");
+      return false;
     }
   };
 
@@ -134,10 +132,47 @@ export function useTemplateList() {
   const removeTemplate = async (id: number) => {
     try {
       await deleteTemplate(id);
+      
+      // 从本地数据中移除被删除的模板
+      templates.value = templates.value.filter(template => template.id !== id);
+      sortedTemplates.value = sortedTemplates.value.filter(template => template.id !== id);
+      total.value = Math.max(0, total.value - 1);
+      
+      // 更新缓存
+      const cachedTemplates = cacheManager.get<Template[]>(CacheKey.TEMPLATES);
+      if (cachedTemplates) {
+        const updatedCache = cachedTemplates.filter(template => template.id !== id);
+        cacheManager.set(CacheKey.TEMPLATES, updatedCache);
+      }
+      
+      // 清理最近访问的模板缓存
+      const recentTemplates = cacheManager.get<Template[]>(CacheKey.RECENT_TEMPLATES);
+      if (recentTemplates) {
+        const updatedRecent = recentTemplates.filter(template => template.id !== id);
+        cacheManager.set(CacheKey.RECENT_TEMPLATES, updatedRecent);
+      }
+
       ElMessage.success("删除成功");
-      await loadData();
+      return true;
     } catch (error: any) {
-      ElMessage.error(error.message || "删除失败");
+      if (error.response?.status === 404) {
+        // 如果服务器返回404，说明模板已经被删除，此时仍然更新本地缓存
+        templates.value = templates.value.filter(template => template.id !== id);
+        sortedTemplates.value = sortedTemplates.value.filter(template => template.id !== id);
+        total.value = Math.max(0, total.value - 1);
+        
+        // 更新缓存
+        const cachedTemplates = cacheManager.get<Template[]>(CacheKey.TEMPLATES);
+        if (cachedTemplates) {
+          const updatedCache = cachedTemplates.filter(template => template.id !== id);
+          cacheManager.set(CacheKey.TEMPLATES, updatedCache);
+        }
+        
+        ElMessage.warning("模板已被删除");
+        return true;
+      }
+      ElMessage.error(error.response?.data?.message || "删除失败");
+      return false;
     }
   };
 

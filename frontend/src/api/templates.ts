@@ -11,7 +11,7 @@ export const createTemplate = (data: Partial<Template>) => {
 
 export const getTemplate = (id: number) => {
   return request<Template>({
-    url: `/templates/templates/${id}/`,
+    url: `/templates/templates/${id}`,
     method: "get",
   })
     .then((response) => {
@@ -38,7 +38,7 @@ export const getTemplate = (id: number) => {
 
 export const updateTemplate = (id: number, data: Partial<Template>) => {
   return request<Template>({
-    url: `/templates/templates/${id}/`,
+    url: `/templates/templates/${id}`,
     method: "put",
     data,
   });

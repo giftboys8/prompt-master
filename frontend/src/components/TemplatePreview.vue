@@ -17,7 +17,7 @@
           <el-radio-button
             v-for="mode in previewModes"
             :key="mode.value"
-            :label="mode.value"
+            :value="mode.value"
           >
             <el-icon>
               <component :is="mode.icon" />

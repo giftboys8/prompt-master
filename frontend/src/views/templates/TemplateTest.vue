@@ -7,6 +7,17 @@
           <template v-if="template">
             <h2>{{ template.name }}</h2>
             <p>{{ template.description }}</p>
+            <a-card class="template-content-preview" size="small" title="模板内容">
+              <div class="template-content-wrapper">
+                <div v-if="isJsonContent" class="prompt-fields-container">
+                  <div v-for="(value, key) in parsedTemplateContent" :key="key" class="prompt-field">
+                    <span class="prompt-label">{{ key }}:</span>
+                    <span class="prompt-content" v-html="formatContent(value)"></span>
+                  </div>
+                </div>
+                <pre v-else class="template-content">{{ template.content }}</pre>
+              </div>
+            </a-card>
             <a-form :model="formState" @finish="handleTest">
               <div
                 v-for="(field, index) in template.variables"
@@ -14,21 +25,26 @@
                 class="form-field"
               >
                 <a-form-item
-                  :label="field.name"
+                  :label="`${field.name}${field.description ? ` (${field.description})` : ''}`"
                   :name="field.name"
                   :rules="[{ required: true, message: '请输入' + field.name }]"
                 >
                   <a-input
                     v-model:value="formState[field.name]"
-                    :placeholder="'请输入' + field.name"
+                    :placeholder="`请输入${field.name}${field.description ? ` (${field.description})` : ''}`"
                   />
                 </a-form-item>
               </div>
-              <a-form-item>
+              <a-form-item 
+                label="API平台"
+                name="selectedApiKey"
+                :rules="[{ required: true, message: '请选择API平台' }]"
+              >
                 <a-select
                   v-model:value="selectedApiKey"
                   style="width: 100%"
                   placeholder="选择API密钥"
+                  @change="handleApiKeyChange"
                 >
                   <a-select-option
                     v-for="key in apiKeys"
@@ -118,21 +134,48 @@ const selectedApiKey = ref<string>("");
 const testing = ref(false);
 const testResult = ref<any | null>(null);
 const testHistory = ref<TemplateTest[]>([]);
-const processedContent = computed(() => {
-  if (testResult.value && testResult.value.answer) {
-    return testResult.value.answer.replace(/\n/g, "<br>");
+const formatContent = (content: string) => {
+  return content.replace(/\n/g, '<br>');
+};
+
+const parsedTemplateContent = computed(() => {
+  try {
+    return JSON.parse(template.value?.content || '{}');
+  } catch (e) {
+    return null;
   }
-  return "";
 });
 
-const historyColumns = [
-  { title: "测试时间", dataIndex: "created_at", key: "created_at" },
-  { title: "模板名称", dataIndex: "template_name", key: "template_name" },
-  { title: "操作", dataIndex: "action", key: "action" },
-];
+const isJsonContent = computed(() => {
+  return parsedTemplateContent.value !== null;
+});
 
+const processedContent = computed(() => {
+  if (testResult.value && testResult.value.answer) {
+    try {
+      const content = JSON.parse(testResult.value.answer);
+      return Object.entries(content).map(([key, value]) => `
+        <div class="prompt-field">
+          <span class="prompt-label">${key}:</span>
+          <span class="prompt-content">${formatContent(String(value))}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      // 如果不是JSON格式，按原样显示
+      return testResult.value.answer.replace(/\n/g, '<br>');
+    }
+  }
+  return '';
+});
+
+// 历史记录详情相关
+const historyColumns = [
+  { title: '测试时间', dataIndex: 'created_at', key: 'created_at' },
+  { title: '模型', dataIndex: 'model', key: 'model' },
+  { title: '操作', dataIndex: 'action', key: 'action' },
+];
 const historyDetailVisible = ref(false);
-const selectedHistoryDetail = ref<TemplateTest | null>(null);
+const selectedHistoryDetail = ref(null);
 
 onMounted(async () => {
   const templateId = route.params.id ? Number(route.params.id) : null;
@@ -286,9 +329,20 @@ const testTemplate = async (templateId: number, data: any) => {
   }
 };
 
+const handleApiKeyChange = (value: string) => {
+  if (value) {
+    formState.selectedApiKey = value;
+  }
+};
+
 const handleTest = async () => {
-  if (!template.value || !selectedApiKey.value) {
-    message.error("请选择模板和API密钥");
+  if (!template.value) {
+    message.error("请选择模板");
+    return;
+  }
+  
+  if (!selectedApiKey.value) {
+    message.error("请选择API平台");
     return;
   }
 
@@ -352,5 +406,59 @@ const viewHistoryDetail = (record: TemplateTest) => {
   justify-content: center;
   align-items: center;
   min-height: 200px;
+}
+.template-content-preview {
+  margin: 16px 0;
+}
+
+.template-content-wrapper {
+  position: relative;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.template-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+  margin: 0;
+  padding: 16px;
+  font-family: 'Roboto Mono', Monaco, 'Courier New', Courier, monospace;
+  font-size: 14px;
+  max-height: 300px;
+  overflow-y: auto;
+  color: #1a1a1a;
+  background: transparent;
+}
+
+.template-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.template-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.template-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .template-content-wrapper {
+    background-color: #2d2d2d;
+    border-color: #3d3d3d;
+  }
+  
+  .template-content {
+    color: #e1e1e1;
+  }
+  
+  .template-content::-webkit-scrollbar-thumb {
+    background: #666;
+  }
 }
 </style>
