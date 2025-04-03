@@ -49,8 +49,8 @@
       </el-table>
 
       <div v-else-if="viewType === 'card'" class="card-view">
-      <el-row :gutter="20">
-        <el-col v-for="framework in frameworks" :key="framework.id" :span="8">
+      <el-row :gutter="24">
+        <el-col v-for="framework in frameworks" :key="framework.id" :span="8" class="mb-6">
           <el-card class="framework-card" shadow="hover">
             <template #header>
               <div class="card-header">
@@ -66,10 +66,7 @@
               </div>
             </template>
             <div class="card-content">
-              <p>{{ framework.description }}</p>
-              <p>模块数量：{{ framework.modules?.length || 0 }}</p>
-              <p>创建时间：{{ formatDate(framework.created_at) }}</p>
-              <p>最后更新：{{ formatDate(framework.updated_at) }}</p>
+              <p class="framework-description">{{ framework.description }}</p>
             </div>
           </el-card>
         </el-col>
@@ -208,19 +205,68 @@ onMounted(() => {
 
 .framework-card {
   margin-bottom: 20px;
+  background-color: #f8f9fa;
+  height: 240px; /* 根据要求调整卡片高度 */
+  display: flex;
+  flex-direction: column;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: #333;
+  font-weight: bold;
+  padding: 16px 20px; /* 统一内边距 */
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
 }
 
 .card-content {
   font-size: 14px;
+  color: #333;
+  padding: 16px 20px; /* 调整内边距，使内容更紧凑 */
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.framework-description {
+  margin: 0; /* 移除默认段落边距 */
+  line-height: 1.5; /* 优化行高 */
 }
 
 .card-content p {
-  margin: 5px 0;
+  margin: 6px 0; /* 减少段落间距 */
+  line-height: 1.5; /* 稍微减小行高 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-content p:first-child {
+  margin-top: 0;
+}
+
+.card-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 添加悬停效果 */
+.framework-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+/* 优化滚动条样式 */
+.card-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.card-content::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 3px;
+}
+
+.card-content::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
 }
 </style>
