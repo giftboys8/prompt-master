@@ -3,3 +3,5 @@
 # 生产环境依赖
 gunicorn>=21.2.0
 supervisor>=4.2.5
+django-storages>=1.14.2
+boto3>=1.34.69

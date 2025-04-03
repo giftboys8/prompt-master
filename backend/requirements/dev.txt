@@ -3,7 +3,7 @@
 # 开发工具
 ipython>=8.22.2
 django-debug-toolbar>=4.3.0
-pytest>=8.1.1
+pytest>=8.2.0
 pytest-django>=4.8.0
 black>=24.3.0
 flake8>=7.0.0
