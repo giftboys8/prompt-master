@@ -82,33 +82,36 @@ defineEmits(["edit", "test", "history", "clone", "delete", "preview", "share"]);
 
 <style scoped>
 .template-item {
-  height: 100%;
+  height: 320px;
+  width: 100%;
   cursor: pointer;
-  min-width: 0; /* 防止flex子项溢出 */
+  min-width: 0;
 }
 
 .template-content {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-width: 0; /* 防止内容溢出 */
+  min-width: 0;
 }
 
 .template-info {
   flex: 1;
   width: 100%;
-  overflow: hidden; /* 确保内容不会溢出 */
+  overflow-y: auto;
+  padding: 16px 20px;
 }
 
 .template-info h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: #333;
+  margin-bottom: 12px;
 }
 
 .template-info .description {
-  color: #606266;
+  color: #333;
   font-size: 14px;
   margin: 0;
   overflow: hidden;
@@ -117,24 +120,47 @@ defineEmits(["edit", "test", "history", "clone", "delete", "preview", "share"]);
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   min-height: 40px;
+  line-height: 1.5;
 }
 
 .template-info .time {
   font-size: 12px;
-  color: #909399;
-  margin: 0;
+  color: #666;
+  margin: 6px 0;
+  line-height: 1.5;
 }
 
 .template-actions {
   margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid #ebeef5;
+  padding: 12px 20px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fff;
 }
 
 .template-actions :deep(.el-button-group) {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.template-actions :deep(.el-button) {
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #409eff;
+  border: none;
+}
+
+.template-actions :deep(.el-button:not(.el-button--danger):hover) {
+  background-color: #66b1ff;
+}
+
+.template-actions :deep(.el-button--danger) {
+  background-color: #f56c6c;
+}
+
+.template-actions :deep(.el-button--danger:hover) {
+  background-color: #f78989;
 }
 
 .template-actions :deep(.button-text) {
@@ -142,22 +168,40 @@ defineEmits(["edit", "test", "history", "clone", "delete", "preview", "share"]);
   font-size: 12px;
 }
 
-.template-item:hover {
-  transform: translateY(-2px);
-  transition: all 0.3s;
-}
-
 .box-card {
-  height: 100%;
-  transition: all 0.3s;
+  height: 320px;
+  width: 100%;
+  transition: all 0.3s ease-in-out;
   cursor: pointer;
   display: flex;
   flex-direction: column;
 }
 
+.box-card :deep(.el-card__body) {
+  background-color: #f8f9fa;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .box-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+}
+
+/* 优化滚动条样式 */
+.template-info::-webkit-scrollbar {
+  width: 6px;
+}
+
+.template-info::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 3px;
+}
+
+.template-info::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
 }
 
 .mb-2 {

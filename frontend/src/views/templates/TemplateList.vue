@@ -26,30 +26,29 @@
 
     <!-- 模板列表 -->
     <div class="template-container">
-      <draggable
-        v-model="sortedTemplates"
-        v-loading="loading"
-        item-key="id"
-        :animation="150"
-        ghost-class="ghost"
-        class="template-grid"
-        @end="handleDragEnd"
-      >
-        <template #item="{ element: template }">
-          <div class="template-item-wrapper">
-            <template-card
-              :template="template"
-              @edit="handleEdit"
-              @test="handleTest"
-              @history="handleVersionHistory"
-              @clone="handleClone"
-              @share="handleShare"
-              @delete="handleDelete"
-              @preview="handlePreview"
-            />
-          </div>
-        </template>
-      </draggable>
+      <el-row :gutter="24">
+        <el-col
+          v-for="template in sortedTemplates"
+          :key="template.id"
+          :xs="24"
+          :sm="12"
+          :md="8"
+          :lg="6"
+          :xl="4"
+          class="mb-6"
+        >
+          <template-card
+            :template="template"
+            @edit="handleEdit"
+            @test="handleTest"
+            @history="handleVersionHistory"
+            @clone="handleClone"
+            @share="handleShare"
+            @delete="handleDelete"
+            @preview="handlePreview"
+          />
+        </el-col>
+      </el-row>
     </div>
 
     <!-- 分页器 -->
