@@ -2,10 +2,17 @@
   <div class="framework-list">
     <div class="header">
       <h1>模板框架管理</h1>
-      <el-button type="primary" @click="handleCreate"> 创建框架 </el-button>
+      <div class="header-actions">
+        <el-radio-group v-model="viewType" size="small">
+          <el-radio-button label="list">列表视图</el-radio-button>
+          <el-radio-button label="card">卡片视图</el-radio-button>
+        </el-radio-group>
+        <el-button type="primary" @click="handleCreate"> 创建框架 </el-button>
+      </div>
     </div>
 
-    <el-table v-loading="loading" :data="frameworks" style="width: 100%" border>
+    <div v-loading="loading">
+      <el-table v-if="viewType === 'list'" :data="frameworks" style="width: 100%" border>
       <el-table-column prop="name" label="框架名称" />
       <el-table-column
         prop="description"
@@ -39,7 +46,36 @@
           </el-button-group>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
+
+      <div v-else-if="viewType === 'card'" class="card-view">
+      <el-row :gutter="20">
+        <el-col v-for="framework in frameworks" :key="framework.id" :span="8">
+          <el-card class="framework-card" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>{{ framework.name }}</span>
+                <el-button-group>
+                  <el-button type="primary" size="small" @click="handleEdit(framework)">
+                    编辑
+                  </el-button>
+                  <el-button type="danger" size="small" @click="handleDelete(framework)">
+                    删除
+                  </el-button>
+                </el-button-group>
+              </div>
+            </template>
+            <div class="card-content">
+              <p>{{ framework.description }}</p>
+              <p>模块数量：{{ framework.modules?.length || 0 }}</p>
+              <p>创建时间：{{ formatDate(framework.created_at) }}</p>
+              <p>最后更新：{{ formatDate(framework.updated_at) }}</p>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      </div>
+    </div>
 
     <div class="pagination-container">
       <el-pagination
@@ -72,6 +108,7 @@ const frameworks = ref<Framework[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
+const viewType = ref('list');
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -157,5 +194,33 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-view {
+  margin-top: 20px;
+}
+
+.framework-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-content {
+  font-size: 14px;
+}
+
+.card-content p {
+  margin: 5px 0;
 }
 </style>
