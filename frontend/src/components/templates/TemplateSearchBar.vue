@@ -50,7 +50,7 @@ const selectedFramework = ref(null);
 const emitSearch = () => {
   emit("search", {
     query: searchQuery.value?.trim() || "",
-    role: selectedRole.value || "",
+    role: selectedRole.value ? `["${selectedRole.value}"]` : "",
     framework: selectedFramework.value || null,
   });
 };
@@ -58,7 +58,7 @@ const emitSearch = () => {
 const handleSearch = () => {
   emit("search", {
     query: searchQuery.value?.trim() || "",
-    role: selectedRole.value || "",
+    role: selectedRole.value ? `["${selectedRole.value}"]` : "",
     framework: selectedFramework.value || null,
     forceRefresh: true // 添加强制刷新标记
   });
