@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Template, TemplateVersion, TemplateTest, SharedTemplate
 from frameworks.serializers import FrameworkSerializer
+import json
 
 User = get_user_model()
 

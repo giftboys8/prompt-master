@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+import json
 
 User = get_user_model()
 
@@ -86,9 +87,25 @@ class Template(models.Model):
     content = models.JSONField('内容')
     variables = models.JSONField('变量', default=list)
     order = models.IntegerField('排序', default=0)
-    target_role = models.CharField('适用角色', max_length=100, blank=True, null=True)
+    target_role = models.CharField('适用角色', max_length=255, blank=True, null=True)
     
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
+
+    def set_target_role(self, roles):
+        if isinstance(roles, list):
+            self.target_role = json.dumps(roles)
+        elif isinstance(roles, str):
+            self.target_role = json.dumps([roles])
+        else:
+            self.target_role = json.dumps([str(roles)])
+
+    def get_target_role(self):
+        if self.target_role:
+            try:
+                return json.loads(self.target_role)
+            except json.JSONDecodeError:
+                return [self.target_role]
+        return []
     updated_at = models.DateTimeField('更新时间', auto_now=True)
     created_by = models.ForeignKey(
         User,
@@ -108,6 +125,11 @@ class Template(models.Model):
     def save(self, *args, **kwargs):
         # 保存模板时自动创建新版本
         is_new = self.pk is None
+        
+        # 确保 target_role 是有效的 JSON 字符串
+        if self.target_role and not isinstance(self.target_role, str):
+            self.set_target_role(self.target_role)
+        
         super().save(*args, **kwargs)
         
         if is_new:
