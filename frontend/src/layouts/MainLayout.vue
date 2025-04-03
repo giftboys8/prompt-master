@@ -109,13 +109,13 @@
 
     <el-main>
       <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <keep-alive>
-            <ErrorBoundary>
+        <keep-alive>
+          <ErrorBoundary>
+            <transition name="fade" mode="out-in">
               <component :is="Component" :key="route.fullPath" />
-            </ErrorBoundary>
-          </keep-alive>
-        </transition>
+            </transition>
+          </ErrorBoundary>
+        </keep-alive>
       </router-view>
     </el-main>
 
@@ -188,6 +188,7 @@ import {
   Key,
   Folder,
 } from "@element-plus/icons-vue";
+import ErrorBoundary from "@/components/ErrorBoundary.vue";
 
 export default defineComponent({
   name: "MainLayout",
@@ -201,6 +202,7 @@ export default defineComponent({
     Lock,
     Key,
     Folder,
+    ErrorBoundary,
   },
 });
 </script>
