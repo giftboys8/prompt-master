@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from .models import Template, TemplateVersion, TemplateTest, SharedTemplate
 from .serializers import TemplateSerializer, TemplateVersionSerializer, TemplateTestSerializer
+from .filters import TemplateFilter
 
 from django.db.models import Q
 
@@ -20,7 +21,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
     serializer_class = TemplateSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['framework', 'visibility', 'target_role']
+    filterset_class = TemplateFilter  # 使用自定义的过滤器类
     search_fields = ['name', 'description']
     ordering_fields = ['created_at', 'name', 'order']
     parser_classes = [JSONParser, MultiPartParser]
@@ -38,9 +39,28 @@ class TemplateViewSet(viewsets.ModelViewSet):
             ).distinct()
             
             # 添加角色筛选
+            # 注意：主要的角色筛选逻辑已经在 TemplateFilter 中处理
+            # 这里仅作为备用，当 filterset_class 未生效时使用
             target_role = self.request.query_params.get('target_role', None)
-            if target_role:
-                queryset = queryset.filter(target_role__icontains=target_role)
+            if target_role and not hasattr(self, 'filterset_class'):
+                # 尝试解析JSON数组
+                try:
+                    roles = json.loads(target_role)
+                    if isinstance(roles, list):
+                        # 如果是列表，我们需要检查任何一个角色是否匹配
+                        queryset = queryset.filter(target_role__overlap=roles)
+                    else:
+                        # 如果不是列表，就当作单个值处理
+                        queryset = queryset.filter(target_role__contains=[roles])
+                except json.JSONDecodeError:
+                    # 如果不是有效的JSON，就当作单个字符串处理
+                    value = target_role.strip('[]').replace('\"', '').strip()
+                    # 使用 PostgreSQL 的 jsonb_path_exists 函数来实现不区分大小写的搜索
+                    queryset = queryset.filter(target_role__contains=[value]) | \
+                               queryset.extra(
+                                   where=["jsonb_path_exists(target_role, '$ ? (@[*] like_regex \"(?i)^.*' || %s || '.*$\")')"],
+                                   params=[value]
+                               )
             
             # 添加模糊搜索（名称和描述）
             search = self.request.query_params.get('search', None)

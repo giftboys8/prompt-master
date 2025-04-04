@@ -87,25 +87,29 @@ class Template(models.Model):
     content = models.JSONField('内容')
     variables = models.JSONField('变量', default=list)
     order = models.IntegerField('排序', default=0)
-    target_role = models.CharField('适用角色', max_length=255, blank=True, null=True)
+    target_role = models.JSONField('适用角色', default=list)
     
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
 
     def set_target_role(self, roles):
         if isinstance(roles, list):
-            self.target_role = json.dumps(roles)
+            self.target_role = roles
         elif isinstance(roles, str):
-            self.target_role = json.dumps([roles])
+            self.target_role = [roles]
         else:
-            self.target_role = json.dumps([str(roles)])
+            self.target_role = [str(roles)]
 
     def get_target_role(self):
-        if self.target_role:
-            try:
-                return json.loads(self.target_role)
-            except json.JSONDecodeError:
-                return [self.target_role]
-        return []
+        return self.target_role if self.target_role else []
+
+    @classmethod
+    def get_all_unique_roles(cls):
+        all_roles = cls.objects.exclude(target_role__isnull=True).values_list('target_role', flat=True)
+        unique_roles = set()
+        for roles in all_roles:
+            if roles:
+                unique_roles.update(roles)
+        return sorted(list(unique_roles))
     updated_at = models.DateTimeField('更新时间', auto_now=True)
     created_by = models.ForeignKey(
         User,
