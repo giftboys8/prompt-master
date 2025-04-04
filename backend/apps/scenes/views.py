@@ -12,7 +12,8 @@ from .serializers import (
     SceneCreateUpdateSerializer,
     SceneTaskSerializer,
     SceneVersionSerializer,
-    SceneUsageSerializer
+    SceneUsageSerializer,
+    ScenePreviewSerializer
 )
 
 
@@ -159,6 +160,13 @@ class SceneViewSet(viewsets.ModelViewSet):
         )
         
         serializer = SceneDetailSerializer(scene)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def preview(self, request, pk=None):
+        """获取场景预览信息"""
+        scene = self.get_object()
+        serializer = ScenePreviewSerializer(scene)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])

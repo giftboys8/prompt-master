@@ -23,6 +23,7 @@ export const getSceneDetail = (id: string | number) => {
   return request<Scene>({
     url: `/scenes/${id}/`,
     method: "get",
+    params: { include_tasks: true },
   });
 };
 

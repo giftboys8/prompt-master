@@ -74,6 +74,21 @@ export interface SharedTemplate {
   created_at: string;
 }
 
+// 业务场景任务类型 (合并了两个定义)
+export interface SceneTask {
+  id?: number;
+  name: string;
+  description: string;
+  template_id?: number;
+  template_name?: string;
+  template?: number;
+  template_description?: string;
+  applicable_roles?: string[];
+  order?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface TemplateVersion {
   id: number;
   template: number;
@@ -107,18 +122,6 @@ export interface TemplateVersion {
   created_at: string;
   created_by: number;
   created_by_username: string;
-}
-
-// 场景任务类型
-export interface SceneTask {
-  id?: number;
-  name: string;
-  description: string;
-  applicable_roles: string[];
-  template: number;
-  template_name?: string;
-  template_description?: string;
-  created_at?: string;
 }
 
 // 业务场景类型

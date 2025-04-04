@@ -53,6 +53,13 @@ class SceneListSerializer(serializers.ModelSerializer):
     
     def get_tasks_count(self, obj):
         return obj.tasks.count()
+
+class ScenePreviewSerializer(SceneListSerializer):
+    """场景预览序列化器，包含任务信息"""
+    tasks = SceneTaskSerializer(many=True, read_only=True)
+
+    class Meta(SceneListSerializer.Meta):
+        fields = SceneListSerializer.Meta.fields + ['tasks']
     
 
 

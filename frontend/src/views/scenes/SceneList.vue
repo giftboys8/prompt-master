@@ -24,41 +24,81 @@
       </el-button>
     </div>
 
-    <el-table v-loading="loading" :data="scenes" style="width: 100%">
-      <el-table-column prop="name" label="场景名称" />
-      <el-table-column
-        prop="description"
-        label="场景描述"
-        show-overflow-tooltip
-      />
-      <el-table-column prop="created_at" label="创建时间" width="180">
-        <template #default="{ row }">
-          {{ new Date(row.created_at).toLocaleString() }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button-group>
-            <el-button type="primary" text @click="handleEdit(row)"
-              >编辑</el-button
-            >
-            <el-button type="danger" text @click="handleDelete(row)"
-              >删除</el-button
-            >
-          </el-button-group>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-row v-loading="loading" :gutter="20" class="scene-cards">
+      <el-col
+        v-for="scene in scenes"
+        :key="scene.id"
+        :xs="24"
+        :sm="12"
+        :md="8"
+        :lg="6"
+        :xl="4"
+      >
+        <el-card class="scene-card" :body-style="{ padding: '0px' }" @click="showPreview(scene)">
+          <div class="scene-card-content">
+            <div class="scene-header">
+              <h3 class="scene-name" :title="scene.name">{{ scene.name }}</h3>
+              <div class="scene-actions">
+                <el-dropdown trigger="click" @command="handleCommand">
+                  <el-button type="primary" text @click.stop>
+                    <el-icon><More /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item :command="{ action: 'edit', scene }">
+                        <el-icon><Edit /></el-icon>编辑
+                      </el-dropdown-item>
+                      <el-dropdown-item :command="{ action: 'delete', scene }">
+                        <el-icon><Delete /></el-icon>删除
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
+            </div>
+            <div class="scene-version">
+              <el-tag size="small" type="info">v{{ scene.version }}</el-tag>
+            </div>
+            <div class="scene-description" :title="scene.description">
+              {{ scene.description }}
+            </div>
+            <div class="scene-tags">
+              <el-tag size="small" type="success">{{ scene.category }}</el-tag>
+              <el-tag
+                v-for="role in scene.target_roles"
+                :key="role"
+                size="small"
+                type="warning"
+                class="role-tag"
+              >
+                {{ role.replace(/['\[\]]/g, '') }}
+              </el-tag>
+            </div>
+            <div class="scene-footer">
+              <span class="scene-time">
+                {{ new Date(scene.created_at).toLocaleDateString() }}
+              </span>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
     <div class="pagination-container">
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50, 100]"
+        :page-sizes="[12, 24, 36, 48]"
         :total="total"
         layout="total, sizes, prev, pager, next"
       />
     </div>
+
+    <ScenePreviewModal
+      :scene="selectedScene"
+      :visible="previewModalVisible"
+      @update:visible="previewModalVisible = $event"
+    />
   </div>
 </template>
 
@@ -66,9 +106,10 @@
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessageBox, ElMessage } from "element-plus";
-import { Search, Plus } from "@element-plus/icons-vue";
+import { Search, Plus, More, Edit, Delete } from "@element-plus/icons-vue";
 import type { Scene } from "@/types";
-import { getScenes, deleteScene } from "@/api/scenes";
+import { getScenes, deleteScene, getSceneDetail } from "@/api/scenes";
+import ScenePreviewModal from "@/components/ScenePreviewModal.vue";
 
 const router = useRouter();
 
@@ -77,8 +118,10 @@ const loading = ref(false);
 const scenes = ref<Scene[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(12);
 const searchQuery = ref("");
+const selectedScene = ref<Scene | null>(null);
+const previewModalVisible = ref(false);
 
 // 加载场景列表
 const loadScenes = async () => {
@@ -89,7 +132,16 @@ const loadScenes = async () => {
       page_size: pageSize.value,
       search: searchQuery.value,
     });
-    scenes.value = response.results;
+    // 确保我们获取了所有必要的字段，并正确处理 target_roles
+    scenes.value = response.results.map(scene => ({
+      ...scene,
+      version: scene.version || 'N/A',
+      target_roles: Array.isArray(scene.target_roles) 
+        ? scene.target_roles.map(role => role.replace(/['\[\]]/g, ''))
+        : typeof scene.target_roles === 'string'
+          ? scene.target_roles.replace(/['\[\]]/g, '').split(',').map(r => r.trim())
+          : [],
+    }));
     total.value = response.count;
   } catch (error) {
     console.error("获取场景列表失败:", error);
@@ -141,6 +193,45 @@ const handleDelete = async (row: Scene) => {
   }
 };
 
+const showPreview = async (scene: Scene) => {
+  console.log('Showing preview for scene:', scene);
+  try {
+    loading.value = true;
+    // 获取包含任务信息的场景详情
+    const detailedScene = await getSceneDetail(scene.id);
+    console.log('Scene detail with tasks:', detailedScene);
+    
+    // 确保 target_roles 字段被正确处理
+    const processedScene = {
+      ...detailedScene,
+      target_roles: Array.isArray(detailedScene.target_roles) 
+        ? detailedScene.target_roles
+        : typeof detailedScene.target_roles === 'string'
+          ? detailedScene.target_roles.replace(/['\\[\\]]/g, '').split(',').map(r => r.trim())
+          : []
+    };
+    
+    selectedScene.value = processedScene;
+    previewModalVisible.value = true;
+  } catch (error) {
+    console.error('Failed to fetch scene details:', error);
+    ElMessage.error('获取场景详情失败');
+    // 如果获取详情失败，仍然显示基本信息
+    selectedScene.value = scene;
+    previewModalVisible.value = true;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleCommand = ({ action, scene }: { action: string; scene: Scene }) => {
+  if (action === 'edit') {
+    handleEdit(scene);
+  } else if (action === 'delete') {
+    handleDelete(scene);
+  }
+};
+
 // 监听分页变化
 watch([currentPage, pageSize], () => {
   loadScenes();
@@ -148,6 +239,81 @@ watch([currentPage, pageSize], () => {
 </script>
 
 <style scoped>
+.scene-cards {
+  margin: 20px 0;
+}
+
+.scene-card {
+  height: 100%;
+  margin-bottom: 20px;
+  transition: all 0.3s;
+}
+
+.scene-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.scene-card-content {
+  padding: 16px;
+}
+
+.scene-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.scene-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.scene-version {
+  margin-bottom: 12px;
+}
+
+.scene-description {
+  color: #606266;
+  font-size: 14px;
+  margin-bottom: 16px;
+  height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.scene-tags {
+  margin-bottom: 12px;
+  min-height: 24px;
+}
+
+.role-tag {
+  margin-left: 8px;
+}
+
+.scene-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #909399;
+  font-size: 12px;
+}
+
+.scene-time {
+  color: #909399;
+}
+
 .pagination-container {
   margin-top: 20px;
   display: flex;
