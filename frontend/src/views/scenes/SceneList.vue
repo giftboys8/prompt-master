@@ -38,23 +38,6 @@
           <div class="scene-card-content">
             <div class="scene-header">
               <h3 class="scene-name" :title="scene.name">{{ scene.name }}</h3>
-              <div class="scene-actions">
-                <el-dropdown trigger="click" @command="handleCommand">
-                  <el-button type="primary" text @click.stop>
-                    <el-icon><More /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item :command="{ action: 'edit', scene }">
-                        <el-icon><Edit /></el-icon>编辑
-                      </el-dropdown-item>
-                      <el-dropdown-item :command="{ action: 'delete', scene }">
-                        <el-icon><Delete /></el-icon>删除
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </div>
             </div>
             <div class="scene-version">
               <el-tag size="small" type="info">v{{ scene.version }}</el-tag>
@@ -78,6 +61,14 @@
               <span class="scene-time">
                 {{ new Date(scene.created_at).toLocaleDateString() }}
               </span>
+            </div>
+            <div class="scene-actions">
+              <el-button @click.stop="handleEdit(scene)">
+                <el-icon><Edit /></el-icon>编辑
+              </el-button>
+              <el-button @click.stop="handleDelete(scene)">
+                <el-icon><Delete /></el-icon>删除
+              </el-button>
             </div>
           </div>
         </el-card>
@@ -244,32 +235,58 @@ watch([currentPage, pageSize], () => {
 }
 
 .scene-card {
-  height: 100%;
+  height: 320px;
+  width: 100%;
   margin-bottom: 20px;
-  transition: all 0.3s;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
 .scene-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: #d9d9d9;
+}
+
+.scene-card :deep(.el-card__body) {
+  background-color: #f8f9fa;
+  padding: 0;
+  height: 100%;
 }
 
 .scene-card-content {
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.scene-info {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  padding: 24px 24px;
 }
 
 .scene-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  padding: 16px 20px 0;
 }
 
 .scene-name {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: #333;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -279,23 +296,26 @@ watch([currentPage, pageSize], () => {
 
 .scene-version {
   margin-bottom: 12px;
+  padding: 0 20px;
 }
 
 .scene-description {
-  color: #606266;
+  color: #333;
   font-size: 14px;
-  margin-bottom: 16px;
-  height: 40px;
+  margin-bottom: 12px;
+  min-height: 40px;
+  line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  padding: 0 20px;
 }
 
 .scene-tags {
   margin-bottom: 12px;
-  min-height: 24px;
+  padding: 0 20px;
 }
 
 .role-tag {
@@ -303,20 +323,73 @@ watch([currentPage, pageSize], () => {
 }
 
 .scene-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #909399;
   font-size: 12px;
+  color: #666;
+  margin: 6px 0;
+  line-height: 1.5;
+  padding: 0 20px;
 }
 
-.scene-time {
-  color: #909399;
+.scene-actions {
+  margin-top: auto;
+  padding: 12px 20px;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fff;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.scene-actions :deep(.el-button) {
+  font-size: 13px;
+  padding: 8px 16px;
+  height: 32px;
+  line-height: 1;
+}
+
+.scene-actions :deep(.el-button:first-child) {
+  background-color: #409eff;
+  color: white;
+  border-color: #409eff;
+}
+
+.scene-actions :deep(.el-button:first-child:hover) {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
+}
+
+.scene-actions :deep(.el-button:last-child) {
+  background-color: #f56c6c;
+  color: white;
+  border-color: #f56c6c;
+}
+
+.scene-actions :deep(.el-button:last-child:hover) {
+  background-color: #f78989;
+  border-color: #f78989;
+}
+
+.scene-actions :deep(.el-button .el-icon) {
+  margin-right: 4px;
 }
 
 .pagination-container {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+/* 优化滚动条样式 */
+.scene-info::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scene-info::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 3px;
+}
+
+.scene-info::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
 }
 </style>

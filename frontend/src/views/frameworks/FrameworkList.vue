@@ -4,8 +4,8 @@
       <h1>模板框架管理</h1>
       <div class="header-actions">
         <el-radio-group v-model="viewType" size="small">
-          <el-radio-button label="list">列表视图</el-radio-button>
-          <el-radio-button label="card">卡片视图</el-radio-button>
+          <el-radio-button value="list">列表视图</el-radio-button>
+          <el-radio-button value="card">卡片视图</el-radio-button>
         </el-radio-group>
         <el-button type="primary" @click="handleCreate"> 创建框架 </el-button>
       </div>
@@ -49,24 +49,24 @@
       </el-table>
 
       <div v-else-if="viewType === 'card'" class="card-view">
-      <el-row :gutter="24">
-        <el-col v-for="framework in frameworks" :key="framework.id" :span="8" class="mb-6">
+      <el-row :gutter="16">
+        <el-col v-for="framework in frameworks" :key="framework.id" :span="4" class="mb-3">
           <el-card class="framework-card" shadow="hover">
-            <template #header>
-              <div class="card-header">
-                <span>{{ framework.name }}</span>
-                <el-button-group>
-                  <el-button type="primary" size="small" @click="handleEdit(framework)">
-                    编辑
-                  </el-button>
-                  <el-button type="danger" size="small" @click="handleDelete(framework)">
-                    删除
-                  </el-button>
-                </el-button-group>
-              </div>
-            </template>
+            <div class="card-title">
+              <h3>{{ framework.name }}</h3>
+            </div>
             <div class="card-content">
               <p class="framework-description">{{ framework.description }}</p>
+            </div>
+            <div class="card-actions">
+              <el-button-group>
+                <el-button type="primary" size="small" @click="handleEdit(framework)">
+                  编辑
+                </el-button>
+                <el-button type="danger" size="small" @click="handleDelete(framework)">
+                  删除
+                </el-button>
+              </el-button-group>
             </div>
           </el-card>
         </el-col>
@@ -204,30 +204,41 @@ onMounted(() => {
 }
 
 .framework-card {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   background-color: #f8f9fa;
-  height: 240px; /* 根据要求调整卡片高度 */
+  height: 180px;
   display: flex;
   flex-direction: column;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #333;
-  font-weight: bold;
-  padding: 16px 20px; /* 统一内边距 */
+.card-title {
+  padding: 12px 16px 6px;
   border-bottom: 1px solid #f0f0f0;
-  flex-shrink: 0;
+}
+
+.card-title h3 {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card-content {
-  font-size: 14px;
-  color: #333;
-  padding: 16px 20px; /* 调整内边距，使内容更紧凑 */
+  font-size: 12px;
+  color: #666;
+  padding: 8px 16px;
   flex-grow: 1;
   overflow-y: auto;
+}
+
+.card-actions {
+  padding: 8px 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .framework-description {
