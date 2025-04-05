@@ -7,9 +7,6 @@
             <span class="logo-icon">⚡</span>
             <h1>PromptMaster</h1>
           </div>
-        </div>
-
-        <div class="right-section">
           <el-menu
             router
             :default-active="route.path"
@@ -24,38 +21,46 @@
                 <span>首页</span>
               </template>
             </el-menu-item>
-            <el-menu-item index="/templates">
+            <el-menu-item index="/contents">
+              <template #title>
+                <el-icon><Collection /></el-icon>
+                <span>场景市场</span>
+              </template>
+            </el-menu-item>
+            <el-menu-item v-if="userStore.isLoggedIn()" index="/scenes">
+              <template #title>
+                <el-icon><Grid /></el-icon>
+                <span>业务场景</span>
+              </template>
+            </el-menu-item>
+            <el-menu-item v-if="userStore.isLoggedIn()" index="/templates">
               <template #title>
                 <el-icon><Document /></el-icon>
                 <span>提示词模板</span>
               </template>
             </el-menu-item>
-            <el-menu-item index="/scenes">
-              <template #title>
-                <el-icon><Grid /></el-icon>
-                <span>场景管理</span>
-              </template>
-            </el-menu-item>
-            <el-menu-item index="/frameworks">
+            <el-menu-item v-if="userStore.isLoggedIn()" index="/frameworks">
               <template #title>
                 <el-icon><Folder /></el-icon>
-                <span>模板框架</span>
+                <span>提示词框架</span>
               </template>
             </el-menu-item>
-            <el-menu-item index="/contents">
-              <template #title>
-                <el-icon><Collection /></el-icon>
-                <span>内容管理</span>
-              </template>
-            </el-menu-item>
-            <el-menu-item index="/apikeys">
+            <el-menu-item v-if="userStore.user?.is_staff" index="/apikeys">
               <template #title>
                 <el-icon><Key /></el-icon>
                 <span>秘钥管理</span>
               </template>
             </el-menu-item>
+            <el-menu-item v-if="userStore.user?.is_staff" index="/users">
+              <template #title>
+                <el-icon><User /></el-icon>
+                <span>用户管理</span>
+              </template>
+            </el-menu-item>
           </el-menu>
+        </div>
 
+        <div class="right-section">
           <div class="user-info">
             <template v-if="userStore.isLoggedIn()">
               <el-dropdown @command="handleCommand">
@@ -334,7 +339,8 @@ const goToRegister = () => {
 .left-section {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 24px;
+  flex: 1;
 }
 
 .right-section {
@@ -382,6 +388,7 @@ const goToRegister = () => {
   display: flex;
   background: transparent !important;
   border: none;
+  margin-left: 24px;
 }
 
 .user-info {

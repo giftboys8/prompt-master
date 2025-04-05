@@ -10,6 +10,10 @@ CSRF_COOKIE_SECURE = False
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 
+# CORS配置
+CORS_ALLOW_ALL_ORIGINS = True  # 开发环境允许所有源
+CORS_ALLOW_CREDENTIALS = True
+
 # Database
 DATABASES = {
     'default': {

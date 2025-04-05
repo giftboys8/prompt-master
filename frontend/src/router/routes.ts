@@ -179,9 +179,22 @@ export const contentRoutes: RouteRecordRaw[] = [
     name: "content-list",
     component: () => import("@/views/contents/ContentList.vue"),
     meta: {
-      title: "内容列表",
+      title: "场景市场",
+      requiresAuth: false,
+    },
+  },
+];
+
+// 用户管理相关路由
+export const userRoutes: RouteRecordRaw[] = [
+  {
+    path: "users",
+    name: "user-list",
+    component: () => import("@/views/users/UserList.vue"),
+    meta: {
+      title: "用户管理",
       requiresAuth: true,
-      permissions: ["content:view"],
+      permissions: ["user:manage"],
     },
   },
 ];
@@ -218,6 +231,7 @@ export const mainRoutes: RouteRecordRaw = {
     ...frameworkRoutes,
     ...contentRoutes,
     ...apiKeyRoutes,
+    ...userRoutes,
   ],
 };
 

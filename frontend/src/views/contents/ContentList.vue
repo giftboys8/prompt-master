@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1>内容生成</h1>
+      <h1>场景市场</h1>
     </div>
 
     <div class="operation-bar">

@@ -37,10 +37,10 @@
       <el-table-column label="操作" width="180">
         <template #default="{ row }">
           <el-button-group>
-            <el-button type="primary" @click="handleEdit(row)">
+            <el-button type="primary" @click="handleEdit(row)" v-if="canEdit(row)">
               编辑
             </el-button>
-            <el-button type="danger" @click="handleDelete(row)">
+            <el-button type="danger" @click="handleDelete(row)" v-if="canDelete(row)">
               删除
             </el-button>
           </el-button-group>
@@ -60,10 +60,10 @@
             </div>
             <div class="card-actions">
               <el-button-group>
-                <el-button type="primary" size="small" @click="handleEdit(framework)">
+                <el-button type="primary" size="small" @click="handleEdit(framework)" v-if="canEdit(framework)">
                   编辑
                 </el-button>
-                <el-button type="danger" size="small" @click="handleDelete(framework)">
+                <el-button type="danger" size="small" @click="handleDelete(framework)" v-if="canDelete(framework)">
                   删除
                 </el-button>
               </el-button-group>
@@ -98,6 +98,7 @@ import {
   deleteFramework,
   type Framework,
 } from "@/api/frameworks";
+import { canEdit, canDelete } from "@/utils/permissions";
 
 const router = useRouter();
 const loading = ref(false);

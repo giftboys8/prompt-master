@@ -63,10 +63,10 @@
               </span>
             </div>
             <div class="scene-actions">
-              <el-button @click.stop="handleEdit(scene)">
+              <el-button @click.stop="handleEdit(scene)" v-if="canEdit(scene)">
                 <el-icon><Edit /></el-icon>编辑
               </el-button>
-              <el-button @click.stop="handleDelete(scene)">
+              <el-button @click.stop="handleDelete(scene)" v-if="canDelete(scene)">
                 <el-icon><Delete /></el-icon>删除
               </el-button>
             </div>
@@ -101,6 +101,7 @@ import { Search, Plus, More, Edit, Delete } from "@element-plus/icons-vue";
 import type { Scene } from "@/types";
 import { getScenes, deleteScene, getSceneDetail } from "@/api/scenes";
 import ScenePreviewModal from "@/components/ScenePreviewModal.vue";
+import { canEdit, canDelete } from "@/utils/permissions";
 
 const router = useRouter();
 

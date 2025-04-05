@@ -1,18 +1,19 @@
-from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-from .views import UserInfoView, CustomTokenObtainPairView, RegisterView, UserSearchView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
+from . import views
+from .auth import CustomTokenObtainPairView
 
-app_name = 'users'
+router = DefaultRouter()
+router.register(r'users', views.UserViewSet)
+router.register(r'menus', views.MenuViewSet)
+router.register(r'user-menus', views.UserMenuViewSet)
 
 urlpatterns = [
-    # 用户注册
-    path('register/', RegisterView.as_view(), name='register'),
-    # JWT认证
+    # JWT认证相关路由
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    # 用户信息
-    path('info/', UserInfoView.as_view(), name='user_info'),
-    # 用户搜索
-    path('search/', UserSearchView.as_view(), name='user_search'),
+    
+    # 用户管理相关路由
+    path('', include(router.urls)),
 ]

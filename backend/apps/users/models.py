@@ -3,6 +3,9 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+# 导入菜单相关模型
+from .menu_models import Menu, UserMenu
+
 
 class UserProfile(models.Model):
     """用户扩展信息"""
@@ -21,6 +24,18 @@ class UserProfile(models.Model):
         upload_to='avatars/',
         blank=True,
         verbose_name='头像'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='是否启用'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='创建时间'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='更新时间'
     )
 
     class Meta:

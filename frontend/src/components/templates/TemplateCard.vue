@@ -25,16 +25,31 @@
         </div>
         <div class="template-actions" @click.stop>
           <el-button-group>
-            <el-button type="primary" text @click="$emit('edit', template)"
-              >编辑</el-button
+            <el-button 
+              v-if="canEdit(template)"
+              type="primary" 
+              text 
+              @click="$emit('edit', template)"
+            >编辑</el-button>
+            <el-button 
+              v-if="canTest(template)"
+              type="primary" 
+              text 
+              @click="$emit('test', template)"
+            >测试</el-button>
+            <el-button 
+              type="primary" 
+              text 
+              @click="$emit('history', template)"
             >
-            <el-button type="primary" text @click="$emit('test', template)"
-              >测试</el-button
-            >
-            <el-button type="primary" text @click="$emit('history', template)">
               <el-icon><Timer /></el-icon>
             </el-button>
-            <el-button type="primary" text @click="$emit('clone', template)">
+            <el-button 
+              v-if="canClone(template)"
+              type="primary" 
+              text 
+              @click="$emit('clone', template)"
+            >
               <el-icon><CopyDocument /></el-icon>
             </el-button>
             <el-button
@@ -47,9 +62,12 @@
               <el-icon><Share /></el-icon>
               <span class="button-text">分享</span>
             </el-button>
-            <el-button type="danger" text @click="$emit('delete', template)"
-              >删除</el-button
-            >
+            <el-button 
+              v-if="canDelete(template)"
+              type="danger" 
+              text 
+              @click="$emit('delete', template)"
+            >删除</el-button>
           </el-button-group>
         </div>
       </div>
@@ -63,6 +81,7 @@ import type { Template } from "@/types";
 import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
 import dayjs from "dayjs";
+import { canEdit, canDelete, canClone, canTest } from "@/utils/permissions";
 
 const formatDate = (dateString: string) => {
   return dayjs(dateString).format("YYYY-MM-DD HH:mm:ss");

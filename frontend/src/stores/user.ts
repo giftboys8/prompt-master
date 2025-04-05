@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { User } from "@/types";
-import { login as loginApi, getUserInfo } from "@/api/auth";
+import { login as loginApi, getUserInfo, register as registerApi } from "@/api/auth";
 import { ElMessage } from "element-plus";
 
 export const useUserStore = defineStore("user", () => {
@@ -16,12 +16,29 @@ export const useUserStore = defineStore("user", () => {
       user.value = data;
 
       // 设置默认权限 - 根据用户角色设置权限
-      // 这里假设所有用户至少有基本查看权限
+      // 普通用户的基础权限：查看所有内容，创建新内容
       const defaultPermissions = [
+        // 模板权限
         "template:view",
+        "template:create",
+        // 框架权限
         "framework:view",
+        "framework:create",
+        // 场景权限
         "scene:view",
+        "scene:create",
+        // 内容查看权限
         "content:view",
+        "content:create",
+        // 针对自己创建的内容的权限
+        "template:edit:own",
+        "template:delete:own",
+        "template:clone:own",
+        "template:test:own",
+        "framework:edit:own",
+        "framework:delete:own",
+        "scene:edit:own",
+        "scene:delete:own"
       ];
 
       // 如果是管理员，添加更多权限
@@ -42,6 +59,7 @@ export const useUserStore = defineStore("user", () => {
           "apikey:view",
           "apikey:create",
           "apikey:delete",
+          "user:manage", // 添加用户管理权限
         );
       }
 
@@ -136,10 +154,31 @@ export const useUserStore = defineStore("user", () => {
 
   // 初始化：如果有 token 就立即获取用户信息
   if (token.value) {
-    fetchUserInfo().catch(error => {
-      console.error('初始化获取用户信息失败:', error);
-    });
+    // 使用setTimeout确保在Vue应用初始化完成后再获取用户信息
+    setTimeout(() => {
+      fetchUserInfo().catch(error => {
+        console.error('初始化获取用户信息失败:', error);
+      });
+    }, 0);
   }
+
+  // 注册
+  const register = async (userData: { username: string; email: string; password: string; password2: string }) => {
+    try {
+      await registerApi(userData);
+      ElMessage.success("用户创建成功");
+      return true;
+    } catch (error: any) {
+      console.error("注册失败:", error);
+      ElMessage.error(error.response?.data?.detail || "用户创建失败，请稍后重试");
+      return false;
+    }
+  };
+
+  // 检查是否已设置默认权限
+  const hasDefaultPermissions = () => {
+    return permissions.value && permissions.value.length > 0;
+  };
 
   return {
     user,
@@ -149,5 +188,7 @@ export const useUserStore = defineStore("user", () => {
     logout,
     isLoggedIn,
     fetchUserInfo,
+    register,
+    hasDefaultPermissions,
   };
 });

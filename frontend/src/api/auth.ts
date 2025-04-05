@@ -34,7 +34,7 @@ interface UserInfo {
 
 export const register = (data: RegisterData) => {
   return request<UserInfo>({
-    url: "/auth/register/",
+    url: "/auth/users/",
     method: "post",
     data,
   });
@@ -50,7 +50,7 @@ export const login = (data: LoginData) => {
 
 export const getUserInfo = () => {
   return request<UserInfo>({
-    url: "/auth/info/",
+    url: "/auth/users/me/",
     method: "get",
   });
 };

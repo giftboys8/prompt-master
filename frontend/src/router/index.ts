@@ -40,6 +40,12 @@ function checkPermissions(to: RouteLocationNormalized): boolean {
   // 确保权限数组存在
   if (!userStore.permissions || userStore.permissions.length === 0) {
     console.warn('用户权限未加载，尝试重新获取用户信息');
+    // 即使权限未加载，如果设置了默认权限，也应该继续检查
+    if (userStore.hasDefaultPermissions()) {
+      return requiredPermissions.every((permission) =>
+        userStore.permissions.includes(permission),
+      );
+    }
     return false;
   }
 
@@ -106,6 +112,11 @@ router.beforeEach(async (to, from, next) => {
         }
       } catch (error) {
         console.error('重新获取用户信息失败:', error);
+        // 即使获取用户信息失败，如果设置了默认权限并满足要求，也允许访问
+        if (checkPermissions(to)) {
+          next();
+          return;
+        }
       }
       next({ name: "403" });
       NProgress.done();
